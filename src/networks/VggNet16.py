@@ -1,14 +1,9 @@
 import warnings
 
 from tensorflow.keras import backend as K
-from tensorflow.keras.layers.convolutional import Conv2D
-from tensorflow.keras.layers.convolutional import MaxPooling2D
-from tensorflow.keras.layers.core import Activation
-from tensorflow.keras.layers.core import Dense
-from tensorflow.keras.layers.core import Dropout
-from tensorflow.keras.layers.core import Flatten
-from tensorflow.keras.layers.normalization import BatchNormalization
 from tensorflow.keras.models import Sequential
+from tensorflow_core.python.keras.layers import Conv2D, Activation, BatchNormalization, MaxPooling2D, Dropout, Flatten, \
+    Dense
 
 warnings.filterwarnings('ignore')
 

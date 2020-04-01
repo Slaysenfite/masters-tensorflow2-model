@@ -27,7 +27,7 @@ class DataSetNames(Enum):
     InBreast = "IN"
 
 
-def create_ddsm_dataset():
+def create_ddsm_dataset_singleton():
     return DataSet(
         DataSetNames.DDSM,
         ROOT_DIRECTORY + PATH_TO_DDSM,
@@ -37,4 +37,4 @@ def create_ddsm_dataset():
     )
 
 
-DDSM_DataSet = create_ddsm_dataset()
+ddsm_data_set = create_ddsm_dataset_singleton()

@@ -11,3 +11,7 @@ class LearningOptimization(Enum):
 class ActivationFunctions(Enum):
     RELU = "Rectified linear unit activation"
     SIGMOID = "Sigmoid activation"
+
+
+class Pooling(Enum):
+    TWO_BY_TWO = (2, 2)
