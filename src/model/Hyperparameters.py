@@ -18,7 +18,7 @@ class Hyperparameters:
 
 def create_hyperparameter_singleton():
     return Hyperparameters(
-        30,
+        10,
         5e-3,
         32,
         0.25,

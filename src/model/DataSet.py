@@ -1,4 +1,6 @@
 from enum import Enum
+import pandas as pd
+import numpy as np
 
 # Dataset paths
 
@@ -14,12 +16,17 @@ ddsm_class_names = ['Benign', 'Malignant', 'Normal']
 
 
 class DataSet:
-    def __init__(self, name, root_path, metadata_path, class_label_index, label_map):
+    def __init__(self, name, root_path, metadata_path, class_label_index, label_map, class_names):
         self.name = name
         self.root_path = root_path
         self.metadata_path = metadata_path
         self.class_label_index = class_label_index
         self.label_map = label_map
+        self.class_names = class_names
+
+    def get_image_metadata(self):
+        df_images = pd.read_csv(self.metadata_path)
+        return np.array(df_images)
 
 
 class DataSetNames(Enum):
@@ -33,8 +40,8 @@ def create_ddsm_dataset_singleton():
         ROOT_DIRECTORY + PATH_TO_DDSM,
         ROOT_DIRECTORY + PATH_TO_DDSM + '/ddsm.csv',
         1,
-        ddsm_label_map
+        ddsm_label_map,
+        ddsm_class_names
     )
-
 
 ddsm_data_set = create_ddsm_dataset_singleton()

@@ -2,15 +2,11 @@ import gc
 
 import cv2
 import numpy as np
-import pandas as pd
 from imutils import paths
 
 
-def load_images(data, labels, arr_dataset, dataset, image_dimensions=(128, 128, 3)):
+def load_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
     print("[INFO] loading images...")
-    """Add these to dataset object"""
-    df_images = pd.read_csv(dataset.metadata_path)
-    arr_images = np.array(df_images)
 
     # grab the image paths and randomly shuffle them
     image_paths = paths.list_images(dataset.metadata_path)
@@ -24,7 +20,7 @@ def load_images(data, labels, arr_dataset, dataset, image_dimensions=(128, 128, 
 
         # extract the class label from the image path and update the
         # labels list
-        label = dataset.label_map[arr_dataset[i][dataset.class_label_index]]
+        label = dataset.label_map[dataset.get_image_metadata()[i][dataset.class_label_index]]
 
         labels.append(label)
         i += 1

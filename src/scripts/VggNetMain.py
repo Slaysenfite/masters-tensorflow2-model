@@ -2,18 +2,19 @@ import sys
 import warnings
 import smtplib
 
-from tf.keras.optimizers import SGD
-
+from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, precision_score, recall_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 
-import src.config.GlobalConstants as gC
 from src.model.Hyperparameters import hyperparameters
+from src.config.GlobalConstants import IMAGE_DIMS
 from src.utils.ImageLoader import load_images
 from src.model.DataSet import ddsm_data_set
-
+from src.networks.VggNet16 import SmallVGGNet
+from imutils import paths
 
 warnings.filterwarnings('ignore')
 
@@ -23,19 +24,18 @@ print('[INFO] Model hyperparameters...')
 print(' Epochs: {}'.format(hyperparameters.epochs))
 print(' Initial learning rate: {}'.format(hyperparameters.init_lr))
 print(' Batch size: {}'.format(hyperparameters.batch_size))
-print(' Image dimensions: {}\n'.format(gC.IMAGE_DIMS))
-
+print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 
 # initialize the data and labels
 data = []
 labels = []
 
-data, labels = load_images(data, labels, config.path, config.label_map,
-                                       config.arr_images, config.data_set, IMAGE_DIMS)
 
-# partition the data into training and testing splits using 75% of
-# the data for training and the remaining 25% for testing
-(trainX, testX, trainY, testY) = train_test_split(data, labels, test_size=0.3, random_state=42)
+data, labels = load_images(data, labels, ddsm_data_set, IMAGE_DIMS)
+
+# partition the data into training and testing splits using 70% of
+# the data for training and the remaining 30% for testing
+(trainX, testX, trainY, testY) = train_test_split(data, labels, test_size=0.3, train_size=0.7, random_state=42)
 
 # convert the labels from integers to vectors (for 2-class, binary
 # classification you should use Keras' to_categorical function
@@ -45,3 +45,27 @@ lb = LabelBinarizer()
 trainY = lb.fit_transform(trainY)
 testY = lb.transform(testY)
 
+# construct the image generator for data augmentation
+print('[INFO] Augmenting data set')
+aug = ImageDataGenerator()
+
+model = SmallVGGNet.build(IMAGE_DIMS[0], IMAGE_DIMS[1], IMAGE_DIMS[2], classes=len(lb.classes_))
+
+print('[INFO] Model summary...')
+model.summary()
+
+opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
+model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+
+# train the network
+H = model.fit_generator(aug.flow(trainX, trainY, batch_size=hyperparameters.batch_size),
+                        validation_data=(testX, testY), steps_per_epoch=len(trainX) // hyperparameters.bs,
+                        epochs=hyperparameters.epochs)
+
+# evaluate the network
+print('[INFO] evaluating network...')
+
+predictions = model.predict(testX, batch_size=32)
+
+print(classification_report(testY.argmax(axis=1),
+                            predictions.argmax(axis=1), target_names=ddsm_data_set.class_names))
