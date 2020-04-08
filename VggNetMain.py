@@ -1,22 +1,21 @@
 import sys
 import warnings
-import smtplib
 
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score, precision_score, recall_score
+from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 
-from src.model.Hyperparameters import hyperparameters
-from src.config.GlobalConstants import IMAGE_DIMS
-from src.utils.ImageLoader import load_images
-from src.model.DataSet import ddsm_data_set
-from src.networks.VggNet16 import SmallVGGNet
-from imutils import paths
+from model.Hyperparameters import hyperparameters
+from utils.ImageLoader import load_images
+from model.DataSet import ddsm_data_set
+from networks.VggNet16 import SmallVGGNet
 
-warnings.filterwarnings('ignore')
+# warnings.filterwarnings('ignore')
+
+IMAGE_DIMS = (256, 256, 3)
 
 print('Python version: ' + sys.version + '\n')
 print('[BEGIN] Start script...\n')

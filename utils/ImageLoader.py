@@ -9,7 +9,7 @@ def load_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
     print("[INFO] loading images...")
 
     # grab the image paths and randomly shuffle them
-    image_paths = paths.list_images(dataset.metadata_path)
+    image_paths = list(paths.list_images(dataset.root_path))
 
     i = 0
     # loop over the input images

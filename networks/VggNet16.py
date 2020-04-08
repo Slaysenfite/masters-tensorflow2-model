@@ -2,7 +2,7 @@ import warnings
 
 from tensorflow.keras import backend as K
 from tensorflow.keras.models import Sequential
-from tensorflow_core.python.keras.layers import Conv2D, Activation, BatchNormalization, MaxPooling2D, Dropout, Flatten, \
+from tensorflow.python.keras.layers import Conv2D, Activation, BatchNormalization, MaxPooling2D, Dropout, Flatten, \
     Dense
 
 warnings.filterwarnings('ignore')

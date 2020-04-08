@@ -1,4 +1,4 @@
-from src.model.Enums import ActivationFunctions, LearningOptimization, Pooling
+from model.Enums import ActivationFunctions, LearningOptimization, Pooling
 
 
 class Hyperparameters:
