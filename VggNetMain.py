@@ -12,10 +12,11 @@ from model.Hyperparameters import hyperparameters
 from utils.ImageLoader import load_images
 from model.DataSet import ddsm_data_set
 from networks.VggNet16 import SmallVGGNet
+from configurations.GlobalConstants import IMAGE_DIMS
 
 # warnings.filterwarnings('ignore')
 
-IMAGE_DIMS = (256, 256, 3)
+
 
 print('Python version: ' + sys.version + '\n')
 print('[BEGIN] Start script...\n')
@@ -58,7 +59,7 @@ model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy
 
 # train the network
 H = model.fit_generator(aug.flow(trainX, trainY, batch_size=hyperparameters.batch_size),
-                        validation_data=(testX, testY), steps_per_epoch=len(trainX) // hyperparameters.bs,
+                        validation_data=(testX, testY), steps_per_epoch=len(trainX) // hyperparameters.batch_size,
                         epochs=hyperparameters.epochs)
 
 # evaluate the network
