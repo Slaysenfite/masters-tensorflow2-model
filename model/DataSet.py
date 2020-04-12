@@ -1,6 +1,7 @@
 from enum import Enum
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 
 # Dataset paths
 
@@ -43,5 +44,6 @@ def create_ddsm_dataset_singleton():
         ddsm_label_map,
         ddsm_class_names
     )
+
 
 ddsm_data_set = create_ddsm_dataset_singleton()

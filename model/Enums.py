@@ -11,6 +11,7 @@ class LearningOptimization(Enum):
 class ActivationFunctions(Enum):
     RELU = "Rectified linear unit activation"
     SIGMOID = "Sigmoid activation"
+    SOFTMAX = "softmax"
 
 
 class Pooling(Enum):

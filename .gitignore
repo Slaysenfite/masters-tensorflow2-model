@@ -2,5 +2,6 @@
 /.idea
 .idea
 /data
+/output
 __pycache__
 *.steven

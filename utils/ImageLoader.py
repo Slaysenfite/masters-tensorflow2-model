@@ -6,15 +6,15 @@ from imutils import paths
 
 
 def load_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
-    print("[INFO] loading images...")
-
     # grab the image paths and randomly shuffle them
     image_paths = list(paths.list_images(dataset.root_path))
 
     i = 0
     # loop over the input images
-    for imagePath in image_paths:
-        image = cv2.imread(imagePath)
+    for image_path in image_paths:
+        print_progress_bar(i + 1, len(image_paths), prefix=' Progress:', suffix='Complete')
+
+        image = cv2.imread(image_path)
         image = cv2.resize(image, (image_dimensions[1], image_dimensions[0]))
         data.append(image)
 
@@ -35,3 +35,26 @@ def load_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
     print("[INFO] Label shape: " + str(labels.shape))
 
     return data, labels
+
+
+# Print iterations progress
+def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd="\r"):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filled_length = int(length * iteration // total)
+    bar = fill * filled_length + '-' * (length - filled_length)
+    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end=printEnd)
+    # Print New Line on Complete
+    if iteration == total:
+        print()
