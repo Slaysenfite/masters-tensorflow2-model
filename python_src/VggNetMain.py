@@ -1,3 +1,4 @@
+import smtplib
 import sys
 import tensorflow as tf
 
@@ -14,6 +15,7 @@ from model.DataSet import ddsm_data_set
 from model.Hyperparameters import hyperparameters
 from networks.VggNet16 import SmallVGGNet
 from utils.ImageLoader import load_images
+from utils.Emailer import results_dispatch
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
@@ -83,5 +85,12 @@ plot_network_metrics(hyperparameters.epochs, H, "VggNet")
 print('[INFO] serializing network and label binarizer...')
 
 save_mode_to_file(model, lb)
+
+print('[INFO] emailing result...')
+
+try:
+    results_dispatch('ddsm', "vggnet")
+except smtplib.SMTPAuthenticationError:
+    print('[ERROR] Email credentials could not be authenticated')
 
 print('[END] Finishing script...\n')
