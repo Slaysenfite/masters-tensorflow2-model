@@ -1,4 +1,4 @@
-IMAGE_DIMS = (64, 64, 3)
+IMAGE_DIMS = (8, 8, 3)
 
 output_dir = 'output/figures/'
 

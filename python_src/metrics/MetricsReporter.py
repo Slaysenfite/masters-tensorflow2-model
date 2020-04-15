@@ -8,15 +8,14 @@ from scipy import interp
 from sklearn.metrics import roc_curve, auc, accuracy_score, recall_score, precision_score
 
 import configurations.GlobalConstants as constants
+from metrics.MetricResults import MetricResult
 
 
-def generate_basic_metrics(test_y, predictions):
-    acc_score = accuracy_score(test_y.argmax(axis=1), predictions.argmax(axis=1)) * 100
-    print('Accuracy Score: {:.2f}%'.format(acc_score))
-    precision = precision_score(test_y.argmax(axis=1), predictions.argmax(axis=1), average='macro') * 100
-    print('Precision Score: {:.2f}%'.format(precision))
-    recall = recall_score(test_y.argmax(axis=1), predictions.argmax(axis=1), average='macro') * 100
-    print('Recall Score: {:.2f}%'.format(recall))
+def generate_metric_report(H, test_y, predictions, data_set):
+    metric_result = MetricResult(H, test_y, predictions, data_set)
+    with open("output/result_report.txt", "w") as text_file:
+        text_file.write(metric_result.report_result())
+    print(metric_result.report_result())
 
 
 def plot_confusion_matrix(cm, classes,
@@ -140,7 +139,7 @@ def plot_network_metrics(epochs, H, model_name):
     plt.savefig(constants.NETWORK_METRIC_PLOT)
 
 
-def save_mode_to_file(model, lb):
+def save_model_to_file(model, lb):
     # save the model and label binarizer to disk
     model.save('output/model/model_simVGNN')
     f = open('output/model/label_bin_simVGNN', 'wb')

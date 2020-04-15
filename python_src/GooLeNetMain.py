@@ -1,8 +1,8 @@
 import smtplib
 import sys
-
 import tensorflow as tf
-from sklearn.metrics import confusion_matrix
+
+from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.keras.optimizers import SGD
@@ -13,9 +13,9 @@ from metrics.MetricsReporter import plot_confusion_matrix, generate_metric_repor
     save_model_to_file
 from model.DataSet import ddsm_data_set
 from model.Hyperparameters import hyperparameters
-from networks.VggNet16 import SmallVGGNet
-from utils.Emailer import results_dispatch
+from networks.MiniGoogLeNet import SmallGoogLeNet
 from utils.ImageLoader import load_images
+from utils.Emailer import results_dispatch
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
@@ -49,7 +49,7 @@ test_y = lb.transform(test_y)
 print('[INFO] Augmenting data set')
 aug = ImageDataGenerator()
 
-model = SmallVGGNet.build(IMAGE_DIMS[0], IMAGE_DIMS[1], IMAGE_DIMS[2], classes=len(lb.classes_))
+model = SmallGoogLeNet.build(IMAGE_DIMS[0], IMAGE_DIMS[1], IMAGE_DIMS[2], classes=len(lb.classes_))
 
 print('[INFO] Model summary...')
 model.summary()
@@ -69,7 +69,10 @@ predictions = model.predict(test_x, batch_size=32)
 
 print('[INFO] generating metrics...')
 
-generate_metric_report(H, test_y, predictions, ddsm_data_set)
+print(classification_report(test_y.argmax(axis=1),
+                            predictions.argmax(axis=1), target_names=ddsm_data_set.class_names))
+
+generate_metric_report(test_y, predictions)
 
 cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
 plot_confusion_matrix(cm1, classes=ddsm_data_set.class_names,
