@@ -9,22 +9,20 @@ from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.GlobalConstants import IMAGE_DIMS
-from metrics.MetricsReporter import plot_confusion_matrix, generate_metric_report, plot_network_metrics, plot_roc, \
+from metrics.MetricsReporter import plot_confusion_matrix,plot_network_metrics, plot_roc, \
     save_model_to_file
 from model.DataSet import ddsm_data_set
 from model.Hyperparameters import hyperparameters
 from networks.VggNet16 import SmallVGGNet
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_images
+from utils.ScriptHelper import generate_script_report
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
 print('[BEGIN] Start script...\n')
-print('[INFO] Model hyperparameters...')
-print(' Epochs: {}'.format(hyperparameters.epochs))
-print(' Initial learning rate: {}'.format(hyperparameters.init_lr))
-print(' Batch size: {}'.format(hyperparameters.batch_size))
 print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
+print(hyperparameters.report_hyperparameters())
 
 # initialize the data and labels
 data = []
@@ -37,10 +35,7 @@ data, labels = load_images(data, labels, ddsm_data_set, IMAGE_DIMS)
 # the data for training and the remaining 30% for testing
 (train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7, random_state=42)
 
-# convert the labels from integers to vectors (for 2-class, binary
-# classification you should use Keras' to_categorical function
-# instead as the scikit-learn's LabelBinarizer will not return a
-# vector)
+# binarize the class labels
 lb = LabelBinarizer()
 train_y = lb.fit_transform(train_y)
 test_y = lb.transform(test_y)
@@ -69,7 +64,7 @@ predictions = model.predict(test_x, batch_size=32)
 
 print('[INFO] generating metrics...')
 
-generate_metric_report(H, test_y, predictions, ddsm_data_set)
+generate_script_report(H, test_y, predictions, ddsm_data_set, hyperparameters)
 
 cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
 plot_confusion_matrix(cm1, classes=ddsm_data_set.class_names,

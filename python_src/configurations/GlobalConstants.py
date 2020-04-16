@@ -1,6 +1,6 @@
 IMAGE_DIMS = (8, 8, 3)
 
-output_dir = 'output/figures/'
+output_dir = 'output/generated-data/'
 
 filename_prefix = output_dir + "ddsm" + '_' + "vggnet" + "_"
 

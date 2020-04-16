@@ -5,17 +5,9 @@ from itertools import cycle
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import interp
-from sklearn.metrics import roc_curve, auc, accuracy_score, recall_score, precision_score
+from sklearn.metrics import roc_curve, auc
 
 import configurations.GlobalConstants as constants
-from metrics.MetricResults import MetricResult
-
-
-def generate_metric_report(H, test_y, predictions, data_set):
-    metric_result = MetricResult(H, test_y, predictions, data_set)
-    with open("output/result_report.txt", "w") as text_file:
-        text_file.write(metric_result.report_result())
-    print(metric_result.report_result())
 
 
 def plot_confusion_matrix(cm, classes,

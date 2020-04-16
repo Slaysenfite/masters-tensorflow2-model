@@ -16,6 +16,7 @@ class MetricResult:
     final_validation_accuracy = 0.0
 
     # Best network metric
+    best_epoch = 0
     best_training_loss = 0.0
     best_validation_loss = 0.0
     best_training_accuracy = 0.0
@@ -40,6 +41,7 @@ class MetricResult:
     def get_best_network_metrics(self, H):
         idx, min_loss = min(enumerate(H.history['loss']), key=operator.itemgetter(1))
 
+        self.best_epoch = idx + 1
         self.best_training_loss = min_loss
         self.best_validation_loss = H.history['val_loss'][idx]
         self.best_training_accuracy = H.history['accuracy'][idx]
@@ -52,23 +54,24 @@ class MetricResult:
         self.final_validation_accuracy = H.history['val_accuracy'][-1]
 
     def report_result(self):
-        report = '*** Classification Report *** \n\n {} \n'.format(self.report_dict)
+        report = '*** Classification Report *** \n {} \n'.format(self.report_dict)
 
         report += '*** General Metrics *** \n'
-        report += 'Accuracy Score: {:.2f}% \n'.format(self.accuracy)
-        report += 'Precision Score: {:.2f}% \n'.format(self.precision)
-        report += 'Recall Score: {:.2f}% \n\n'.format(self.recall)
+        report += ' Accuracy Score: {:.2f}% \n'.format(self.accuracy)
+        report += ' Precision Score: {:.2f}% \n'.format(self.precision)
+        report += ' Recall Score: {:.2f}% \n\n'.format(self.recall)
 
         report += '*** Final Network Metrics *** \n'
-        report += 'Final Training Loss: {:.2f}% \n'.format(self.final_training_loss)
-        report += 'Final Validation Loss: {:.2f}% \n'.format(self.final_validation_loss)
-        report += 'Final Training Accuracy: {:.2f}% \n'.format(self.final_training_accuracy)
-        report += 'Final Validation Accuracy: {:.2f}% \n\n'.format(self.final_validation_accuracy)
+        report += ' Final Training Loss: {:.4f} \n'.format(self.final_training_loss)
+        report += ' Final Validation Loss: {:.4f} \n'.format(self.final_validation_loss)
+        report += ' Final Training Accuracy: {:.2f}% \n'.format(self.final_training_accuracy)
+        report += ' Final Validation Accuracy: {:.2f}% \n\n'.format(self.final_validation_accuracy)
 
         report += '*** Best Network Metrics *** \n'
-        report += 'Best Training Loss: {:.2f}% \n'.format(self.best_training_loss)
-        report += 'Best Validation Loss: {:.2f}% \n'.format(self.best_validation_loss)
-        report += 'Best Training Accuracy: {:.2f}% \n'.format(self.best_training_accuracy)
-        report += 'Best Validation Accuracy: {:.2f}% \n\n'.format(self.best_validation_accuracy)
+        report += ' Best Epoch: {} \n'.format(self.best_epoch)
+        report += ' Best Training Loss: {:.4f} \n'.format(self.best_training_loss)
+        report += ' Best Validation Loss: {:.4f} \n'.format(self.best_validation_loss)
+        report += ' Best Training Accuracy: {:.2f}% \n'.format(self.best_training_accuracy)
+        report += ' Best Validation Accuracy: {:.2f}% \n\n'.format(self.best_validation_accuracy)
 
         return report

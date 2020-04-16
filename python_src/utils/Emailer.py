@@ -33,7 +33,6 @@ def populate_file_list(directory, qualifier):
             file_list.append(directory + filename)
         elif filename.endswith('.txt') and filename.startswith(qualifier):
             file_list.append(directory + filename)
-            continue
         else:
             continue
     return file_list
@@ -75,6 +74,11 @@ def send_email(text):
 
 
 def results_dispatch(data_set, architecture):
-    file_list = populate_file_list('' + output_dir, data_set + '_' + architecture)
+    file_list = populate_file_list(output_dir, data_set + '_' + architecture)
     message = create_message_with_attachments(file_list)
     send_email(message)
+
+try:
+    results_dispatch('ddsm', "vggnet")
+except smtplib.SMTPAuthenticationError:
+    print('[ERROR] Email credentials could not be authenticated')
