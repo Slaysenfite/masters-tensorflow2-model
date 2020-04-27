@@ -68,7 +68,7 @@ generate_script_report(H, test_y, predictions, ddsm_data_set, hyperparameters)
 reporter = MetricReporter(ddsm_data_set.name, 'vggnet')
 cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
 reporter.plot_confusion_matrix(cm1, classes=ddsm_data_set.class_names,
-                      title='Confusion matrix, without normalization')
+                               title='Confusion matrix, without normalization')
 
 reporter.plot_roc(ddsm_data_set.class_names, test_y, predictions)
 
@@ -80,9 +80,6 @@ reporter.save_model_to_file(model, lb)
 
 reporter.print('[INFO] emailing result...')
 
-try:
-    results_dispatch(ddsm_data_set.name, "vggnet")
-except smtplib.SMTPAuthenticationError:
-    print('[ERROR] Email credentials could not be authenticated')
+results_dispatch(ddsm_data_set.name, "vggnet")
 
 print('[END] Finishing script...\n')

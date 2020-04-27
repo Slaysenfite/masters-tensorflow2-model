@@ -78,4 +78,10 @@ def send_email(text):
 def results_dispatch(data_set, architecture):
     file_list = populate_file_list(output_dir, architecture + '_' + data_set)
     message = create_message_with_attachments(file_list)
-    send_email(message)
+    try:
+        send_email(message)
+    except smtplib.SMTPConnectError:
+        print('[ERROR] Email credentials could not be authenticated')
+    except smtplib.SMTPAuthenticationError:
+        print('[ERROR] Email credentials could not be authenticated')
+

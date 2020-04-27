@@ -86,9 +86,6 @@ reporter.save_model_to_file(model, lb)
 
 print('[INFO] emailing result...')
 
-try:
-    results_dispatch(ddsm_data_set.name, "googlenet")
-except smtplib.SMTPAuthenticationError:
-    print('[ERROR] Email credentials could not be authenticated')
+results_dispatch(ddsm_data_set.name, "googlenet")
 
 print('[END] Finishing script...\n')

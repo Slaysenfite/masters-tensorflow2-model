@@ -85,9 +85,6 @@ reporter.save_model_to_file(model, lb)
 
 print('[INFO] emailing result...')
 
-try:
-    results_dispatch(mias_data_set.name, 'resnet')
-except smtplib.SMTPAuthenticationError:
-    print('[ERROR] Email credentials could not be authenticated')
+results_dispatch(mias_data_set.name, 'resnet')
 
 print('[END] Finishing script...\n')
