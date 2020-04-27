@@ -9,8 +9,7 @@ from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.GConstants import IMAGE_DIMS
-from metrics.MetricsReporter import plot_confusion_matrix,plot_network_metrics, plot_roc, \
-    save_model_to_file
+from metrics.MetricsReporter import MetricReporter
 from model.DataSet import ddsm_data_set
 from model.Hyperparameters import hyperparameters
 from networks.VggNet16 import SmallVGGNet
@@ -66,22 +65,23 @@ print('[INFO] generating metrics...')
 
 generate_script_report(H, test_y, predictions, ddsm_data_set, hyperparameters)
 
+reporter = MetricReporter(ddsm_data_set.name, 'vggnet')
 cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
-plot_confusion_matrix(cm1, classes=ddsm_data_set.class_names,
+reporter.plot_confusion_matrix(cm1, classes=ddsm_data_set.class_names,
                       title='Confusion matrix, without normalization')
 
-plot_roc(ddsm_data_set.class_names, test_y, predictions)
+reporter.plot_roc(ddsm_data_set.class_names, test_y, predictions)
 
-plot_network_metrics(hyperparameters.epochs, H, "VggNet")
+reporter.plot_network_metrics(hyperparameters.epochs, H, "VggNet")
 
 print('[INFO] serializing network and label binarizer...')
 
-save_model_to_file(model, lb)
+reporter.save_model_to_file(model, lb)
 
-print('[INFO] emailing result...')
+reporter.print('[INFO] emailing result...')
 
 try:
-    results_dispatch('ddsm', "vggnet")
+    results_dispatch(ddsm_data_set.name, "vggnet")
 except smtplib.SMTPAuthenticationError:
     print('[ERROR] Email credentials could not be authenticated')
 

@@ -1,12 +1,15 @@
+import os
+
+
+def create_required_directories():
+    os.makedirs(output_dir, 0o777, True)
+    os.makedirs(output_dir + 'figures/', 0o777, True)
+    os.makedirs(output_dir + 'model/', 0o777, True)
+
+
 IMAGE_DIMS = (8, 8, 3)
 
-output_dir = 'output/generated-data/'
+output_dir = 'output/'
 
-filename_prefix = output_dir + "ddsm" + '_' + "vggnet" + "_"
-
-TERMINAL_OUTPUT_TXT = filename_prefix + 'terminal_output.txt'
-NETWORK_METRIC_PLOT = filename_prefix + 'network_metric_plot.png'
-ROC_PLOT = filename_prefix + 'roc_plot.png'
-CONFUSION_MATRIX_PLOT = filename_prefix + 'confusion_matrix_plot.png'
-
-MODEL_DUMP = 'bin/model-dump/' + 'confusion_matrix_plot.png'
+FIGURE_OUTPUT = output_dir + 'figures/'
+MODEL_OUTPUT = output_dir + 'model/'

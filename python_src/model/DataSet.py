@@ -38,7 +38,7 @@ class DataSetNames(Enum):
 
 def create_ddsm_dataset_singleton():
     return DataSet(
-        DataSetNames.DDSM,
+        DataSetNames.DDSM.name,
         ROOT_DIRECTORY + PATH_TO_DDSM,
         ROOT_DIRECTORY + PATH_TO_DDSM + '/ddsm.csv',
         1,
@@ -49,7 +49,7 @@ def create_ddsm_dataset_singleton():
 
 def create_mias_dataset_singleton():
     return DataSet(
-        DataSetNames.MIAS,
+        DataSetNames.MIAS.name,
         ROOT_DIRECTORY + PATH_TO_MIAS,
         ROOT_DIRECTORY + PATH_TO_MIAS + '/info.csv',
         3,

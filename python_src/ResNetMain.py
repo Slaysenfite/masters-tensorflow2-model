@@ -10,9 +10,8 @@ from sklearn.preprocessing import LabelBinarizer
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-from configurations.GConstants import IMAGE_DIMS
-from metrics.MetricsReporter import plot_confusion_matrix, plot_network_metrics, plot_roc, \
-    save_model_to_file
+from configurations.GConstants import IMAGE_DIMS, create_required_directories
+from metrics.MetricsReporter import MetricReporter
 from model.DataSet import mias_data_set
 from model.Hyperparameters import hyperparameters
 from networks.ResNet import resnet50
@@ -25,6 +24,9 @@ print('Tensorflow version: {}\n'.format(tf.__version__))
 print('[BEGIN] Start script...\n')
 print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
+
+print('[INFO] Creating required directories...')
+create_required_directories()
 
 # initialize the data and labels
 data = []
@@ -66,24 +68,25 @@ predictions = model.predict(test_x, batch_size=32)
 
 print('[INFO] generating metrics...')
 
-generate_script_report(H, test_y, predictions, mias_data_set, hyperparameters)
+generate_script_report(H, test_y, predictions, mias_data_set, hyperparameters, 'resnet')
 
+reporter = MetricReporter(mias_data_set.name, 'resnet')
 cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
-plot_confusion_matrix(cm1, classes=mias_data_set.class_names,
+reporter.plot_confusion_matrix(cm1, classes=mias_data_set.class_names,
                       title='Confusion matrix, without normalization')
 
-plot_roc(mias_data_set.class_names, test_y, predictions)
+reporter.plot_roc(mias_data_set.class_names, test_y, predictions)
 
-plot_network_metrics(hyperparameters.epochs, H, 'ResNet')
+reporter.plot_network_metrics(hyperparameters.epochs, H, 'ResNet')
 
 print('[INFO] serializing network and label binarizer...')
 
-save_model_to_file(model, lb)
+reporter.save_model_to_file(model, lb)
 
 print('[INFO] emailing result...')
 
 try:
-    results_dispatch('mias', 'resnet')
+    results_dispatch(mias_data_set.name, 'resnet')
 except smtplib.SMTPAuthenticationError:
     print('[ERROR] Email credentials could not be authenticated')
 
