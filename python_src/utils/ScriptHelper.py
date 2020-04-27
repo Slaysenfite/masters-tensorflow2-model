@@ -1,5 +1,5 @@
 from metrics.MetricResults import MetricResult
-from configurations.GlobalConstants import output_dir
+from configurations.GConstants import output_dir
 
 
 def generate_script_report(H, test_y, predictions, data_set, hyperparameters):

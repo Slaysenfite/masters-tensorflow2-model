@@ -8,7 +8,7 @@ from sklearn.preprocessing import LabelBinarizer
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-from configurations.GlobalConstants import IMAGE_DIMS
+from configurations.GConstants import IMAGE_DIMS
 from metrics.MetricsReporter import plot_confusion_matrix, generate_metric_report, plot_network_metrics, plot_roc, \
     save_model_to_file
 from model.DataSet import ddsm_data_set

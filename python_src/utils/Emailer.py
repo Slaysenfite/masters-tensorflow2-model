@@ -6,7 +6,7 @@ from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from configurations.GlobalConstants import output_dir
+from configurations.GConstants import output_dir
 
 port = 465  # For SSL
 subject = "Your deep learning results are ready for collection"
@@ -77,8 +77,3 @@ def results_dispatch(data_set, architecture):
     file_list = populate_file_list(output_dir, data_set + '_' + architecture)
     message = create_message_with_attachments(file_list)
     send_email(message)
-
-try:
-    results_dispatch('ddsm', "vggnet")
-except smtplib.SMTPAuthenticationError:
-    print('[ERROR] Email credentials could not be authenticated')

@@ -7,7 +7,7 @@ import numpy as np
 from scipy import interp
 from sklearn.metrics import roc_curve, auc
 
-import configurations.GlobalConstants as constants
+import configurations.GConstants as constants
 
 
 def plot_confusion_matrix(cm, classes,
