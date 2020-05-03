@@ -1,7 +1,7 @@
 import warnings
 
-from tensorflow.keras import backend as K
-from tensorflow.keras.models import Sequential
+from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import Conv2D, Activation, BatchNormalization, MaxPooling2D, Dropout, Flatten, \
     Dense
 

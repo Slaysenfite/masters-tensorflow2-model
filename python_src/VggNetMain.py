@@ -5,8 +5,8 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.keras.optimizers import SGD
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.python.keras.optimizers import SGD
+from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.GConstants import IMAGE_DIMS
 from metrics.MetricsReporter import MetricReporter
@@ -14,7 +14,7 @@ from model.DataSet import ddsm_data_set
 from model.Hyperparameters import hyperparameters
 from networks.VggNet16 import SmallVGGNet
 from utils.Emailer import results_dispatch
-from utils.ImageLoader import load_images
+from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import generate_script_report
 
 print('Python version: {}'.format(sys.version))
@@ -28,7 +28,7 @@ data = []
 labels = []
 
 print('[INFO] Loading images...')
-data, labels = load_images(data, labels, ddsm_data_set, IMAGE_DIMS)
+data, labels = load_rgb_images(data, labels, ddsm_data_set, IMAGE_DIMS)
 
 # partition the data into training and testing splits using 70% of
 # the data for training and the remaining 30% for testing
@@ -65,7 +65,7 @@ print('[INFO] generating metrics...')
 
 generate_script_report(H, test_y, predictions, ddsm_data_set, hyperparameters)
 
-reporter = MetricReporter(ddsm_data_set.name, 'vggnet')
+reporter = MetricReporter(ddsm_data_set.name, 'vggpython.net')
 cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
 reporter.plot_confusion_matrix(cm1, classes=ddsm_data_set.class_names,
                                title='Confusion matrix, without normalization')

@@ -1,6 +1,3 @@
-
-
-import smtplib
 import sys
 
 import tensorflow as tf
@@ -12,11 +9,11 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
-from model.DataSet import mias_data_set
+from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters
 from networks.ResNet import resnet50
 from utils.Emailer import results_dispatch
-from utils.ImageLoader import load_images
+from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import generate_script_report
 
 print('Python version: {}'.format(sys.version))
@@ -33,7 +30,7 @@ data = []
 labels = []
 
 print('[INFO] Loading images...')
-data, labels = load_images(data, labels, mias_data_set, IMAGE_DIMS)
+data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
 
 # partition the data into training and testing splits using 70% of
 # the data for training and the remaining 30% for testing
@@ -68,14 +65,14 @@ predictions = model.predict(test_x, batch_size=32)
 
 print('[INFO] generating metrics...')
 
-generate_script_report(H, test_y, predictions, mias_data_set, hyperparameters, 'resnet')
+generate_script_report(H, test_y, predictions, data_set, hyperparameters, 'resnet')
 
-reporter = MetricReporter(mias_data_set.name, 'resnet')
+reporter = MetricReporter(data_set.name, 'resnet')
 cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
-reporter.plot_confusion_matrix(cm1, classes=mias_data_set.class_names,
-                      title='Confusion matrix, without normalization')
+reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
+                               title='Confusion matrix, without normalization')
 
-reporter.plot_roc(mias_data_set.class_names, test_y, predictions)
+reporter.plot_roc(data_set.class_names, test_y, predictions)
 
 reporter.plot_network_metrics(hyperparameters.epochs, H, 'ResNet')
 
@@ -85,6 +82,6 @@ reporter.save_model_to_file(model, lb)
 
 print('[INFO] emailing result...')
 
-results_dispatch(mias_data_set.name, 'resnet')
+results_dispatch(data_set.name, 'resnet')
 
 print('[END] Finishing script...\n')

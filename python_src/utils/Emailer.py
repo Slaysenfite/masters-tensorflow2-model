@@ -81,7 +81,7 @@ def results_dispatch(data_set, architecture):
     try:
         send_email(message)
     except smtplib.SMTPConnectError:
-        print('[ERROR] Email credentials could not be authenticated')
+        print('[ERROR] Could not establish SMTP connection')
     except smtplib.SMTPAuthenticationError:
         print('[ERROR] Email credentials could not be authenticated')
 

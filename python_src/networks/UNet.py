@@ -1,31 +1,29 @@
-import warnings
+"""
+Based on:
 
-import keras.layers as layers
-import keras.models as models
-from keras.models import Sequential
+https://github.com/zizhaozhang/unet-tensorflow-keras/blob/master/model.py
 
-warnings.filterwarnings('ignore')
+"""
 
-
-def woohoo(width, height, depth, classes):
-    model = Sequential()
-    inputShape = (height, width, depth)
-    chanDim = -1
+from tensorflow.python.keras import backend as K, Input
+from tensorflow.python.keras.layers import Conv2D, Activation, BatchNormalization, MaxPooling2D, Flatten, \
+    Dense, ZeroPadding2D, concatenate, Cropping2D, UpSampling2D
+from tensorflow.python.keras.models import Model
 
 
-# Convert to keras version
 class UNet:
+
     @staticmethod
     def get_crop_shape(target, refer):
         # width, the 3rd dimension
-        cw = (target.get_shape()[2] - refer.get_shape()[2]).value
+        cw = (target.get_shape()[2] - refer.get_shape()[2])
         assert (cw >= 0)
         if cw % 2 != 0:
             cw1, cw2 = int(cw / 2), int(cw / 2) + 1
         else:
             cw1, cw2 = int(cw / 2), int(cw / 2)
         # height, the 2nd dimension
-        ch = (target.get_shape()[1] - refer.get_shape()[1]).value
+        ch = (target.get_shape()[1] - refer.get_shape()[1])
         assert (ch >= 0)
         if ch % 2 != 0:
             ch1, ch2 = int(ch / 2), int(ch / 2) + 1
@@ -36,61 +34,78 @@ class UNet:
 
     @staticmethod
     def build(img_shape, classes):
+        # initialize the model along with the input shape to be
+        # "channels last" and the channels dimension itself
+        input_shape = img_shape
+        chan_dim = -1
+
+        # if we are using "channels first", update the input shape
+        # and channels dimension
+        if K.image_data_format() == "channels_first":
+            input_shape = (img_shape[2], img_shape[0], img_shape[1])
+            chan_dim = 1
 
         concat_axis = 3
-        inputs = layers.Input(shape=img_shape)
+        inputs = Input(shape=input_shape)
 
-        conv1 = layers.Conv2D(32, (3, 3), activation='relu', padding='same', name='conv1_1')(inputs)
-        conv1 = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(conv1)
-        pool1 = layers.MaxPooling2D(pool_size=(2, 2))(conv1)
-        conv2 = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(pool1)
-        conv2 = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(conv2)
-        pool2 = layers.MaxPooling2D(pool_size=(2, 2))(conv2)
+        conv1 = Conv2D(32, (3, 3), activation='relu', padding='same', name='conv1_1')(inputs)
+        conv1 = Conv2D(32, (3, 3), activation='relu', padding='same')(conv1)
+        pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+        conv2 = Conv2D(64, (3, 3), activation='relu', padding='same')(pool1)
+        conv2 = Conv2D(64, (3, 3), activation='relu', padding='same')(conv2)
+        pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
 
-        conv3 = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(pool2)
-        conv3 = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(conv3)
-        pool3 = layers.MaxPooling2D(pool_size=(2, 2))(conv3)
+        conv3 = Conv2D(128, (3, 3), activation='relu', padding='same')(pool2)
+        conv3 = Conv2D(128, (3, 3), activation='relu', padding='same')(conv3)
+        pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
 
-        conv4 = layers.Conv2D(256, (3, 3), activation='relu', padding='same')(pool3)
-        conv4 = layers.Conv2D(256, (3, 3), activation='relu', padding='same')(conv4)
-        pool4 = layers.MaxPooling2D(pool_size=(2, 2))(conv4)
+        conv4 = Conv2D(256, (3, 3), activation='relu', padding='same')(pool3)
+        conv4 = Conv2D(256, (3, 3), activation='relu', padding='same')(conv4)
+        pool4 = MaxPooling2D(pool_size=(2, 2))(conv4)
 
-        conv5 = layers.Conv2D(512, (3, 3), activation='relu', padding='same')(pool4)
-        conv5 = layers.Conv2D(512, (3, 3), activation='relu', padding='same')(conv5)
+        conv5 = Conv2D(512, (3, 3), activation='relu', padding='same')(pool4)
+        conv5 = Conv2D(512, (3, 3), activation='relu', padding='same')(conv5)
 
-        up_conv5 = layers.UpSampling2D(size=(2, 2))(conv5)
+        up_conv5 = UpSampling2D(size=(2, 2))(conv5)
         ch, cw = UNet.get_crop_shape(conv4, up_conv5)
-        crop_conv4 = layers.Cropping2D(cropping=(ch, cw))(conv4)
-        up6 = layers.concatenate([up_conv5, crop_conv4], axis=concat_axis)
-        conv6 = layers.Conv2D(256, (3, 3), activation='relu', padding='same')(up6)
-        conv6 = layers.Conv2D(256, (3, 3), activation='relu', padding='same')(conv6)
+        crop_conv4 = Cropping2D(cropping=(ch, cw))(conv4)
+        up6 = concatenate([up_conv5, crop_conv4], axis=concat_axis)
+        conv6 = Conv2D(256, (3, 3), activation='relu', padding='same')(up6)
+        conv6 = Conv2D(256, (3, 3), activation='relu', padding='same')(conv6)
 
-        up_conv6 = layers.UpSampling2D(size=(2, 2))(conv6)
+        up_conv6 = UpSampling2D(size=(2, 2))(conv6)
         ch, cw = UNet.get_crop_shape(conv3, up_conv6)
-        crop_conv3 = layers.Cropping2D(cropping=(ch, cw))(conv3)
-        up7 = layers.concatenate([up_conv6, crop_conv3], axis=concat_axis)
-        conv7 = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(up7)
-        conv7 = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(conv7)
+        crop_conv3 = Cropping2D(cropping=(ch, cw))(conv3)
+        up7 = concatenate([up_conv6, crop_conv3], axis=concat_axis)
+        conv7 = Conv2D(128, (3, 3), activation='relu', padding='same')(up7)
+        conv7 = Conv2D(128, (3, 3), activation='relu', padding='same')(conv7)
 
-        up_conv7 = layers.UpSampling2D(size=(2, 2))(conv7)
+        up_conv7 = UpSampling2D(size=(2, 2))(conv7)
         ch, cw = UNet.get_crop_shape(conv2, up_conv7)
-        crop_conv2 = layers.Cropping2D(cropping=(ch, cw))(conv2)
-        up8 = layers.concatenate([up_conv7, crop_conv2], axis=concat_axis)
-        conv8 = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(up8)
-        conv8 = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(conv8)
+        crop_conv2 = Cropping2D(cropping=(ch, cw))(conv2)
+        up8 = concatenate([up_conv7, crop_conv2], axis=concat_axis)
+        conv8 = Conv2D(64, (3, 3), activation='relu', padding='same')(up8)
+        conv8 = Conv2D(64, (3, 3), activation='relu', padding='same')(conv8)
 
-        up_conv8 = layers.UpSampling2D(size=(2, 2))(conv8)
+        up_conv8 = UpSampling2D(size=(2, 2))(conv8)
         ch, cw = UNet.get_crop_shape(conv1, up_conv8)
-        crop_conv1 = layers.Cropping2D(cropping=(ch, cw))(conv1)
-        up9 = layers.concatenate([up_conv8, crop_conv1], axis=concat_axis)
-        conv9 = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(up9)
-        conv9 = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(conv9)
+        crop_conv1 = Cropping2D(cropping=(ch, cw))(conv1)
+        up9 = concatenate([up_conv8, crop_conv1], axis=concat_axis)
+        conv9 = Conv2D(32, (3, 3), activation='relu', padding='same')(up9)
+        conv9 = Conv2D(32, (3, 3), activation='relu', padding='same')(conv9)
 
         ch, cw = UNet.get_crop_shape(inputs, conv9)
-        conv9 = layers.ZeroPadding2D(padding=((ch[0], ch[1]), (cw[0], cw[1])))(conv9)
-        conv10 = layers.Conv2D(classes, (1, 1))(conv9)
-        conv11 = layers.core.Activation('softmax')(conv10)
+        conv9 = ZeroPadding2D(padding=((ch[0], ch[1]), (cw[0], cw[1])))(conv9)
+        conv10 = Conv2D(classes, (1, 1))(conv9)
 
-        model = models.Model(inputs=inputs, outputs=conv11)
+        flatten = Flatten()(conv10)
+        fc = (Dense(512))(flatten)
+        act = Activation('relu')(fc)
+        batch_norm2 = BatchNormalization(axis=chan_dim)(act)
+
+        dense = Dense(classes)(batch_norm2)
+        final_layer = Activation("softmax")(dense)
+
+        model = Model(inputs=inputs, outputs=final_layer)
 
         return model
