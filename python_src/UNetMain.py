@@ -9,7 +9,7 @@ from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
-from model.DataSet import mias_data_set as data_set
+from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters
 from networks.UNet import UNet
 from utils.Emailer import results_dispatch
@@ -24,8 +24,6 @@ print(hyperparameters.report_hyperparameters())
 
 print('[INFO] Creating required directories...')
 create_required_directories()
-
-model = UNet.build([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], 3)
 
 # initialize the data and labels
 data = []
@@ -47,7 +45,7 @@ test_y = lb.transform(test_y)
 print('[INFO] Augmenting data set')
 aug = ImageDataGenerator()
 
-#model = UNet.build([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(lb.classes_))
+model = UNet.build([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(lb.classes_))
 
 print('[INFO] Model summary...')
 model.summary()
