@@ -1,84 +1,178 @@
-import mxnet as mx
+"""
+https://androidkt.com/resnet-implementation-in-tensorflow-keras/
+"""
+from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.layers import Input, Activation, BatchNormalization, Dense, add, GlobalAveragePooling2D, \
+    ZeroPadding2D, Conv2D
+from tensorflow.python.keras.layers.core import Lambda
+from tensorflow.python.keras.layers.pooling import MaxPooling2D
+from tensorflow.python.keras.models import Model
+from tensorflow.python.keras.regularizers import l2
+
+L2_WEIGHT_DECAY = 0.0001
 
 
-class MxResNet:
+def identity_block(input_tensor, kernel_size, filters):
+    """The identity block is the block that has no conv layer at shortcut.
+    # Arguments
+        input_tensor: input tensor
+        kernel_size: default 3, the kernel size of
+            middle conv layer at main path
+        filters: list of integers, the filters of 3 conv layer at main path
+    """
+    filters1, filters2, filters3 = filters
+    if K.image_data_format() == 'channels_last':
+        bn_axis = 3
+    else:
+        bn_axis = 1
 
-    @staticmethod
-    def residual_module(data, K, stride, red=False, bnEps=2e-5,
-                        bnMom=0.9):
-        # the shortcut branch of the ResNet module should be
-        # initialized as the input (identity) data
-        shortcut = data
+    x = Conv2D(filters1, (1, 1), use_bias=False,
+               kernel_initializer='he_normal',
+               kernel_regularizer=l2(L2_WEIGHT_DECAY))(input_tensor)
 
-        # the first block of the ResNet module are 1x1 CONVs
-        bn1 = mx.sym.BatchNorm(data=data, fix_gamma=False,
-                               eps=bnEps, momentum=bnMom)
-        act1 = mx.sym.Activation(data=bn1, act_type="relu")
-        conv1 = mx.sym.Convolution(data=act1, pad=(0, 0), kernel=(1, 1), stride=(1, 1), num_filter=int(K * 0.25),
-                                   no_bias=True)
-        # the second block of the ResNet module are 3x3 CONVs
-        bn2 = mx.sym.BatchNorm(data=conv1, fix_gamma=False,
-                               eps=bnEps, momentum=bnMom)
-        act2 = mx.sym.Activation(data=bn2, act_type="relu")
-        conv2 = mx.sym.Convolution(data=act2, pad=(1, 1),
-                                   kernel=(3, 3), stride=stride, num_filter=int(K * 0.25),
-                                   no_bias=True)
-        # the third block of the ResNet module is another set of 1x1
-        # CONVs
-        bn3 = mx.sym.BatchNorm(data=conv2, fix_gamma=False,
-                               eps=bnEps, momentum=bnMom)
-        act3 = mx.sym.Activation(data=bn3, act_type="relu")
-        conv3 = mx.sym.Convolution(data=act3, pad=(0, 0),
-                                   kernel=(1, 1), stride=(1, 1), num_filter=K, no_bias=True)
-        # if we are to reduce the spatial size, apply a CONV layer
-        # to the shortcut
-        if red:
-            shortcut = mx.sym.Convolution(data=act1, pad=(0, 0),
-                                          kernel=(1, 1), stride=stride, num_filter=K,
-                                          no_bias=True)
+    x = BatchNormalization(axis=bn_axis, )(x)
+    x = Activation('relu')(x)
 
-        # add together the shortcut and the final CONV
-        add = conv3 + shortcut
+    x = Conv2D(filters2, kernel_size,
+               padding='same', use_bias=False,
+               kernel_initializer='he_normal',
+               kernel_regularizer=l2(L2_WEIGHT_DECAY))(x)
 
-        return add
+    x = BatchNormalization(axis=bn_axis)(x)
 
-    @staticmethod
-    def build(classes, stages, filters, bnEps=2e-5, bnMom=0.9):
+    x = Activation('relu')(x)
 
-        # data input
-        data = mx.sym.Variable("data")
-        # Block #1: BN => CONV => ACT => POOL, then initialize the
-        # "body" of the network
-        bn1_1 = mx.sym.BatchNorm(data=data, fix_gamma=True,
-                                 eps=bnEps, momentum=bnMom)
-        conv1_1 = mx.sym.Convolution(data=bn1_1, pad=(3, 3),
-                                     kernel=(7, 7), stride=(2, 2), num_filter=filters[0],
-                                     no_bias=True)
-        bn1_2 = mx.sym.BatchNorm(data=conv1_1, fix_gamma=False,
-                                 eps=bnEps, momentum=bnMom)
-        act1_2 = mx.sym.Activation(data=bn1_2, act_type="relu")
-        pool1 = mx.sym.Pooling(data=act1_2, pool_type="max",
-                               pad=(1, 1), kernel=(3, 3), stride=(2, 2))
-        body = pool1
+    x = Conv2D(filters3, (1, 1), use_bias=False,
+               kernel_initializer='he_normal',
+               kernel_regularizer=l2(L2_WEIGHT_DECAY))(x)
 
-        # loop over the number of stages
-        for i in range(0, len(stages)):
-            # initialize the stride, then apply a residual module
-            # used to reduce the spatial size of the input volume
-            stride = (1, 1) if i == 0 else (2, 2)
-            body = MxResNet.residual_module(body, filters[i + 1],
-                                            stride, red=True, bnEps=bnEps, bnMom=bnMom)
-        # loop over the number of layers in the stage
-            for j in range(0, stages[i] - 1):
-                # apply a ResNet module
-                body = MxResNet.residual_module(body, filters[i + 1],
-                                                (1, 1), bnEps=bnEps, bnMom=bnMom)
-        # apply BN => ACT => POOL
-        bn2_1 = mx.sym.BatchNorm(data=body, fix_gamma=False,
-                                 eps=bnEps, momentum=bnMom)
-        act2_1 = mx.sym.Activation(data=bn2_1, act_type="relu")
-        pool2 = mx.sym.Pooling(data=act2_1, pool_type="avg",
-                               global_pool=True, kernel=(7, 7))
-        # softmax classifier
-        flatten = mx.sym.Flatten(data=pool2)
-        fc1 = mx.sym.FullyConnected(data=flatten, num_hidden=classes)
+    x = BatchNormalization(axis=bn_axis)(x)
+
+    x = add([x, input_tensor])
+    x = Activation('relu')(x)
+    return x
+
+
+def conv_block(input_tensor, kernel_size, filters, strides=(2, 2)):
+    """A block that has a conv layer at shortcut.
+    # Arguments
+        input_tensor: input tensor
+        kernel_size: default 3, the kernel size of
+            middle conv layer at main path
+        filters: list of integers, the filters of 3 conv layer at main path
+        stage: integer, current stage label, used for generating layer names
+    # Returns
+        Output tensor for the block.
+    Note that from stage 3,
+    the second conv layer at main path is with strides=(2, 2)
+    And the shortcut should have strides=(2, 2) as well
+    """
+
+    filters1, filters2, filters3 = filters
+
+    if K.image_data_format() == 'channels_last':
+        bn_axis = 3
+    else:
+        bn_axis = 1
+
+    x = Conv2D(filters1, (1, 1), use_bias=False,
+               kernel_initializer='he_normal',
+               kernel_regularizer=l2(L2_WEIGHT_DECAY))(input_tensor)
+    x = BatchNormalization(axis=bn_axis)(x)
+    x = Activation('relu')(x)
+
+    x = Conv2D(filters2, kernel_size, strides=strides, padding='same',
+               use_bias=False, kernel_initializer='he_normal',
+               kernel_regularizer=l2(L2_WEIGHT_DECAY))(x)
+    x = BatchNormalization(axis=bn_axis)(x)
+    x = Activation('relu')(x)
+
+    x = Conv2D(filters3, (1, 1), use_bias=False,
+               kernel_initializer='he_normal',
+               kernel_regularizer=l2(L2_WEIGHT_DECAY))(x)
+    x = BatchNormalization(axis=bn_axis)(x)
+
+    shortcut = Conv2D(filters3, (1, 1), strides=strides, use_bias=False,
+                      kernel_initializer='he_normal',
+                      kernel_regularizer=l2(L2_WEIGHT_DECAY))(input_tensor)
+    shortcut = BatchNormalization(axis=bn_axis)(shortcut)
+
+    x = add([x, shortcut])
+    x = Activation('relu')(x)
+    return x
+
+
+def resnet50(input_shape, num_classes):
+    img_input = Input(shape=input_shape)
+
+    if K.image_data_format() == 'channels_first':
+        x = Lambda(lambda x: K.permute_dimensions(x, (0, 3, 1, 2)),
+                   name='transpose')(img_input)
+        bn_axis = 1
+    else:  # channels_last
+        x = img_input
+        bn_axis = 3
+
+    # Conv1 (7x7,64,stride=2)
+    x = ZeroPadding2D(padding=(3, 3))(x)
+
+    x = Conv2D(64, (7, 7),
+               strides=(2, 2),
+               padding='valid', use_bias=False,
+               kernel_initializer='he_normal',
+               kernel_regularizer=l2(L2_WEIGHT_DECAY))(x)
+    x = BatchNormalization(axis=bn_axis)(x)
+    x = Activation('relu')(x)
+    x = ZeroPadding2D(padding=(1, 1))(x)
+
+    # 3x3 max pool,stride=2
+    x = MaxPooling2D((3, 3), strides=(2, 2))(x)
+
+    # Conv2_x
+
+    # 1×1, 64
+    # 3×3, 64
+    # 1×1, 256
+
+    x = conv_block(x, 3, [64, 64, 256], strides=(1, 1))
+    x = identity_block(x, 3, [64, 64, 256])
+    x = identity_block(x, 3, [64, 64, 256])
+
+    # Conv3_x
+    #
+    # 1×1, 128
+    # 3×3, 128
+    # 1×1, 512
+
+    x = conv_block(x, 3, [128, 128, 512])
+    x = identity_block(x, 3, [128, 128, 512])
+    x = identity_block(x, 3, [128, 128, 512])
+    x = identity_block(x, 3, [128, 128, 512])
+
+    # Conv4_x
+    # 1×1, 256
+    # 3×3, 256
+    # 1×1, 1024
+    x = conv_block(x, 3, [256, 256, 1024])
+    x = identity_block(x, 3, [256, 256, 1024])
+    x = identity_block(x, 3, [256, 256, 1024])
+    x = identity_block(x, 3, [256, 256, 1024])
+    x = identity_block(x, 3, [256, 256, 1024])
+    x = identity_block(x, 3, [256, 256, 1024])
+
+    # 1×1, 512
+    # 3×3, 512
+    # 1×1, 2048
+    x = conv_block(x, 3, [512, 512, 2048])
+    x = identity_block(x, 3, [512, 512, 2048])
+    x = identity_block(x, 3, [512, 512, 2048])
+
+    # average pool, 1000-d fc, softmax
+    x = GlobalAveragePooling2D()(x)
+    x = Dense(
+        num_classes, activation='softmax',
+        kernel_regularizer=l2(L2_WEIGHT_DECAY),
+        bias_regularizer=l2(L2_WEIGHT_DECAY))(x)
+
+    # Create model.
+    return Model(img_input, x, name='resnet50')

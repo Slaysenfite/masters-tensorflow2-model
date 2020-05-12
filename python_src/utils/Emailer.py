@@ -1,3 +1,4 @@
+import datetime
 import os
 import smtplib
 import ssl
@@ -6,11 +7,11 @@ from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from configurations.GlobalConstants import output_dir
+from configurations.GConstants import output_dir
 
 port = 465  # For SSL
 subject = "Your deep learning results are ready for collection"
-body = "Whoopsie, these results suck"
+body = "Results: " + str(datetime.datetime.now())
 smtp_server = 'smtp.gmail.com'
 sender_email = 'weaselspythonserver@gmail.com'  # Enter your address
 receiver_email = "215029263@student.uj.ac.za"  # Enter receiver address
@@ -28,14 +29,14 @@ def open_as_binary_file(filename):
 
 def populate_file_list(directory, qualifier):
     file_list = []
-    for filename in os.listdir(directory):
-        if filename.endswith('.png') and filename.startswith(qualifier):
-            file_list.append(directory + filename)
-        elif filename.endswith('.txt') and filename.startswith(qualifier):
-            file_list.append(directory + filename)
-            continue
-        else:
-            continue
+    for root, dirs, files in os.walk(directory):
+        for filename in files:
+            if filename.endswith('.png') and filename.startswith(qualifier):
+                file_list.append(os.path.join(root, filename))
+            elif filename.endswith('.txt') and filename.startswith(qualifier):
+                file_list.append(os.path.join(root, filename))
+            else:
+                continue
     return file_list
 
 
@@ -75,6 +76,12 @@ def send_email(text):
 
 
 def results_dispatch(data_set, architecture):
-    file_list = populate_file_list('' + output_dir, data_set + '_' + architecture)
+    file_list = populate_file_list(output_dir, architecture + '_' + data_set)
     message = create_message_with_attachments(file_list)
-    send_email(message)
+    try:
+        send_email(message)
+    except smtplib.SMTPConnectError:
+        print('[ERROR] Could not establish SMTP connection')
+    except smtplib.SMTPAuthenticationError:
+        print('[ERROR] Email credentials could not be authenticated')
+

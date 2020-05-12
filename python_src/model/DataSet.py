@@ -31,13 +31,14 @@ class DataSet:
 
 
 class DataSetNames(Enum):
-    DDSM = "Digital Database for Screening Mammography"
-    InBreast = "IN"
+    DDSM = 'Digital Database for Screening Mammography'
+    MIAS = 'Mammographic Image Analysis Homepage'
+    InBreast = 'IN'
 
 
 def create_ddsm_dataset_singleton():
     return DataSet(
-        DataSetNames.DDSM,
+        DataSetNames.DDSM.name,
         ROOT_DIRECTORY + PATH_TO_DDSM,
         ROOT_DIRECTORY + PATH_TO_DDSM + '/ddsm.csv',
         1,
@@ -46,4 +47,15 @@ def create_ddsm_dataset_singleton():
     )
 
 
+def create_mias_dataset_singleton():
+    return DataSet(
+        DataSetNames.MIAS.name,
+        ROOT_DIRECTORY + PATH_TO_MIAS,
+        ROOT_DIRECTORY + PATH_TO_MIAS + '/info.csv',
+        3,
+        ddsm_label_map,
+        ddsm_class_names
+    )
+
 ddsm_data_set = create_ddsm_dataset_singleton()
+mias_data_set = create_mias_dataset_singleton()
