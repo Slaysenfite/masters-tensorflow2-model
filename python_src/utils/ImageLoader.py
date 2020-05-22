@@ -15,7 +15,7 @@ def load_rgb_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
     i = 0
     # loop over the input images
     for image_path in image_paths:
-        print(image_path)
+        #print(image_path)
         print_progress_bar(i + 1, len(image_paths), prefix=' Progress:', suffix='Complete')
 
         image = cv2.imread(image_path)

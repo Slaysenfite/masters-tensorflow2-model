@@ -5,7 +5,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.keras.optimizers import SGD
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
@@ -14,7 +14,7 @@ from model.Hyperparameters import hyperparameters
 from networks.ResNet import resnet50
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
-from utils.ScriptHelper import generate_script_report, read_cmd_line_args
+from utils.ScriptHelper import generate_script_report, read_cmd_line_args, gen_ddsm_metadata
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
@@ -23,6 +23,7 @@ print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
 
 read_cmd_line_args(data_set)
+gen_ddsm_metadata(data_set.root_path)
 
 print('[INFO] Creating required directories...')
 create_required_directories()
@@ -49,14 +50,14 @@ aug = ImageDataGenerator()
 
 model = resnet50(IMAGE_DIMS, len(lb.classes_))
 
-print('[INFO] Model summary...')
-model.summary()
+# print('[INFO] Model summary...')
+# model.summary()
 
 opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 # train the network
-H = model.fit_generator(aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size),
+H = model.fit(aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size),
                         validation_data=(test_x, test_y), steps_per_epoch=len(train_x) // hyperparameters.batch_size,
                         epochs=hyperparameters.epochs)
 
