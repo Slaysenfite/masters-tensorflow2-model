@@ -23,7 +23,6 @@ print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
 
 read_cmd_line_args(data_set)
-gen_ddsm_metadata(data_set.root_path)
 
 print('[INFO] Creating required directories...')
 create_required_directories()
