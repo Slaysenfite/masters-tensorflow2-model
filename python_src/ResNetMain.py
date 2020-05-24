@@ -14,15 +14,14 @@ from model.Hyperparameters import hyperparameters
 from networks.ResNet import resnet50
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
-from utils.ScriptHelper import generate_script_report, read_cmd_line_args, gen_ddsm_metadata
+from utils.ScriptHelper import generate_script_report, read_cmd_line_args
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
 print('[BEGIN] Start script...\n')
+read_cmd_line_args(data_set, hyperparameters, IMAGE_DIMS)
 print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
-
-read_cmd_line_args(data_set)
 
 print('[INFO] Creating required directories...')
 create_required_directories()

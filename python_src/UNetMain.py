@@ -14,11 +14,12 @@ from model.Hyperparameters import hyperparameters
 from networks.UNet import UNet
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_greyscale_images
-from utils.ScriptHelper import generate_script_report
+from utils.ScriptHelper import generate_script_report, read_cmd_line_args
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
 print('[BEGIN] Start script...\n')
+read_cmd_line_args(data_set, hyperparameters, IMAGE_DIMS)
 print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
 

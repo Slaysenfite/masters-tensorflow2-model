@@ -1,9 +1,7 @@
-import os
-from metrics.MetricResults import MetricResult
-from configurations.GConstants import output_dir
 from argparse import ArgumentParser
 
-
+from configurations.GConstants import output_dir
+from metrics.MetricResults import MetricResult
 
 
 def generate_script_report(H, test_y, predictions, data_set, hyperparameters, model_name):
@@ -15,33 +13,17 @@ def generate_script_report(H, test_y, predictions, data_set, hyperparameters, mo
     print(metric_result.report_result())
 
 
-def read_cmd_line_args(dataset):
+def read_cmd_line_args(dataset, hyperparameters, image_dims):
     parser = ArgumentParser(description='Enter the path to the data set')
     parser.add_argument('--data_set_path', type=str)
+    parser.add_argument('--set_image_dims', type=int)
+    parser.add_argument('--set_num_epochs', type=int)
     args = parser.parse_args()
     if (args.data_set_path != None):
         dataset.root_path = args.data_set_path
         dataset.metadata_path = args.data_set_path + '/ddsm.csv'
-
-
-
-def gen_ddsm_metadata(rootDir):
-    csv_path = rootDir + '/ddsm.csv'
-    append_to_ddsm_csv(csv_path, 'image,label')
-    for dirName, subdirList, fileList in os.walk(rootDir):
-        for fname in fileList:
-            if 'png' in fname:
-                if 'benign' in dirName:
-                    append_to_ddsm_csv(csv_path, fname + ',B')
-                elif 'cancer' in dirName:
-                    append_to_ddsm_csv(csv_path, fname + ',M')
-                elif 'normal' in dirName:
-                    append_to_ddsm_csv(csv_path, fname + ',N')
-
-
-def append_to_ddsm_csv(path, string):
-    f = open(path, 'a+')
-    f.write(string + '\n')
-    print('appended line: ' + string)
-
-
+    if (args.set_image_dims != None):
+        temp_dims = (args.set_image_dims, args.set_image_dims, image_dims[2])
+        image_dims = temp_dims
+    if (args.set_num_epochs != None):
+        hyperparameters.epochs = args.set_num_epochs
