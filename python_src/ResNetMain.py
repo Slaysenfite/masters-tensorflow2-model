@@ -12,6 +12,7 @@ from metrics.MetricsReporter import MetricReporter
 from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters
 from networks.ResNet import resnet50
+from optimizers.PsoOptimizer import PSO
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
@@ -51,7 +52,8 @@ model = resnet50(IMAGE_DIMS, len(lb.classes_))
 # print('[INFO] Model summary...')
 # model.summary()
 
-opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
+# opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
+opt = PSO()
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 # train the network
