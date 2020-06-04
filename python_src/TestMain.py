@@ -4,17 +4,18 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
-from configurations.GConstants import IMAGE_DIMS
 from metrics.MetricsReporter import MetricReporter
-from model.DataSet import ddsm_data_set as data_set
+from model.DataSet import mias_data_set as data_set
 from model.Hyperparameters import hyperparameters
-from networks.VggNet19 import Vgg19Net
+from optimizers.OptimizerHelper import VggOneBlock
+from optimizers.PsoOptimizer import PsoOptimizer
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
+
+IMAGE_DIMS = (64, 64, 3)
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
@@ -22,7 +23,6 @@ print('[BEGIN] Start script...\n')
 read_cmd_line_args(data_set, hyperparameters, IMAGE_DIMS)
 print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
-
 
 # initialize the data and labels
 data = []
@@ -40,16 +40,12 @@ lb = LabelBinarizer()
 train_y = lb.fit_transform(train_y)
 test_y = lb.transform(test_y)
 
-# construct the image generator for data augmentation
-print('[INFO] Augmenting data set')
 aug = ImageDataGenerator()
 
-model = Vgg19Net.build(IMAGE_DIMS[0], IMAGE_DIMS[1], IMAGE_DIMS[2], classes=len(lb.classes_))
+model = VggOneBlock.build(IMAGE_DIMS[0], IMAGE_DIMS[1], IMAGE_DIMS[2], classes=len(lb.classes_))
 
-print('[INFO] Model summary...')
-model.summary()
+opt = PsoOptimizer()
 
-opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 # train the network
