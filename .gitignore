@@ -1,6 +1,7 @@
 /venv
 /.idea
 .idea
+.h5
 /data
 /output
 __pycache__

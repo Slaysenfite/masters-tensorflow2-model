@@ -3,25 +3,25 @@
     1. Toggle between Gbest and Lbest
     2. Specify max number of generations
 """
-from tensorflow import Tensor
-from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
 from tensorflow.python.ops import state_ops
-from tensorflow.python.training import training_ops
-
 
 
 class PsoOptimizer(OptimizerV2):
 
-    def __init__(self, num_particles=100, max_gens=100, topology='lbest', name="PSO", **kwargs):
-        super(PsoOptimizer, self).__init__(name, **kwargs)
+    def __init__(self, num_particles=25, max_gens=100, topology='lbest', inertia_weight=0.8, c1=2, c2=2, vmax=2,
+                 **kwargs):
+        super(PsoOptimizer, self).__init__("PSO", **kwargs)
         self.max_gens = max_gens
         self.topology = topology
         self.num_particles = num_particles
-        with K.name_scope(self.__class__.__name__):
-            self.iterations = K.variable(0, dtype='int64', name='iterations')
+        self.inertia_weight = inertia_weight
+        self.c1 = c1
+        self.c2 = c2
+        self.vmax = vmax
 
     def _resource_apply_dense(self, grad, var):
+
         return [state_ops.assign_add(self.iterations, 1)]
 
     def get_config(self):
@@ -44,10 +44,12 @@ class PsoOptimizer(OptimizerV2):
             for var in var_list:
                 self.add_slot(var, "topology")
 
-    """
-    - resource_apply_dense (update variable given gradient tensor is dense)
-    - resource_apply_sparse (update variable given gradient tensor is sparse)
-    - create_slots (if your optimizer algorithm requires additional variables)
-    - get_config (serialization of the optimizer, include all hyper parameters)
-    """
+    def calculate_loss(self):
+        weights = self.get_weights()
+
+    def calculate_solution_score(self, position):
+        raise NotImplementedError("")
+
+    def update(self):
+        raise NotImplementedError("")
 

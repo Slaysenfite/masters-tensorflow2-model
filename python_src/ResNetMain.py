@@ -4,15 +4,13 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.keras.optimizers import SGD
-from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 
 from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
 from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters
 from networks.ResNet import resnet50
-from optimizers.PsoOptimizer import PSO
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
@@ -43,23 +41,17 @@ lb = LabelBinarizer()
 train_y = lb.fit_transform(train_y)
 test_y = lb.transform(test_y)
 
-# construct the image generator for data augmentation
-print('[INFO] Augmenting data set')
-aug = ImageDataGenerator()
-
 model = resnet50(IMAGE_DIMS, len(lb.classes_))
 
 # print('[INFO] Model summary...')
 # model.summary()
 
-# opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
-opt = PSO()
+opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 # train the network
-H = model.fit(aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size),
-                        validation_data=(test_x, test_y), steps_per_epoch=len(train_x) // hyperparameters.batch_size,
-                        epochs=hyperparameters.epochs)
+H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs)
 
 # evaluate the network
 print('[INFO] evaluating network...')

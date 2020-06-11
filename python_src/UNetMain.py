@@ -4,8 +4,7 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.python.keras.optimizers import SGD
-from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 
 from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
@@ -42,10 +41,6 @@ lb = LabelBinarizer()
 train_y = lb.fit_transform(train_y)
 test_y = lb.transform(test_y)
 
-# construct the image generator for data augmentation
-print('[INFO] Augmenting data set')
-aug = ImageDataGenerator()
-
 model = UNet.build([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(lb.classes_))
 
 print('[INFO] Model summary...')
@@ -55,9 +50,8 @@ opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparam
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 # train the network
-H = model.fit_generator(aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size),
-                        validation_data=(test_x, test_y), steps_per_epoch=len(train_x) // hyperparameters.batch_size,
-                        epochs=hyperparameters.epochs)
+H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs)
 
 # evaluate the network
 print('[INFO] evaluating network...')
