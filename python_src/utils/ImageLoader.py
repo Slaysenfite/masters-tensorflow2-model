@@ -32,7 +32,7 @@ def load_rgb_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
     gc.collect()
 
     # scale the raw pixel intensities to the range [0, 1]
-    data = np.array(data, dtype="float") / 255.0
+    data = np.array(data, dtype="float32") / 255.0
     labels = np.array(labels)
 
     print("[INFO] Data shape: " + str(data.shape))
