@@ -4,6 +4,6 @@
 .h5
 /data
 /output
-python_source/output
+/python_source/output
 __pycache__
 *.steven

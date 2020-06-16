@@ -1,6 +1,6 @@
-import numpy as np
 from random import random, randint, seed
 
+import numpy as np
 from tensorflow.python.keras import backend as K, Input, Model
 from tensorflow.python.keras.layers import Conv2D, Activation, BatchNormalization, MaxPooling2D, Flatten, \
     Dense, Dropout
@@ -22,32 +22,29 @@ class Particle:
         self.velocity = velocity
         self.gbest = None
         self.pbest = position
-        self.loss = loss
+        self.current_loss = loss
+        self.best_loss = loss
 
 
-def calc_min_loss(particles):
+def find_best_particle(particles):
     best_particle = particles[0]
-    index = 0
     for i in range(0, len(particles)):
-        if particles[i].loss < best_particle.loss:
+        if particles[i].current_loss < best_particle.current_loss:
             best_particle = particles[i]
-            index = i
-    return best_particle, index, best_particle.loss
+    return best_particle
 
 
 def update_velocity(particle, inertia_weight, acc_c):
     # TODO: Look into clamping the velocity
-    rand1 = random()
-    rand2 = random()
     initial = (inertia_weight) * (particle.velocity)
-    cognitive_component = (acc_c[0]) * (rand1) * (np.array(particle.pbest) -  np.array(particle.position))
-    social_component = (acc_c[1]) * (rand2) * (np.array(particle.gbest) -  np.array(particle.position))
+    cognitive_component = (acc_c[0]) * (random()) * (particle.pbest - particle.position)
+    social_component = (acc_c[1]) * (random()) * (particle.gbest - particle.position)
 
-    return initial + cognitive_component+ social_component
+    particle.velocity = initial + cognitive_component + social_component
 
 
-def update_position(particle):
-    return np.array(particle.position) + np.array(particle.velocity)
+def calc_new_position(particle):
+    return particle.position + particle.velocity
 
 
 class VggOneBlock:
