@@ -1,50 +1,7 @@
-from random import random, randint, seed
-
-import numpy as np
 from tensorflow.python.keras import backend as K, Input, Model
 from tensorflow.python.keras.layers import Conv2D, Activation, BatchNormalization, MaxPooling2D, Flatten, \
     Dense, Dropout
 from tensorflow.python.keras.models import Sequential
-
-seed(1)
-rand_seed = randint(0, 10)
-seed(rand_seed)
-
-INERTIA = 0.75
-C1 = 2
-C2 = 2
-V_MAX = 2
-
-
-class Particle:
-    def __init__(self, position, loss, velocity=0.0):
-        self.position = position
-        self.velocity = velocity
-        self.gbest = None
-        self.pbest = position
-        self.current_loss = loss
-        self.best_loss = loss
-
-
-def find_best_particle(particles):
-    best_particle = particles[0]
-    for i in range(0, len(particles)):
-        if particles[i].current_loss < best_particle.current_loss:
-            best_particle = particles[i]
-    return best_particle
-
-
-def update_velocity(particle, inertia_weight, acc_c):
-    # TODO: Look into clamping the velocity
-    initial = (inertia_weight) * (particle.velocity)
-    cognitive_component = (acc_c[0]) * (random()) * (particle.pbest - particle.position)
-    social_component = (acc_c[1]) * (random()) * (particle.gbest - particle.position)
-
-    particle.velocity = initial + cognitive_component + social_component
-
-
-def calc_new_position(particle):
-    return particle.position + particle.velocity
 
 
 class VggOneBlock:
