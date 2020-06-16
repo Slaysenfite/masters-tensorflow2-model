@@ -52,4 +52,3 @@ class PsoOptimizer(OptimizerV2):
 
     def update(self):
         raise NotImplementedError("")
-
