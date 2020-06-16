@@ -1,6 +1,7 @@
 import sys
 
 import tensorflow as tf
+import numpy as np
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
@@ -94,10 +95,8 @@ seed(1)
 def train_on_batch(X, y):
     ŷ = model(X, training=True)
     loss_value = loss_function(y, ŷ)
-    losses = []
 
     weights = get_trainable_weights(model)
-    losses.append(calc_position_loss(weights, model, train_loss_metric, X, y))
 
     swarm = initialize_swarm(15, weights, model, train_loss_metric, X, y)
     calculate_initial_losses(swarm, model, train_loss_metric, X, y)
@@ -145,7 +144,8 @@ def update_gbest(best_initial_loss, particle):
 def update_positions(particles):
     for particle in particles:
         particle.velocity = update_velocity(particle, INERTIA, [C1, C2])
-        new_pos = update_position(particle, INERTIA, [C1, C2])
+        new_pos = update_position(particle)
+        # Calculate new loss dumbass
         if new_pos < particle.pbest:
             particle.pbest = new_pos
 
@@ -154,9 +154,7 @@ def initialize_swarm(swarm_size, weights, model, loss_metric, X, y):
     particles = [None] * swarm_size
     particles[0] = Particle(weights, calc_position_loss(weights, model, loss_metric, X, y))
     for p in range(1, swarm_size):
-        new_weights = [None] * len(weights)
-        for i in range(0, len(weights)):
-            new_weights[i] = weights[i] * uniform(0, 1)
+        new_weights = [np.array(w)*uniform(0, 1) for w in weights]
         initial_loss = calc_position_loss(new_weights, model, loss_metric, X, y)
         particles[p] = Particle(new_weights, initial_loss)
     return particles

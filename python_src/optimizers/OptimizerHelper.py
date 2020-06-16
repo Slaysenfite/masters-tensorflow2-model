@@ -1,3 +1,4 @@
+import numpy as np
 from random import random, randint, seed
 
 from tensorflow.python.keras import backend as K, Input, Model
@@ -39,14 +40,14 @@ def update_velocity(particle, inertia_weight, acc_c):
     rand1 = random()
     rand2 = random()
     initial = (inertia_weight) * (particle.velocity)
-    cognitive_component = (acc_c[0]) * (rand1) * (a - b for a, b in zip(particle.pbest, particle.position))
-    social_component = (acc_c[1]) * (rand2) * (particle.gbest.subtract(particle.position))
+    cognitive_component = (acc_c[0]) * (rand1) * (np.array(particle.pbest) -  np.array(particle.position))
+    social_component = (acc_c[1]) * (rand2) * (np.array(particle.gbest) -  np.array(particle.position))
 
-    return initial + cognitive_component.add(social_component)
+    return initial + cognitive_component+ social_component
 
 
 def update_position(particle):
-    return particle.position + particle.velocity
+    return np.array(particle.position) + np.array(particle.velocity)
 
 
 class VggOneBlock:
