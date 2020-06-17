@@ -4,11 +4,6 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.python.data import Dataset
-from tensorflow.python.keras.callbacks import History
-from tensorflow.python.keras.losses import categorical_crossentropy
-from tensorflow.python.keras.metrics import CategoricalCrossentropy, CategoricalAccuracy
-from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 
 from configurations.GConstants import create_required_directories
@@ -16,7 +11,7 @@ from metrics.MetricsReporter import MetricReporter
 from model.DataSet import mias_data_set as data_set
 from model.Hyperparameters import hyperparameters
 from optimizers.OptimizerHelper import VggOneBlockFunctional
-from optimizers.PsoOptimizer import PsoEnv
+from optimizers.PsoTrainingLoop import training_loop
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import read_cmd_line_args, generate_script_report
@@ -57,96 +52,7 @@ opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparam
 
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
-# Separate into batches
-train_data = Dataset.from_tensor_slices((train_x, train_y)).shuffle(buffer_size=len(train_x)).batch(
-    hyperparameters.batch_size)
-test_data = Dataset.from_tensor_slices((test_x, test_y)).shuffle(buffer_size=len(test_x)).batch(
-    hyperparameters.batch_size)
-
-# Prepare the metrics.
-train_acc_metric = CategoricalAccuracy()
-val_acc_metric = CategoricalAccuracy()
-train_loss_metric = CategoricalCrossentropy()
-val_loss_metric = CategoricalCrossentropy()
-loss_function = categorical_crossentropy
-optimizer = Adam(0.000)
-H = History()
-H.set_model(model)
-H.set_params({
-    'batch_size': hyperparameters.batch_size,
-    'epochs': hyperparameters.epochs,
-    'metrics': ['loss', 'accuracy', 'val_loss', 'val_accuracy']
-})
-history = {'loss': [], 'accuracy': [], 'val_loss': [], 'val_accuracy': []}
-loss = []
-accuracy = []
-val_loss = []
-val_accuracy = []
-
-from random import seed
-
-seed(1)
-
-
-### The Custom Loop
-# @tf.function
-def train_on_batch(X, y):
-    ŷ = model(X, training=True)
-
-    pso = PsoEnv(5, 15, model, train_acc_metric, X, y)
-    new_model = pso.get_pso_model()
-
-    ŷ = new_model(X, training=True)
-    # Calculate loss after pso weight updating
-    train_acc_metric(y, ŷ)
-    train_loss_metric(y, ŷ)
-
-    # Update training metric.
-    return train_acc_metric.result().numpy(), train_loss_metric.result().numpy()
-
-
-# The validate_on_batch function
-# Find out how the model works
-# @tf.function
-def validate_on_batch(X, y):
-    ŷ = model(X, training=False)
-    val_acc_metric(y, ŷ)
-    val_loss_metric(y, ŷ)
-
-    return val_acc_metric.result().numpy(), val_loss_metric.result().numpy()
-
-
-# Enumerating the Dataset
-best_loss = 99999
-for epoch in range(0, hyperparameters.epochs):
-    for batch, (X, y) in enumerate(train_data):
-        train_acc_score, train_loss_score = train_on_batch(X, y)
-        val_acc_score, val_loss_score = validate_on_batch(X, y)
-        print('\rEpoch [%d/%d] Batch: %d%s' % (epoch + 1, hyperparameters.epochs, batch, '.' * (batch % 10)), end='')
-
-    # Display metrics at the end of each epoch.
-    print('Training acc over epoch: %s' % (float(train_acc_score)))
-    print('Training loss over epoch: %s' % (float(train_loss_score)))
-    print('Validation acc over epoch: %s' % (float(val_acc_score)))
-    print('Validation loss over epoch: %s' % (float(val_loss_score)))
-
-    # Reset metrics
-    train_acc_metric.reset_states()
-    train_loss_metric.reset_states()
-    val_acc_metric.reset_states()
-    val_loss_metric.reset_states()
-
-    loss.append(train_loss_score)
-    accuracy.append(train_acc_score)
-    val_loss.append(val_loss_score)
-    val_accuracy.append(val_acc_score)
-
-# Update history object
-history['loss'] = loss
-history['accuracy'] = accuracy
-history['val_loss'] = val_loss
-history['val_accuracy'] = val_accuracy
-H.history = history
+H = training_loop(model, hyperparameters, train_x, train_y, test_x, test_y)
 
 # evaluate the network
 print('[INFO] evaluating network...')
