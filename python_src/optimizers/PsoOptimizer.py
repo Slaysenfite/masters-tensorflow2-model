@@ -49,7 +49,7 @@ class PsoEnv():
         particles = [None] * swarm_size
         particles[0] = Particle(weights, self.calc_position_loss(weights, model, loss_metric, X, y))
         for p in range(1, swarm_size):
-            new_weights = [w * uniform(0, 1) for w in weights]
+            new_weights = [w * uniform(-1, 1) for w in weights]
             initial_loss = self.calc_position_loss(new_weights, model, loss_metric, X, y)
             particles[p] = Particle(np.array(new_weights), initial_loss)
         return particles
@@ -67,7 +67,7 @@ class PsoEnv():
 
     def update_positions(self, particles, model, loss_metric, X, y):
         for particle in particles:
-            self.update_velocity(particle, INERTIA, [C1, C2])
+            particle.velocity = self.update_velocity(particle, INERTIA, [C1, C2])
             particle.position = self.calc_new_position(particle)
             particle.current_loss = self.calc_position_loss(particle.position, model, loss_metric, X, y)
             if particle.current_loss < particle.best_loss:
@@ -80,9 +80,7 @@ class PsoEnv():
             if (layer.trainable != True or len(layer.trainable_weights) == 0):
                 pass
             if isinstance(layer, (Conv2D, Dense)):
-                t_weights_for_layer = []
-                t_weights_for_layer.append(layer.weights[0].numpy())
-                weights.append(t_weights_for_layer)
+                weights.append(layer.get_weights())
         return np.array(weights)
 
     def set_trainable_weights(self, model, weights):
@@ -91,7 +89,7 @@ class PsoEnv():
             if (layer.trainable != True or len(layer.weights) == 0):
                 pass
             if isinstance(layer, (Conv2D, Dense)):
-                layer.weights[0] = weights[i]
+                layer.set_weights(weights[i])
                 i += 1
         return model
 
@@ -105,10 +103,10 @@ class PsoEnv():
     def update_velocity(self, particle, inertia_weight, acc_c):
         # TODO: Look into clamping the velocity
         initial = (inertia_weight) * (particle.velocity)
-        cognitive_component = (acc_c[0]) * (random()) * (particle.pbest - particle.position)
-        social_component = (acc_c[1]) * (random()) * (particle.gbest - particle.position)
+        cognitive_component = (acc_c[0]) * (uniform(0, 1)) * (particle.pbest - particle.position)
+        social_component = (acc_c[1]) * (uniform(0, 1)) * (particle.gbest - particle.position)
 
-        particle.velocity = initial + cognitive_component + social_component
+        return initial + cognitive_component + social_component
 
     def calc_new_position(self, particle):
         return particle.position + particle.velocity
