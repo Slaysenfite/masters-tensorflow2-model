@@ -8,7 +8,7 @@ from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 
 from configurations.GConstants import create_required_directories
 from metrics.MetricsReporter import MetricReporter
-from model.DataSet import ddsm_data_set as data_set
+from model.DataSet import mias_data_set as data_set
 from model.Hyperparameters import hyperparameters
 from optimizers.OptimizerHelper import VggOneBlockFunctional
 from optimizers.PsoTrainingLoop import training_loop
@@ -16,7 +16,7 @@ from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import read_cmd_line_args, generate_script_report
 
-IMAGE_DIMS = (128, 128, 3)
+IMAGE_DIMS = (72, 72, 3)
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))

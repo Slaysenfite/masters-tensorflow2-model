@@ -1,12 +1,12 @@
-from tensorflow.python.keras.callbacks import History
 from tensorflow.python.data import Dataset
+from tensorflow.python.keras.callbacks import History
 from tensorflow.python.keras.metrics import CategoricalAccuracy, CategoricalCrossentropy
 
 from optimizers.PsoOptimizer import PsoEnv
 
 
 def train_on_batch(model, X, y, accuracy_metric, loss_metric):
-    pso = PsoEnv(5, 15, model, accuracy_metric, X, y)
+    pso = PsoEnv(5, 8, model, X, y)
     model = pso.get_pso_model()
 
     ŷ = model(X, training=True)
@@ -38,12 +38,6 @@ def training_loop(model, hyperparameters, train_x, train_y, test_x, test_y):
     test_data = Dataset.from_tensor_slices((test_x, test_y)).shuffle(buffer_size=len(test_x)).batch(
         hyperparameters.batch_size)
 
-    # Prepare the metrics.
-    train_acc_metric = CategoricalAccuracy()
-    val_acc_metric = CategoricalAccuracy()
-    train_loss_metric = CategoricalCrossentropy()
-    val_loss_metric = CategoricalCrossentropy()
-
     H = History()
     H.set_model(model)
     H.set_params({
@@ -60,21 +54,29 @@ def training_loop(model, hyperparameters, train_x, train_y, test_x, test_y):
     # Enumerating the Dataset
     best_loss = 99999
     for epoch in range(0, hyperparameters.epochs):
+
+        # Prepare the metrics.
+        train_acc_metric = CategoricalAccuracy()
+        val_acc_metric = CategoricalAccuracy()
+        train_loss_metric = CategoricalCrossentropy(from_logits=True)
+        val_loss_metric = CategoricalCrossentropy(from_logits=True)
+
         for batch, (X, y) in enumerate(train_data):
-            train_acc_score, train_loss_score = train_on_batch(model, X, y, train_acc_metric, train_loss_metric)
-            val_acc_score, val_loss_score = validate_on_batch(model, X, y, val_acc_metric, val_loss_metric)
             print('\rEpoch [%d/%d] Batch: %d%s \n' % (epoch + 1, hyperparameters.epochs, batch, '.' * (batch % 10)),
                   end='')
+
+            train_acc_score, train_loss_score = train_on_batch(model, X, y, train_acc_metric, train_loss_metric)
+            val_acc_score, val_loss_score = validate_on_batch(model, X, y, val_acc_metric, val_loss_metric)
 
         # Display metrics at the end of each epoch.
         print_metrics(train_acc_score, train_loss_score, val_acc_score, val_loss_score)
 
-        # Reset metrics
-        reset_metrics(train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric)
-
-        # Reset metrics
+        # Append metrics
         append_epoch_metrics(accuracy, loss, train_acc_score, train_loss_score, val_acc_score, val_accuracy, val_loss,
                              val_loss_score)
+
+        # Reset metrics
+        reset_metrics(train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric)
 
     # Update history object
     history['loss'] = loss

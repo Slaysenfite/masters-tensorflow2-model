@@ -1,11 +1,10 @@
-from random import uniform, seed, randint, random
+from random import uniform, seed
 
 import numpy as np
-from tensorflow.python.keras.layers import Conv2D, Dense
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.losses import CategoricalCrossentropy
 
 seed(1)
-rand_seed = randint(0, 10)
-seed(rand_seed)
 
 INERTIA = 0.75
 C1 = 2
@@ -21,28 +20,42 @@ class Particle:
         self.pbest = position
         self.current_loss = loss
         self.best_loss = loss
+        self.gbest_loss = None
 
 
 class PsoEnv():
-    def __init__(self, iterations, swarm_size, model, loss_metric, X, y):
+    def __init__(self, iterations, swarm_size, model, X, y):
         self.iterations = iterations
         self.swarm_size = swarm_size
         self.model = model
-        self.loss_metric = loss_metric
         self.X = X
         self.y = y
 
     def get_pso_model(self):
         iteration = 0;
+        loss_metric = CategoricalCrossentropy(from_logits=True)
         weights = self.get_trainable_weights(self.model)
 
-        swarm = self.initialize_swarm(self.swarm_size, weights, self.model, self.loss_metric, self.X, self.y)
+        swarm = self.initialize_swarm(self.swarm_size, weights, self.model, loss_metric, self.X, self.y)
+
+        best_particle = self.find_best_particle(swarm)
+        self.set_gbest(swarm, best_particle)
+
+        # TODO: Figure out why best loss is not transfering from batch to batch
+        # Unless it is transfering but the loss changes because of the inputs
         while iteration < self.iterations:
-            print('PSO training for iteration {}'.format(iteration))
+            print(' PSO training for iteration {}'.format(iteration + 1))
+
+            self.update_positions(swarm, self.model, loss_metric, self.X, self.y)
+
             self.update_gbest(swarm)
-            self.update_positions(swarm, self.model, self.loss_metric, self.X, self.y)
+
+            print(' Best loss of {} for iteration {}'.format(swarm[0].gbest_loss, iteration + 1))
             iteration += 1
-        best_weights = self.find_best_particle(swarm).position
+        best_weights = swarm[0].gbest
+
+        swarm = None
+
         return self.set_trainable_weights(self.model, best_weights)
 
     def initialize_swarm(self, swarm_size, weights, model, loss_metric, X, y):
@@ -57,13 +70,12 @@ class PsoEnv():
     def calc_position_loss(self, weights, model, loss_metric, X, y):
         self.set_trainable_weights(model, weights)
         ŷ = model(X, training=True)
-        loss_metric(y, ŷ)
-        return loss_metric.result().numpy()
+        return loss_metric(y, ŷ).numpy()
 
-    def update_gbest(self, particles):
-        best_particle = self.find_best_particle(particles)
+    def set_gbest(self, particles, best_particle):
         for particle in particles:
             particle.gbest = best_particle.position
+            particle.gbest_loss = best_particle.best_loss
 
     def update_positions(self, particles, model, loss_metric, X, y):
         for particle in particles:
@@ -74,12 +86,22 @@ class PsoEnv():
                 particle.pbest = particle.position
                 particle.best_loss = particle.current_loss
 
+    def update_gbest(self, swarm):
+        best_particle = swarm[0]
+        initial_best_loss = best_particle.gbest_loss
+        for i in range(1, len(swarm)):
+            if swarm[i].best_loss < best_particle.gbest_loss:
+                best_particle = swarm[i]
+        if best_particle.best_loss < initial_best_loss:
+            self.set_gbest(swarm, best_particle)
+
+
     def get_trainable_weights(self, model):
         weights = []
         for layer in model.layers:
             if (layer.trainable != True or len(layer.trainable_weights) == 0):
                 pass
-            if isinstance(layer, (Conv2D, Dense)):
+            if isinstance(layer, (Dense)):
                 weights.append(layer.get_weights())
         return np.array(weights)
 
@@ -88,14 +110,14 @@ class PsoEnv():
         for layer in model.layers:
             if (layer.trainable != True or len(layer.weights) == 0):
                 pass
-            if isinstance(layer, (Conv2D, Dense)):
+            if isinstance(layer, (Dense)):
                 layer.set_weights(weights[i])
                 i += 1
         return model
 
     def find_best_particle(self, particles):
         best_particle = particles[0]
-        for i in range(0, len(particles)):
+        for i in range(1, len(particles)):
             if particles[i].current_loss < best_particle.current_loss:
                 best_particle = particles[i]
         return best_particle
