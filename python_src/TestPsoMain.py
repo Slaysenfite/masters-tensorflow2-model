@@ -10,13 +10,13 @@ from configurations.GConstants import create_required_directories
 from metrics.MetricsReporter import MetricReporter
 from model.DataSet import mias_data_set as data_set
 from model.Hyperparameters import hyperparameters
-from optimizers.OptimizerHelper import VggOneBlockFunctional
-from optimizers.PsoTrainingLoop import training_loop
+from training_loops.OptimizerHelper import VggOneBlockFunctional
+from training_loops.PsoTrainingLoop import training_loop
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import read_cmd_line_args, generate_script_report
 
-IMAGE_DIMS = (72, 72, 3)
+IMAGE_DIMS = (64, 64, 3)
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
