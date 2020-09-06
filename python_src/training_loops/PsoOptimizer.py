@@ -1,8 +1,9 @@
 from random import uniform, seed
 
 import numpy as np
-from tensorflow.python.keras.layers import Dense
 from tensorflow.python.keras.losses import CategoricalCrossentropy
+
+from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights
 
 seed(1)
 
@@ -34,7 +35,7 @@ class PsoEnv():
     def get_pso_model(self):
         iteration = 0;
         loss_metric = CategoricalCrossentropy(from_logits=True)
-        weights = self.get_trainable_weights(self.model)
+        weights = get_trainable_weights(self.model)
 
         swarm = self.initialize_swarm(self.swarm_size, weights, self.model, loss_metric, self.X, self.y)
 
@@ -56,7 +57,7 @@ class PsoEnv():
 
         swarm = None
 
-        return self.set_trainable_weights(self.model, best_weights)
+        return set_trainable_weights(self.model, best_weights)
 
     def initialize_swarm(self, swarm_size, weights, model, loss_metric, X, y):
         particles = [None] * swarm_size
@@ -68,7 +69,7 @@ class PsoEnv():
         return particles
 
     def calc_position_loss(self, weights, model, loss_metric, X, y):
-        self.set_trainable_weights(model, weights)
+        set_trainable_weights(model, weights)
         ŷ = model(X, training=True)
         return loss_metric(y, ŷ).numpy()
 
@@ -94,26 +95,6 @@ class PsoEnv():
                 best_particle = swarm[i]
         if best_particle.best_loss < initial_best_loss:
             self.set_gbest(swarm, best_particle)
-
-
-    def get_trainable_weights(self, model):
-        weights = []
-        for layer in model.layers:
-            if (layer.trainable != True or len(layer.trainable_weights) == 0):
-                pass
-            if isinstance(layer, (Dense)):
-                weights.append(layer.get_weights())
-        return np.array(weights)
-
-    def set_trainable_weights(self, model, weights):
-        i = 0
-        for layer in model.layers:
-            if (layer.trainable != True or len(layer.weights) == 0):
-                pass
-            if isinstance(layer, (Dense)):
-                layer.set_weights(weights[i])
-                i += 1
-        return model
 
     def find_best_particle(self, particles):
         best_particle = particles[0]

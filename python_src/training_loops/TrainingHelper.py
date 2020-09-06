@@ -1,6 +1,7 @@
 from tensorflow.python.data import Dataset
 from tensorflow.python.keras.callbacks import History
-from tensorflow.python.keras.metrics import CategoricalAccuracy, CategoricalCrossentropy
+from tensorflow.python.keras.losses import CategoricalCrossentropy
+from tensorflow.python.keras.metrics import CategoricalAccuracy
 
 
 def append_epoch_metrics(accuracy, loss, train_acc_score, train_loss_score, val_acc_score, val_accuracy, val_loss,
@@ -11,11 +12,9 @@ def append_epoch_metrics(accuracy, loss, train_acc_score, train_loss_score, val_
     val_accuracy.append(val_acc_score)
 
 
-def reset_metrics(train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric):
+def reset_metrics(train_acc_metric, val_acc_metric):
     train_acc_metric.reset_states()
-    train_loss_metric.reset_states()
     val_acc_metric.reset_states()
-    val_loss_metric.reset_states()
 
 
 def print_metrics(train_acc_score, train_loss_score, val_acc_score, val_loss_score):
@@ -63,7 +62,7 @@ def batch_data_set(hyperparameters, test_x, test_y, train_x, train_y):
 # @tf.function
 def validate_on_batch(model, X, y, accuracy_metric, loss_metric):
     ŷ = model(X, training=False)
-    accuracy_metric(y, ŷ)
-    loss_metric(y, ŷ)
+    accuracy = accuracy_metric(y, ŷ)
+    loss = loss_metric(y, ŷ)
 
-    return accuracy_metric.result().numpy(), loss_metric.result().numpy()
+    return accuracy.numpy(), loss .numpy()

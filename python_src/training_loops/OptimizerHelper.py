@@ -1,7 +1,30 @@
-from tensorflow.python.keras import backend as K, Input, Model
+import numpy as np
+from tensorflow.python.keras import backend as K, Input
+from tensorflow.python.keras.engine.training import Model
 from tensorflow.python.keras.layers import Conv2D, Activation, BatchNormalization, MaxPooling2D, Flatten, \
     Dense, Dropout
 from tensorflow.python.keras.models import Sequential
+
+
+def get_trainable_weights(model):
+    weights = []
+    for layer in model.layers:
+        if (layer.trainable != True or len(layer.trainable_weights) == 0):
+            pass
+        if isinstance(layer, (Dense)):
+            weights.append(layer.get_weights())
+    return np.array(weights)
+
+
+def set_trainable_weights(model, weights):
+    i = 0
+    for layer in model.layers:
+        if (layer.trainable != True or len(layer.weights) == 0):
+            pass
+        if isinstance(layer, (Dense)):
+            layer.set_weights(weights[i])
+            i += 1
+    return model
 
 
 class VggOneBlock:

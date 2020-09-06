@@ -1,9 +1,5 @@
 import time
 
-from tensorflow.python.data import Dataset
-from tensorflow.python.keras.callbacks import History
-from tensorflow.python.keras.metrics import CategoricalAccuracy, CategoricalCrossentropy
-
 from training_loops.PsoOptimizer import PsoEnv
 from training_loops.TrainingHelper import print_metrics, append_epoch_metrics, reset_metrics, validate_on_batch, \
     prepare_metrics, batch_data_set, generate_tf_history
@@ -15,14 +11,14 @@ def train_on_batch(model, X, y, accuracy_metric, loss_metric):
 
     ŷ = model(X, training=True)
     # Calculate loss after pso weight updating
-    accuracy_metric(y, ŷ)
-    loss_metric(y, ŷ)
+    accuracy = accuracy_metric(y, ŷ)
+    loss = loss_metric(y, ŷ)
 
     # Update training metric.
-    return accuracy_metric.result().numpy(), loss_metric.result().numpy()
+    return accuracy.numpy(), loss.numpy()
+
 
 ### The Custom Loop For The PSO based optimizer
-# @tf.function
 def training_loop(model, hyperparameters, train_x, train_y, test_x, test_y):
     # Separate into batches
     test_data, train_data = batch_data_set(hyperparameters, test_x, test_y, train_x, train_y)
@@ -51,7 +47,6 @@ def training_loop(model, hyperparameters, train_x, train_y, test_x, test_y):
             val_acc_score, val_loss_score = validate_on_batch(model, X, y, val_acc_metric, val_loss_metric)
         print("Validation accuracy: %.4f" % (float(val_acc_score)) + "Validation loss: %.4f" % (float(val_loss_score)))
 
-
         # Display metrics at the end of each epoch.
         print_metrics(train_acc_score, train_loss_score, val_acc_score, val_loss_score)
 
@@ -60,9 +55,8 @@ def training_loop(model, hyperparameters, train_x, train_y, test_x, test_y):
                              val_loss_score)
 
         # Reset metrics
-        reset_metrics(train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric)
+        reset_metrics(train_acc_metric, val_acc_metric)
 
     print("Time taken: %.2fs" % (time.time() - start_time))
 
     return generate_tf_history(accuracy, hyperparameters, loss, model, val_accuracy, val_loss)
-
