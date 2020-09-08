@@ -43,9 +43,6 @@ test_y = lb.transform(test_y)
 
 model = UNet.build([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(lb.classes_))
 
-print('[INFO] Model summary...')
-model.summary()
-
 opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 

@@ -32,9 +32,9 @@ class Hyperparameters:
 
 def create_hyperparameter_singleton():
     return Hyperparameters(
-        1,
+        75,
         5e-3,
-        256,
+        512,
         0.25,
         LearningOptimization.SGD,
         ActivationFunctions.RELU,

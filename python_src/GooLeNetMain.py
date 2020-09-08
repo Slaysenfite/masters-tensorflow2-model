@@ -44,10 +44,7 @@ lb = LabelBinarizer()
 train_y = lb.fit_transform(train_y)
 test_y = lb.transform(test_y)
 
-model = InceptionV3(input_shape=IMAGE_DIMS, classes=len(lb.classes_))
-
-print('[INFO] Model summary...')
-model.summary()
+model = InceptionV3(input_shape=IMAGE_DIMS, classes=len(lb.classes_), weights=None)
 
 opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
@@ -63,7 +60,7 @@ predictions = model.predict(test_x, batch_size=32)
 
 print('[INFO] generating metrics...')
 
-generate_script_report(H, test_y, predictions, data_set, hyperparameters)
+generate_script_report(H, test_y, predictions, data_set, hyperparameters, 'googlenet')
 
 reporter = MetricReporter(data_set.name, 'googlenet')
 cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
@@ -72,7 +69,7 @@ reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
 
 reporter.plot_roc(data_set.class_names, test_y, predictions)
 
-reporter.plot_network_metrics(hyperparameters.epochs, H, "GoogleNet")
+reporter.plot_network_metrics(hyperparameters.epochs, H, 'googlenet')
 
 print('[INFO] serializing network and label binarizer...')
 

@@ -50,9 +50,10 @@ def load_greyscale_images(data, labels, dataset, image_dimensions=(128, 128, 1))
     for image_path in image_paths:
         print_progress_bar(i + 1, len(image_paths), prefix=' Progress:', suffix='Complete')
 
-        raw_image = load_img(image_path, color_mode = "grayscale")
-        image = img_to_array(raw_image)
-        image = resize(image, image_dimensions, mode='constant', preserve_range=True)
+        image = cv2.imread(image_path)
+        image = cv2.resize(image, (image_dimensions[1], image_dimensions[0]))
+        image = cv2.cv2.cvtColor(image, cv2.COLOR_RGB2GRAY, dstCn=0)
+        image = image[:, :, np.newaxis]
         data.append(image)
 
         # extract the class label from the image path and update the

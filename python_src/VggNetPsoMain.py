@@ -9,7 +9,7 @@ from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.GConstants import IMAGE_DIMS
 from metrics.MetricsReporter import MetricReporter
-from model.DataSet import mias_data_set as data_set
+from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters
 from networks.VggNet19 import Vgg19Net
 from psokeras import Optimizer

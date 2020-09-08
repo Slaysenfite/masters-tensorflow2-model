@@ -8,29 +8,39 @@ from training_loops.TrainingHelper import print_metrics, append_epoch_metrics, r
 
 
 def train_on_batch(model, optimizer, X, y, previous_loss_scalar, accuracy_metric, loss_metric):
-    with GradientTape() as tape:
-        ŷ = model(X, training=True)
-        loss_value = loss_metric(y, ŷ)
-
-    grads = tape.gradient(loss_value, model.trainable_weights)
-    optimizer.apply_gradients(zip(grads, model.trainable_weights))
-
-    ŷ = model(X, training=True)
-    loss = loss_metric(y, ŷ)  # Big poop
-
+    loss, ŷ = compute_loss_via_pso(X, loss_metric, model, y)
     if loss > previous_loss_scalar:
-        pso = PsoEnv(5, 8, model, X, y)
-        model = pso.get_pso_model()
-        ŷ = model(X, training=True)
-        new_loss = loss_metric(y, ŷ)
-        if new_loss < loss:
-            loss = new_loss
+        print('[TRAINING INFO] Compute gradients and calculate new loss')
+        gd_loss, ŷ_gd = compute_loss_via_gradient_descent(X, loss_metric, model, optimizer, y)
+        if gd_loss < loss:
+            print('[TRAINING INFO] Using gradient descent weights')
+            loss = gd_loss
+            ŷ = ŷ_gd
 
     # Calculate loss after pso weight updating
     accuracy = accuracy_metric(y, ŷ)
 
     # Update training metric.
     return accuracy.numpy(), loss.numpy()
+
+
+def compute_loss_via_pso(X, loss_metric, model, y):
+    pso = PsoEnv(5, 8, model, X, y)
+    model = pso.get_pso_model()
+    ŷ = model(X, training=True)
+    loss = loss_metric(y, ŷ)
+    return loss, ŷ
+
+
+def compute_loss_via_gradient_descent(X, loss_metric, model, optimizer, y):
+    with GradientTape() as tape:
+        ŷ = model(X, training=True)
+        loss_value = loss_metric(y, ŷ)
+    grads = tape.gradient(loss_value, model.trainable_weights)
+    optimizer.apply_gradients(zip(grads, model.trainable_weights))
+    ŷ = model(X, training=True)
+    loss = loss_metric(y, ŷ)
+    return loss, ŷ
 
 
 ### The Custom Loop For The SGD-PSO based optimizer

@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 
-from configurations.GConstants import IMAGE_DIMS
+from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
 from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters
@@ -14,6 +14,9 @@ from networks.VggNet19 import Vgg19Net
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
+
+print('[INFO] Creating required directories...')
+create_required_directories()
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
@@ -57,23 +60,23 @@ predictions = model.predict(test_x, batch_size=32)
 
 print('[INFO] generating metrics...')
 
-generate_script_report(H, test_y, predictions, data_set, hyperparameters)
+generate_script_report(H, test_y, predictions, data_set, hyperparameters, 'vggnet')
 
-reporter = MetricReporter(data_set.name, 'vggpython.net')
+reporter = MetricReporter(data_set.name, 'vggnet')
 cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
 reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
                                title='Confusion matrix, without normalization')
 
 reporter.plot_roc(data_set.class_names, test_y, predictions)
 
-reporter.plot_network_metrics(hyperparameters.epochs, H, "VggNet")
+reporter.plot_network_metrics(hyperparameters.epochs, H, 'vggnet')
 
 print('[INFO] serializing network and label binarizer...')
 
 reporter.save_model_to_file(model, lb)
 
-reporter.print('[INFO] emailing result...')
+print('[INFO] emailing result...')
 
-results_dispatch(data_set.name, "vggnet")
+results_dispatch(data_set.name, 'vggnet')
 
 print('[END] Finishing script...\n')
