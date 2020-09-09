@@ -38,16 +38,6 @@ Pillow==5.1.0
 progressbar2==3.50.1
 protobuf==3.11.3
 ptyprocess==0.6.0
-pyasn1==0.4.7
-pyasn1-modules==0.2.6
-pycairo==1.16.2
-pycodestyle==2.3.1
-pycrypto==2.6.1
-python-dateutil==2.8.1
-python-utils==2.4.0
-requests==2.22.0
-requests-oauthlib==1.2.0
-rsa==4.0
 scandir==1.10.0
 scikit-learn==0.20.4
 scipy==1.2.3
@@ -57,8 +47,5 @@ tb-nightly==1.14.0a20190603
 tensorflow==2.0.0b1
 testpath==0.4.4
 tf-estimator-nightly==1.14.0.dev2019060501
-typing==3.7.4.1
-uritemplate==3.0.0
-urllib3==1.25.3
 virtualenv==20.0.16
 virtualenv-clone==0.5.4
