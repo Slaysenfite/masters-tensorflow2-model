@@ -13,7 +13,7 @@ google-resumable-media==0.3.3
 googleapis-common-protos==1.6.0
 graphviz==0.8.4
 h5py==2.10.0
-httplib2==0.13.1
+httplib2==0.18.0
 idna==2.8
 jsonschema==3.2.0
 jupyter-client==5.3.4
