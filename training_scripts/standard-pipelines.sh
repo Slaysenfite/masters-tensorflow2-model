@@ -1,9 +1,5 @@
 #!/bin/bash
 
-echo "Installing requirements..."
-
-pip install -r requirements.txt
-
 echo "Running standard pipelines"
 
 echo "VggNet19"
