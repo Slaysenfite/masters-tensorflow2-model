@@ -2,9 +2,6 @@
 
 echo "Running standard pipelines"
 
-echo "VggNet19"
-python python_src/VggNetMain.py
-
 echo "Inception V3"
 python python_src/GooLeNetMain.py.py
 
