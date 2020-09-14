@@ -10,7 +10,7 @@ from configurations.GConstants import create_required_directories, IMAGE_DIMS
 from metrics.MetricsReporter import MetricReporter
 from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters
-from training_loops.OptimizerHelper import VggOneBlockFunctional
+from networks.MiniGoogLeNet import SmallGoogLeNet
 from training_loops.PsoTrainingLoop import training_loop
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
@@ -43,7 +43,7 @@ lb = LabelBinarizer()
 train_y = lb.fit_transform(train_y)
 test_y = lb.transform(test_y)
 
-model = VggOneBlockFunctional.build(IMAGE_DIMS[0], IMAGE_DIMS[1], IMAGE_DIMS[2], classes=len(lb.classes_))
+model = SmallGoogLeNet.build(IMAGE_DIMS[0], IMAGE_DIMS[1], IMAGE_DIMS[2], classes=len(lb.classes_))
 
 # opt = PsoOptimizer()
 opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)

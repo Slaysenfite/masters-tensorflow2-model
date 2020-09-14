@@ -11,7 +11,7 @@ def get_trainable_weights(model):
     for layer in model.layers:
         if (layer.trainable != True or len(layer.trainable_weights) == 0):
             pass
-        if isinstance(layer, (Dense)):
+        if isinstance(layer, (Dense, Conv2D)):
             weights.append(layer.get_weights())
     return np.array(weights)
 
@@ -21,7 +21,7 @@ def set_trainable_weights(model, weights):
     for layer in model.layers:
         if (layer.trainable != True or len(layer.weights) == 0):
             pass
-        if isinstance(layer, (Dense)):
+        if isinstance(layer, (Dense, Conv2D)):
             layer.set_weights(weights[i])
             i += 1
     return model
