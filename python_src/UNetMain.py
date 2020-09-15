@@ -47,8 +47,7 @@ opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparam
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 # train the network
-H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
-              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs)
+H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y), epochs=hyperparameters.epochs)
 
 # evaluate the network
 print('[INFO] evaluating network...')
