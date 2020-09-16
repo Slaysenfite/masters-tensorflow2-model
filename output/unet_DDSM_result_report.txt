@@ -1,0 +1,40 @@
+*** Script Hyperparameters ***
+ Epochs: 50
+ Initial learning rate: 0.005
+ Batch size: 32
+ Dropout: LearningOptimization.SGD
+ Learning optimization: 0.25
+ Activation type: ActivationFunctions.RELU
+ Pooling: Pooling.TWO_BY_TWO
+ Number of hidden layers: 4
+ Pre-initialized weights: False
+
+*** Classification Report *** 
+               precision    recall  f1-score   support
+
+      Benign       0.56      0.49      0.52      1190
+   Malignant       0.46      0.57      0.51      1114
+      Normal       0.60      0.52      0.56       805
+
+    accuracy                           0.52      3109
+   macro avg       0.54      0.52      0.53      3109
+weighted avg       0.53      0.52      0.53      3109
+ 
+*** General Metrics *** 
+ Accuracy Score: 52.40% 
+ Precision Score: 54.05% 
+ Recall Score: 52.41% 
+
+*** Final Network Metrics *** 
+ Final Training Loss: 0.0053 
+ Final Validation Loss: 2.8892 
+ Final Training Accuracy: 1.00% 
+ Final Validation Accuracy: 0.52% 
+
+*** Best Network Metrics *** 
+ Best Epoch: 50 
+ Best Training Loss: 0.0053 
+ Best Validation Loss: 2.8892 
+ Best Training Accuracy: 1.00% 
+ Best Validation Accuracy: 0.52% 
+
