@@ -4,8 +4,8 @@ https://androidkt.com/resnet-implementation-in-tensorflow-keras/
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.layers import Input, Activation, BatchNormalization, Dense, add, GlobalAveragePooling2D, \
     ZeroPadding2D, Conv2D
-from tensorflow.python.keras.layers.core import Lambda
-from tensorflow.python.keras.layers.pooling import MaxPooling2D
+from tensorflow.python.keras.core import Lambda
+from tensorflow.python.keras.pooling import MaxPooling2D
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.regularizers import l2
 
