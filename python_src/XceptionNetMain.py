@@ -4,6 +4,7 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
+from tensorflow.python.keras.applications import Xception
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 
 from configurations.GConstants import IMAGE_DIMS, create_required_directories
@@ -11,7 +12,6 @@ from metrics.MetricsReporter import MetricReporter
 from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters
 from networks.RegularizerHelper import compile_with_regularization
-from networks.Xception import Xception
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
