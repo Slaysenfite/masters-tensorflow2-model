@@ -4,13 +4,14 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.python.keras.applications.xception import Xception
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 
 from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
 from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters
+from networks.RegularizerHelper import compile_with_regularization
+from networks.Xception import Xception
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
@@ -47,7 +48,8 @@ test_y = lb.transform(test_y)
 model = Xception(input_shape=IMAGE_DIMS, classes=len(lb.classes_), weights=None)
 
 opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+compile_with_regularization(model=model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
+                            regularization_type='l2', l2=5e-3)
 
 # train the network
 H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
