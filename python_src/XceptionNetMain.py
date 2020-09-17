@@ -4,8 +4,9 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.python.keras.applications import Xception
+from tensorflow.python.keras.applications.xception import Xception
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
+from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
@@ -37,6 +38,13 @@ data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
 # the data for training and the remaining 30% for testing
 (train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7, random_state=42)
 
+# initialize an our data augmenter
+print('[INFO] Performing \'on the fly\' data augmentation')
+aug = ImageDataGenerator(
+    horizontal_flip=True,
+    vertical_flip=True,
+    fill_mode="nearest")
+
 # convert the labels from integers to vectors (for 2-class, binary
 # classification you should use Keras' to_categorical function
 # instead as the scikit-learn's LabelBinarizer will not return a
@@ -49,11 +57,12 @@ model = Xception(input_shape=IMAGE_DIMS, classes=len(lb.classes_), weights=None)
 
 opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
 compile_with_regularization(model=model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
-                            regularization_type='l2', l2=5e-3)
+                            regularization_type='l2')
+# model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 # train the network
-H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
-              epochs=hyperparameters.epochs)
+H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
+              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs)
 
 # evaluate the network
 print('[INFO] evaluating network...')

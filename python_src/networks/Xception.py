@@ -2,7 +2,7 @@ from keras_applications.imagenet_utils import _obtain_input_shape
 from tensorflow.python.keras import Input, Model
 from tensorflow.python.keras.backend import image_data_format
 from tensorflow.python.keras.layers import BatchNormalization, Activation, Dropout, Conv2D, SeparableConv2D, \
-    MaxPooling2D, add, GlobalAveragePooling2D, Dense, GlobalMaxPooling2D
+    MaxPooling2D, add, GlobalAveragePooling2D, Dense, GlobalMaxPooling2D, Flatten
 
 
 def Xception(input_shape=None,
@@ -180,20 +180,13 @@ def Xception(input_shape=None,
     x = Activation('relu', name='block14_sepconv2_act')(x)
     x = Dropout(0.25)(x)
     x = GlobalAveragePooling2D(name='avg_pool')(x)
-    x = Dense(classes, activation='softmax', name='predictions')(x)
-
-    if pooling == 'avg':
-        x = GlobalAveragePooling2D()(x)
-    elif pooling == 'max':
-        x = GlobalMaxPooling2D()(x)
+    x = Dropout(0.25)(x)
+    # softmax classifier
+    x = Flatten()(x)
+    x = Dense(classes)(x)
+    x = Activation("softmax")(x)
 
     inputs = img_input
     # Create model.
-    model = Model(inputs, x, name='xception')
+    return Model(inputs, x, name='xception')
 
-    # Load weights.
-
-    if weights is not None:
-        model.load_weights(weights)
-
-    return model
