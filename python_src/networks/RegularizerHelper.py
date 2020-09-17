@@ -1,19 +1,19 @@
 import re
 
 from tensorflow.python.keras import regularizers
-from tensorflow.python.keras.layers import Dropout
+from tensorflow.python.keras.layers import Dropout, Dense
 from tensorflow.python.keras.models import Model
 
 
 def compile_with_regularization(model, loss, optimizer, metrics, regularization_type='l2', l1=0.01, l2=0.01):
     regularizer = get_regularizer(regularization_type, l1, l2)
     for layer in model.layers:
-        for attr in ['kernel_regularizer']:
-            if hasattr(layer, attr):
-                setattr(layer, attr, regularizer)
+        if not isinstance(layer, (Dense)):
+            for attr in ['kernel_regularizer']:
+                if hasattr(layer, attr):
+                    setattr(layer, attr, regularizer)
     # compile model
     model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
-    model.losses
 
 
 def get_regularizer(regularization_type, l1, l2):
