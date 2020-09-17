@@ -4,13 +4,14 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
+from tensorflow.python.keras.applications.resnet50 import ResNet50
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
+from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
 from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters
-from networks.ResNet import resnet50
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
@@ -36,13 +37,24 @@ data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
 # the data for training and the remaining 30% for testing
 (train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7, random_state=42)
 
+
+print('[INFO] Performing \'on the fly\' data augmentation')
+aug = ImageDataGenerator(
+    horizontal_flip=True,
+    vertical_flip=True,
+    fill_mode="nearest")
+
 # binarize the class labels
 lb = LabelBinarizer()
 train_y = lb.fit_transform(train_y)
 test_y = lb.transform(test_y)
 
-model = resnet50(IMAGE_DIMS, len(lb.classes_))
-
+model = ResNet50(include_top=True,
+                 weights=None,
+                 input_tensor=None,
+                 input_shape=IMAGE_DIMS,
+                 pooling=None,
+                 classes=3)
 # print('[INFO] Model summary...')
 # model.summary()
 
@@ -50,8 +62,8 @@ opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparam
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 # train the network
-H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
-              epochs=hyperparameters.epochs)
+H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
+              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs)
 
 # evaluate the network
 print('[INFO] evaluating network...')
