@@ -12,6 +12,7 @@ from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
 from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters
+from networks.RegularizerHelper import compile_with_regularization
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
@@ -59,7 +60,8 @@ model = ResNet50(include_top=True,
 # model.summary()
 
 opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+compile_with_regularization(model=model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
+                            regularization_type='l1l2')
 
 # train the network
 H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
