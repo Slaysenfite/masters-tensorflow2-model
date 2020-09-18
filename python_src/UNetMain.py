@@ -5,11 +5,13 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
+from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
 from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters
+from networks.RegularizerHelper import compile_with_regularization
 from networks.UNet import UNet
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_greyscale_images
@@ -41,13 +43,20 @@ lb = LabelBinarizer()
 train_y = lb.fit_transform(train_y)
 test_y = lb.transform(test_y)
 
+aug = ImageDataGenerator(
+    horizontal_flip=True,
+    vertical_flip=True,
+    fill_mode="nearest")
+
 model = UNet.build([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(lb.classes_))
 
 opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+compile_with_regularization(model=model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
+                            regularization_type='l2')
 
 # train the network
-H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y), epochs=hyperparameters.epochs)
+H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
+              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs)
 
 # evaluate the network
 print('[INFO] evaluating network...')
