@@ -1,4 +1,4 @@
-from model.Enums import ActivationFunctions, LearningOptimization, Pooling
+from model.Enums import LearningOptimization
 
 
 class Hyperparameters:
@@ -24,10 +24,10 @@ class Hyperparameters:
 def create_hyperparameter_singleton():
     return Hyperparameters(
         50,
-        75e-4,
+        1e-3,
         32,
-        LearningOptimization.SGD,
-        0.2
+        LearningOptimization.ADAM,
+        0.3
     )
 
 
