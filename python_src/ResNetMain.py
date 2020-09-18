@@ -5,6 +5,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras.applications.resnet50 import ResNet50
+from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
@@ -59,7 +60,7 @@ model = ResNet50(include_top=True,
 # print('[INFO] Model summary...')
 # model.summary()
 
-opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
+opt = Adam(learning_rate=hyperparameters.init_lr)
 compile_with_regularization(model=model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
                             regularization_type='l1l2')
 
