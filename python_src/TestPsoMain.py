@@ -68,7 +68,7 @@ reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
 
 reporter.plot_roc(data_set.class_names, test_y, predictions)
 
-reporter.plot_network_metrics(hyperparameters.epochs, H, 'testnet-pso')
+reporter.plot_network_metrics(H, 'testnet-pso')
 
 print('[INFO] serializing network and label binarizer...')
 

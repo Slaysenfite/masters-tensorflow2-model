@@ -4,18 +4,17 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.python.keras.callbacks import EarlyStopping
-from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
+from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
 from model.DataSet import ddsm_data_set as data_set
-from model.Hyperparameters import hyperparameters
+from model.Hyperparameters import hyperparameters, create_callbacks
 from networks.RegularizerHelper import compile_with_regularization
 from networks.UNet import UNet
 from utils.Emailer import results_dispatch
-from utils.ImageLoader import load_greyscale_images
+from utils.ImageLoader import load_greyscale_images, supplement_training_data
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
 
 print('Python version: {}'.format(sys.version))
@@ -39,29 +38,37 @@ data, labels = load_greyscale_images(data, labels, data_set, [IMAGE_DIMS[0], IMA
 # the data for training and the remaining 30% for testing
 (train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7, random_state=42)
 
+'[INFO] Augmenting data set'
+aug = ImageDataGenerator(
+    horizontal_flip=True,
+    vertical_flip=True,
+    rotation_range=10,
+    zoom_range=0.05,
+    fill_mode="nearest")
+
+train_x, train_y = supplement_training_data(aug, train_x, train_y)
+
+print("[INFO] Training data shape: " + str(train_x.shape))
+print("[INFO] Training label shape: " + str(train_y.shape))
+
 # binarize the class labels
 lb = LabelBinarizer()
 train_y = lb.fit_transform(train_y)
 test_y = lb.transform(test_y)
 
-aug = ImageDataGenerator(
-    horizontal_flip=True,
-    vertical_flip=True,
-    fill_mode="nearest")
-
 model = UNet.build([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(lb.classes_))
 
-opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
+opt = Adam(learning_rate=hyperparameters.init_lr)
 compile_with_regularization(model=model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
                             regularization_type='l1_l2')
 
-# add early stopping
-es = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1, mode='auto', baseline=0.55,
-                   restore_best_weights=True)
+# Setup callbacks
+callbacks = create_callbacks()
 
 # train the network
 H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
-              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs, callbacks=[es])
+              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
+              callbacks=callbacks)
 
 # evaluate the network
 print('[INFO] evaluating network...')
@@ -79,7 +86,7 @@ reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
 
 reporter.plot_roc(data_set.class_names, test_y, predictions)
 
-reporter.plot_network_metrics(hyperparameters.epochs, H, 'U-Net')
+reporter.plot_network_metrics(H, 'U-Net')
 
 print('[INFO] serializing network and label binarizer...')
 

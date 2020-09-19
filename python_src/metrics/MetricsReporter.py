@@ -119,9 +119,9 @@ class MetricReporter:
         plt.legend(loc='lower right')
         plt.savefig(constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + ROC_PLOT)
 
-    def plot_network_metrics(self, epochs, H, model_name):
+    def plot_network_metrics(self, H, model_name):
         # plot the training loss and accuracy
-        N = np.arange(0, epochs)
+        N = np.arange(0, len(H.history['val_loss']))
         plt.style.use('ggplot')
         plt.figure()
         plt.plot(N, H.history['loss'], label='train_loss')
