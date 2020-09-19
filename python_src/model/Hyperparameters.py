@@ -23,7 +23,7 @@ class Hyperparameters:
 
 def create_hyperparameter_singleton():
     return Hyperparameters(
-        50,
+        75,
         1e-3,
         32,
         LearningOptimization.ADAM,

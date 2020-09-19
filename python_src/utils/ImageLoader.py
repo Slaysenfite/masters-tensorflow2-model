@@ -3,6 +3,7 @@ import gc
 import cv2
 import numpy as np
 from imutils import paths
+from numpy import ma
 from skimage.transform import resize
 from tensorflow.python.keras.preprocessing.image import load_img, img_to_array
 
@@ -74,6 +75,9 @@ def load_greyscale_images(data, labels, dataset, image_dimensions=(128, 128, 1))
 
     return data, labels
 
+def supplement_training_data(aug, train_x, train_y):
+    aug_output = aug.flow(train_x, train_y, batch_size=len(train_x), shuffle=False)
+    return ma.concatenate([train_x, aug_output.x]), ma.concatenate([train_y, aug_output.y])
 
 # Print iterations progress
 def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd="\r"):

@@ -5,13 +5,15 @@ from tensorflow.python.keras.layers import Dropout, Dense
 from tensorflow.python.keras.models import Model
 
 
-def compile_with_regularization(model, loss, optimizer, metrics, regularization_type='l2', l1=0.01, l2=0.01):
+def compile_with_regularization(model, loss, optimizer, metrics, attrs=['kernel_regularizer'], regularization_type='l2',
+                                l1=0.01, l2=0.01):
     regularizer = get_regularizer(regularization_type, l1, l2)
     for layer in model.layers:
         if not isinstance(layer, (Dense)):
-            for attr in ['kernel_regularizer']:
+            for attr in attrs:
                 if hasattr(layer, attr):
                     setattr(layer, attr, regularizer)
+                    # print('[INFO] Adding '+ regularization_type + ' ' + attr + ' to ' + layer.name)
     # compile model
     model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 

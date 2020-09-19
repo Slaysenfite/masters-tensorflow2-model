@@ -5,6 +5,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras.applications.xception import Xception
+from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
@@ -55,7 +56,7 @@ test_y = lb.transform(test_y)
 
 model = Xception(input_shape=IMAGE_DIMS, classes=len(lb.classes_), weights=None)
 
-opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
+opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
 compile_with_regularization(model=model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
                             regularization_type='l2')
 # model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])

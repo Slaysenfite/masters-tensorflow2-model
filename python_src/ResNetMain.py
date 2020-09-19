@@ -5,7 +5,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras.applications.resnet50 import ResNet50
-from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
+from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.GConstants import IMAGE_DIMS, create_required_directories
@@ -14,7 +14,7 @@ from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters
 from networks.RegularizerHelper import compile_with_regularization
 from utils.Emailer import results_dispatch
-from utils.ImageLoader import load_rgb_images
+from utils.ImageLoader import load_rgb_images, supplement_training_data
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
 
 print('Python version: {}'.format(sys.version))
@@ -38,12 +38,19 @@ data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
 # the data for training and the remaining 30% for testing
 (train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7, random_state=42)
 
+'[INFO] Augmenting data set'
 
-print('[INFO] Performing \'on the fly\' data augmentation')
 aug = ImageDataGenerator(
     horizontal_flip=True,
     vertical_flip=True,
+    rotation_range=10,
+    zoom_range=0.05,
     fill_mode="nearest")
+
+train_x, train_y = supplement_training_data(aug, train_x, train_y)
+
+print("[INFO] Training data shape: " + str(train_x.shape))
+print("[INFO] Training label shape: " + str(train_y.shape))
 
 # binarize the class labels
 lb = LabelBinarizer()
@@ -56,12 +63,10 @@ model = ResNet50(include_top=True,
                  input_shape=IMAGE_DIMS,
                  pooling=None,
                  classes=3)
-# print('[INFO] Model summary...')
-# model.summary()
 
-opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
+opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
 compile_with_regularization(model=model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
-                            regularization_type='l1l2')
+                            regularization_type='l2')
 
 # train the network
 H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
@@ -70,7 +75,7 @@ H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size
 # evaluate the network
 print('[INFO] evaluating network...')
 
-predictions = model.predict(test_x, batch_size=32)
+predictions = model.predict(test_x, batch_size=hyperparameters.batch_size)
 
 print('[INFO] generating metrics...')
 
