@@ -5,14 +5,13 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras.applications.inception_v3 import InceptionV3
-from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
-from model.DataSet import mias_data_set as data_set
-from model.Hyperparameters import hyperparameters
+from model.DataSet import ddsm_data_set as data_set
+from model.Hyperparameters import hyperparameters, create_callbacks
 from networks.RegularizerHelper import compile_with_regularization
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images, supplement_training_data
@@ -40,7 +39,6 @@ data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
 (train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7, random_state=42)
 
 '[INFO] Augmenting data set'
-
 aug = ImageDataGenerator(
     horizontal_flip=True,
     vertical_flip=True,
@@ -49,7 +47,7 @@ aug = ImageDataGenerator(
     fill_mode="nearest")
 
 train_x, train_y = supplement_training_data(aug, train_x, train_y)
-
+#
 print("[INFO] Training data shape: " + str(train_x.shape))
 print("[INFO] Training label shape: " + str(train_y.shape))
 
@@ -68,18 +66,12 @@ compile_with_regularization(model=model, loss='categorical_crossentropy', optimi
                             attrs=['activity_regularizer'], regularization_type='l1_l2')
 
 # Setup callbacks
-callbacks = [
-    EarlyStopping(
-        monitor='val_loss', min_delta=0.0001, patience=15, verbose=1, mode='min',
-        baseline=1.00, restore_best_weights=False),
-    ReduceLROnPlateau(
-        monitor='val_loss', factor=0.2, patience=10, verbose=1, mode='min',
-        min_delta=0.0001, cooldown=0, min_lr=0)
-]
+callbacks = create_callbacks()
 
 # train the network
 H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
-              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs, callbacks=callbacks)
+              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
+              callbacks=callbacks)
 
 # evaluate the network
 print('[INFO] evaluating network...')
@@ -97,11 +89,11 @@ reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
 
 reporter.plot_roc(data_set.class_names, test_y, predictions)
 
-reporter.plot_network_metrics(hyperparameters.epochs, H, 'googlenet')
+reporter.plot_network_metrics(H, 'googlenet')
 
-print('[INFO] serializing network and label binarizer...')
-
-reporter.save_model_to_file(model, lb)
+# print('[INFO] serializing network and label binarizer...')
+#
+# reporter.save_model_to_file(model, lb)
 
 print('[INFO] emailing result...')
 
