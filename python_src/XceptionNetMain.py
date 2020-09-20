@@ -64,7 +64,7 @@ model = Xception(input_shape=IMAGE_DIMS, classes=len(lb.classes_), weights=None)
 
 opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
 compile_with_regularization(model=model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
-                            attrs=['activity_regularizer'], regularization_type='l2')
+                            attrs=['kernel_regularizer'], regularization_type='l2')
 # model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 # Setup callbacks
