@@ -38,7 +38,7 @@ data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
 # the data for training and the remaining 30% for testing
 (train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7, random_state=42)
 
-'[INFO] Augmenting data set'
+print('[INFO] Augmenting data set')
 aug = ImageDataGenerator(
     horizontal_flip=True,
     vertical_flip=True,
@@ -62,16 +62,14 @@ test_y = lb.transform(test_y)
 model = InceptionV3(input_shape=IMAGE_DIMS, classes=len(lb.classes_), weights=None)
 
 opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
-compile_with_regularization(model=model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
-                            attrs=['kernel_regularizer'], regularization_type='l2')
+model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
-# Setup callbacks
+print('[INFO] Adding callbacks')
 callbacks = create_callbacks()
 
 # train the network
-H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
-              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
-              callbacks=callbacks)
+H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+              epochs=hyperparameters.epochs, callbacks=callbacks)
 
 # evaluate the network
 print('[INFO] evaluating network...')

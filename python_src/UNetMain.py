@@ -59,16 +59,20 @@ test_y = lb.transform(test_y)
 model = UNet.build([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(lb.classes_))
 
 opt = Adam(learning_rate=hyperparameters.init_lr)
-compile_with_regularization(model=model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
-                            regularization_type='l1_l2')
+model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+
 
 # Setup callbacks
 callbacks = create_callbacks()
 
 # train the network
-H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
-              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
-              callbacks=callbacks)
+H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+              epochs=hyperparameters.epochs, callbacks=callbacks)
+
+# train the network
+# H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
+#               steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
+#               callbacks=callbacks)
 
 # evaluate the network
 print('[INFO] evaluating network...')
