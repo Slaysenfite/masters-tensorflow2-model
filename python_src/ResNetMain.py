@@ -12,7 +12,6 @@ from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
 from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters, create_callbacks
-from networks.RegularizerHelper import compile_with_regularization
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images, supplement_training_data
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
@@ -65,15 +64,15 @@ model = ResNet50(include_top=True,
                  classes=3)
 
 opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
-compile_with_regularization(model=model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
-                            regularization_type='l2')
+model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+
 
 # Setup callbacks
 callbacks = create_callbacks()
 
 # train the network
-H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
-              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs, callbacks=callbacks)
+H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+              epochs=hyperparameters.epochs, callbacks=callbacks)
 
 # evaluate the network
 print('[INFO] evaluating network...')

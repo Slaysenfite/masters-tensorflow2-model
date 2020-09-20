@@ -63,17 +63,14 @@ test_y = lb.transform(test_y)
 model = Xception(input_shape=IMAGE_DIMS, classes=len(lb.classes_), weights=None)
 
 opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
-compile_with_regularization(model=model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
-                            attrs=['kernel_regularizer'], regularization_type='l2')
-# model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 # Setup callbacks
 callbacks = create_callbacks()
 
 # train the network
-H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
-              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
-              callbacks=callbacks)
+H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+              epochs=hyperparameters.epochs, callbacks=callbacks)
 
 
 # evaluate the network
