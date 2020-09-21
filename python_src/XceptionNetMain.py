@@ -48,7 +48,7 @@ aug = ImageDataGenerator(
     fill_mode="nearest")
 
 train_x, train_y = supplement_training_data(aug, train_x, train_y)
-#
+
 print("[INFO] Training data shape: " + str(train_x.shape))
 print("[INFO] Training label shape: " + str(train_y.shape))
 
@@ -63,7 +63,8 @@ test_y = lb.transform(test_y)
 model = Xception(input_shape=IMAGE_DIMS, classes=len(lb.classes_), weights=None)
 
 opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+compile_with_regularization(model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'], regularization_type='l2'
+                            , attrs=['bias_regularizer'])
 
 # Setup callbacks
 callbacks = create_callbacks()
@@ -72,7 +73,6 @@ callbacks = create_callbacks()
 H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
               steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
               callbacks=callbacks)
-
 
 # evaluate the network
 print('[INFO] evaluating network...')
