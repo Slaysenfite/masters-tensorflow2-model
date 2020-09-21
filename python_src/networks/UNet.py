@@ -7,7 +7,7 @@ https://github.com/zizhaozhang/unet-tensorflow-keras/blob/master/model.py
 
 from tensorflow.python.keras import backend as K, Input
 from tensorflow.python.keras.layers import Conv2D, Activation, BatchNormalization, MaxPooling2D, Flatten, \
-    Dense, ZeroPadding2D, concatenate, Cropping2D, UpSampling2D, Dropout
+    Dense, ZeroPadding2D, concatenate, Cropping2D, UpSampling2D
 from tensorflow.python.keras.models import Model
 
 from model.Hyperparameters import hyperparameters
@@ -56,17 +56,14 @@ class UNet:
         conv2 = Conv2D(64, (3, 3), activation='relu', padding='same')(pool1)
         conv2 = Conv2D(64, (3, 3), activation='relu', padding='same')(conv2)
         pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
-        pool2 = Dropout(hyperparameters.dropout)(pool2)
 
         conv3 = Conv2D(128, (3, 3), activation='relu', padding='same')(pool2)
         conv3 = Conv2D(128, (3, 3), activation='relu', padding='same')(conv3)
         pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
-        pool3 = Dropout(hyperparameters.dropout)(pool3)
 
         conv4 = Conv2D(256, (3, 3), activation='relu', padding='same')(pool3)
         conv4 = Conv2D(256, (3, 3), activation='relu', padding='same')(conv4)
         pool4 = MaxPooling2D(pool_size=(2, 2))(conv4)
-        pool4 = Dropout(hyperparameters.dropout)(pool4)
 
         conv5 = Conv2D(512, (3, 3), activation='relu', padding='same')(pool4)
         conv5 = Conv2D(512, (3, 3), activation='relu', padding='same')(conv5)
@@ -75,7 +72,6 @@ class UNet:
         ch, cw = UNet.get_crop_shape(conv4, up_conv5)
         crop_conv4 = Cropping2D(cropping=(ch, cw))(conv4)
         up6 = concatenate([up_conv5, crop_conv4], axis=concat_axis)
-        up6 = Dropout(hyperparameters.dropout)(up6)
         conv6 = Conv2D(256, (3, 3), activation='relu', padding='same')(up6)
         conv6 = Conv2D(256, (3, 3), activation='relu', padding='same')(conv6)
 
@@ -83,7 +79,6 @@ class UNet:
         ch, cw = UNet.get_crop_shape(conv3, up_conv6)
         crop_conv3 = Cropping2D(cropping=(ch, cw))(conv3)
         up7 = concatenate([up_conv6, crop_conv3], axis=concat_axis)
-        up7 = Dropout(hyperparameters.dropout)(up7)
         conv7 = Conv2D(128, (3, 3), activation='relu', padding='same')(up7)
         conv7 = Conv2D(128, (3, 3), activation='relu', padding='same')(conv7)
 
@@ -91,7 +86,6 @@ class UNet:
         ch, cw = UNet.get_crop_shape(conv2, up_conv7)
         crop_conv2 = Cropping2D(cropping=(ch, cw))(conv2)
         up8 = concatenate([up_conv7, crop_conv2], axis=concat_axis)
-        up8 = Dropout(hyperparameters.dropout)(up8)
         conv8 = Conv2D(64, (3, 3), activation='relu', padding='same')(up8)
         conv8 = Conv2D(64, (3, 3), activation='relu', padding='same')(conv8)
 
@@ -99,7 +93,6 @@ class UNet:
         ch, cw = UNet.get_crop_shape(conv1, up_conv8)
         crop_conv1 = Cropping2D(cropping=(ch, cw))(conv1)
         up9 = concatenate([up_conv8, crop_conv1], axis=concat_axis)
-        up9 = Dropout(hyperparameters.dropout)(up9)
         conv9 = Conv2D(32, (3, 3), activation='relu', padding='same')(up9)
         conv9 = Conv2D(32, (3, 3), activation='relu', padding='same')(conv9)
 
@@ -110,7 +103,6 @@ class UNet:
         flatten = Flatten()(conv10)
         fc = (Dense(512))(flatten)
         act = Activation('relu')(fc)
-        act = Dropout(hyperparameters.dropout)(act)
         batch_norm2 = BatchNormalization(axis=chan_dim)(act)
 
         dense = Dense(classes)(batch_norm2)
