@@ -70,7 +70,8 @@ callbacks = create_callbacks()
 
 # train the network
 H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
-              epochs=hyperparameters.epochs, callbacks=callbacks)
+              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
+              callbacks=callbacks)
 
 
 # evaluate the network
