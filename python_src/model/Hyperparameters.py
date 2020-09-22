@@ -29,7 +29,7 @@ def create_hyperparameter_singleton():
         1e-3,
         32,
         LearningOptimization.ADAM,
-        0.3
+        0.25
     )
 
 def create_callbacks():
