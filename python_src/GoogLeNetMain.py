@@ -36,7 +36,7 @@ data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
 
 # partition the data into training and testing splits using 70% of
 # the data for training and the remaining 30% for testing
-(train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7, random_state=42)
+(train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.2, train_size=0.8, random_state=42)
 
 print('[INFO] Augmenting data set')
 aug = ImageDataGenerator(
@@ -59,12 +59,11 @@ lb = LabelBinarizer()
 train_y = lb.fit_transform(train_y)
 test_y = lb.transform(test_y)
 
-base_model = InceptionV3(input_shape=IMAGE_DIMS, classes=len(lb.classes_), weights=None, include_top=False)
-model = create_classification_layers(base_model, len(lb.classes_))
+model = InceptionV3(input_shape=IMAGE_DIMS, classes=len(lb.classes_), weights=None, include_top=True)
 
 opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
 compile_with_regularization(model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
-                            regularization_type='l2', attrs=['bias_regularizer'])
+                            regularization_type='l2', attrs=['weight_regularizer'], l2=0.00005)
 
 print('[INFO] Adding callbacks')
 callbacks = create_callbacks()
