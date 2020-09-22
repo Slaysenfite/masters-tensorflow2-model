@@ -11,7 +11,7 @@ from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
 from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters, create_callbacks
-from networks.RegularizerHelper import compile_with_regularization
+from networks.NetworkHelper import compile_with_regularization
 from networks.UNet import UNet
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_greyscale_images, supplement_training_data
@@ -46,7 +46,7 @@ aug = ImageDataGenerator(
     zoom_range=0.05,
     fill_mode="nearest")
 
-train_x, train_y = supplement_training_data(aug, train_x, train_y)
+#train_x, train_y = supplement_training_data(aug, train_x, train_y)
 
 print("[INFO] Training data shape: " + str(train_x.shape))
 print("[INFO] Training label shape: " + str(train_y.shape))
@@ -66,13 +66,9 @@ model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy
 callbacks = create_callbacks()
 
 # train the network
-H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
               steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
               callbacks=callbacks)
-# train the network
-# H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
-#               steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
-#               callbacks=callbacks)
 
 # evaluate the network
 print('[INFO] evaluating network...')
