@@ -35,11 +35,11 @@ def create_hyperparameter_singleton():
 def create_callbacks():
     return [
         EarlyStopping(
-            monitor='val_loss', min_delta=0.0001, patience=15, verbose=1, mode='min',
+            monitor='val_loss', min_delta=0.01, patience=15, verbose=1, mode='min',
             baseline=1.00, restore_best_weights=False),
         ReduceLROnPlateau(
             monitor='val_loss', factor=0.2, patience=10, verbose=1, mode='min',
-            min_delta=0.0001, cooldown=0, min_lr=0)
+            min_delta=0.01, cooldown=0, min_lr=0)
     ]
 
 

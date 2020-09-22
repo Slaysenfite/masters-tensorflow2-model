@@ -1,8 +1,24 @@
 import re
 
 from tensorflow.python.keras import regularizers
-from tensorflow.python.keras.layers import Dropout, Dense
+from tensorflow.python.keras.layers import Dropout, Dense, GlobalMaxPooling2D, AveragePooling2D, Activation, Flatten
 from tensorflow.python.keras.models import Model
+
+def create_classification_layers(base_model, classes, dropout=True, num_units=512, dropout_prob=0.3,
+                                 pooling_type='avg'):
+    if pooling_type == 'max':
+        x = GlobalMaxPooling2D()(base_model.layers[-1].output)
+    else:
+        x = AveragePooling2D()(base_model.layers[-1].output)
+    x = Flatten()(x)
+    x = Dense(num_units, activation='relu')(x)
+    if dropout is True:
+        x = Dropout(dropout_prob)(x)
+    x = Dense(classes)(x)
+    x = Activation("softmax")(x)
+
+    return Model(inputs=base_model.inputs, outputs=x)
+
 
 
 def compile_with_regularization(model, loss, optimizer, metrics, attrs=['kernel_regularizer'], regularization_type='l2',
