@@ -10,7 +10,7 @@ from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
-from model.DataSet import mias_data_set as data_set
+from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters, create_callbacks
 from networks.NetworkHelper import compile_with_regularization, create_classification_layers
 from utils.Emailer import results_dispatch
