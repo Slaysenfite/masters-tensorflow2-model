@@ -63,7 +63,7 @@ model = InceptionV3(input_shape=IMAGE_DIMS, classes=len(lb.classes_), weights=No
 
 opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
 compile_with_regularization(model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
-                            regularization_type='l2', attrs=['weight_regularizer'], l2=0.00005)
+                            regularization_type='l2', attrs=['weight_regularizer'], l2=0.005)
 
 print('[INFO] Adding callbacks')
 callbacks = create_callbacks()
