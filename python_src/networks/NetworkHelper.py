@@ -7,6 +7,7 @@ from tensorflow.python.keras.models import Model
 
 def create_classification_layers(base_model, classes, dropout_prob=0.3):
     x = GlobalAveragePooling2D(name='avg_pool')(base_model.layers[-1].output)
+    x = Flatten()(x)
     x = Dropout(dropout_prob)(x)
     x = Dense(classes, activation='softmax', name='predictions')(x)
     return Model(inputs=base_model.inputs, outputs=x)
