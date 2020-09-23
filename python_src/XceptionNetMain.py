@@ -63,7 +63,7 @@ model = Xception(input_shape=IMAGE_DIMS, classes=len(lb.classes_), weights=None,
 
 opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
 compile_with_regularization(model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
-                            regularization_type='l2', attrs=['weight_regularizer'], l2=0.00001)
+                            regularization_type='l2', attrs=['weight_regularizer'], l2=0.001)
 
 print('[INFO] Adding callbacks')
 callbacks = create_callbacks()
