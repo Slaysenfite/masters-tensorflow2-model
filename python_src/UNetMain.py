@@ -46,7 +46,7 @@ aug = ImageDataGenerator(
     zoom_range=0.05,
     fill_mode="nearest")
 
-#train_x, train_y = supplement_training_data(aug, train_x, train_y)
+train_x, train_y = supplement_training_data(aug, train_x, train_y)
 
 print("[INFO] Training data shape: " + str(train_x.shape))
 print("[INFO] Training label shape: " + str(train_y.shape))

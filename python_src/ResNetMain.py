@@ -4,7 +4,7 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.python.keras.applications.resnet50 import resnet50
+from tensorflow.python.keras.applications import ResNet50
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
@@ -12,8 +12,9 @@ from configurations.GConstants import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
 from model.DataSet import ddsm_data_set as data_set
 from model.Hyperparameters import hyperparameters, create_callbacks
+from networks.NetworkHelper import create_classification_layers
 from utils.Emailer import results_dispatch
-from utils.ImageLoader import load_rgb_images
+from utils.ImageLoader import load_rgb_images, supplement_training_data
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
 
 print('Python version: {}'.format(sys.version))
@@ -46,7 +47,7 @@ aug = ImageDataGenerator(
     zoom_range=0.05,
     fill_mode="nearest")
 
-# train_x, train_y = supplement_training_data(aug, train_x, train_y)
+train_x, train_y = supplement_training_data(aug, train_x, train_y)
 
 print("[INFO] Training data shape: " + str(train_x.shape))
 print("[INFO] Training label shape: " + str(train_y.shape))
@@ -56,7 +57,7 @@ lb = LabelBinarizer()
 train_y = lb.fit_transform(train_y)
 test_y = lb.transform(test_y)
 
-model = resnet50.ResNet50(include_top=True,
+model = ResNet50(include_top=True,
                  weights=None,
                  input_tensor=None,
                  input_shape=IMAGE_DIMS,
