@@ -1,6 +1,6 @@
 import os
 
-from model.DataSet import ddsm_data_set
+from configurations.DataSet import ddsm_data_set
 
 
 def gen_ddsm_metadata(rootDir):

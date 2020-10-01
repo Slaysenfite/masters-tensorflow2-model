@@ -1,6 +1,22 @@
+import os
+
 from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
 from model.Enums import LearningOptimization
+
+
+def create_required_directories():
+    os.makedirs(output_dir, 0o777, True)
+    os.makedirs(output_dir + 'figures/', 0o777, True)
+    os.makedirs(output_dir + 'model/', 0o777, True)
+
+
+IMAGE_DIMS = (128, 128, 3)
+
+output_dir = 'output/'
+
+FIGURE_OUTPUT = output_dir + 'figures/'
+MODEL_OUTPUT = output_dir + 'model/'
 
 
 class Hyperparameters:
