@@ -1,7 +1,5 @@
 import os
 
-from configurations.DataSet import ddsm_data_set
-
 
 def gen_ddsm_metadata(rootDir):
     csv_path = rootDir + '/ddsm.csv'
@@ -36,4 +34,19 @@ def check_for_overlay(filename, path):
     return False
 
 
-gen_ddsm_metadata(ddsm_data_set.root_path)
+def retrieve_overlay_data(filename):
+    return None
+
+
+def curate_cbis_ddsm_folder(path_to_dir, ext_sequence, strip_sequence):
+    for fileList in os.walk(path_to_dir):
+        for fname in fileList[2]:
+            if ext_sequence in fname:
+                os.remove(os.path.join(fileList[0], fname))
+            if strip_sequence in fname:
+                new_fname = fname.replace(strip_sequence, '')
+                os.rename(os.path.join(fileList[0], fname), os.path.join(fileList[0], new_fname))
+
+
+#curate_cbis_ddsm_folder('/media/slaysenfite/Windows/dev/cbis-ddsm/CBIS-DDSM', '.dcm', '_result')
+# gen_ddsm_metadata(ddsm_data_set.root_path)

@@ -1,6 +1,6 @@
 from tensorflow.python.keras.applications.inception_v3 import InceptionV3
 
-from configurations.GConstants import IMAGE_DIMS
+from configurations.TrainingConfig import IMAGE_DIMS
 from networks.ResNet import resnet50
 from networks.UNet import UNet
 from networks.VggNet import Vgg19Net, SmallVggNet

@@ -2,7 +2,7 @@ import os
 
 from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
-from model.Enums import LearningOptimization
+from configurations.Enums import LearningOptimization
 
 
 def create_required_directories():
@@ -41,7 +41,7 @@ class Hyperparameters:
 
 def create_hyperparameter_singleton():
     return Hyperparameters(
-        100,
+        50,
         5e-3,
         32,
         LearningOptimization.SGD,

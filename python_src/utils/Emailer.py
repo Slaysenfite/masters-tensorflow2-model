@@ -7,7 +7,7 @@ from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from configurations.GConstants import output_dir
+from configurations.TrainingConfig import output_dir
 
 port = 465  # For SSL
 subject = "Your deep learning results are ready for collection"

@@ -8,11 +8,9 @@ from tensorflow.python.keras.applications import ResNet50
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
-from configurations.GConstants import IMAGE_DIMS, create_required_directories
+from configurations.DataSet import ddsm_data_set as data_set
+from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks
 from metrics.MetricsReporter import MetricReporter
-from model.DataSet import ddsm_data_set as data_set
-from model.Hyperparameters import hyperparameters, create_callbacks
-from networks.NetworkHelper import create_classification_layers
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images, supplement_training_data
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
