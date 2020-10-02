@@ -4,7 +4,7 @@ from tensorflow.python.keras.backend import image_data_format
 from tensorflow.python.keras.layers import Conv2D, BatchNormalization, Activation, MaxPooling2D, AveragePooling2D, \
     concatenate, GlobalAveragePooling2D, Dense, Dropout, Flatten
 
-from model.Hyperparameters import hyperparameters
+from configurations.TrainingConfig import hyperparameters
 
 
 def conv2d_bn(x,
