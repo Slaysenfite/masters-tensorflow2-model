@@ -6,7 +6,7 @@ from tensorflow.python.keras.layers import Input, Activation, BatchNormalization
     ZeroPadding2D, Conv2D, Lambda, MaxPooling2D, Dropout
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.regularizers import l2
-from model.Hyperparameters import hyperparameters
+from configurations.TrainingConfig import hyperparameters
 
 
 L2_WEIGHT_DECAY = 0.0001

@@ -6,10 +6,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 
-from configurations.GConstants import create_required_directories, IMAGE_DIMS
+from configurations.DataSet import ddsm_data_set as data_set
+from configurations.TrainingConfig import create_required_directories, IMAGE_DIMS, hyperparameters
 from metrics.MetricsReporter import MetricReporter
-from model.DataSet import ddsm_data_set as data_set
-from model.Hyperparameters import hyperparameters
 from networks.MiniGoogLeNet import SmallGoogLeNet
 from training_loops.HybridTrainingLoop import training_loop
 from utils.Emailer import results_dispatch

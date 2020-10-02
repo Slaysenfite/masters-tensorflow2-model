@@ -74,4 +74,8 @@ class MetricResult:
         report += ' Best Training Accuracy: {:.2f}% \n'.format(self.best_training_accuracy)
         report += ' Best Validation Accuracy: {:.2f}% \n\n'.format(self.best_validation_accuracy)
 
+        report += '*** Predictions *** \n'
+        report += ' Predictions: {} \n'.format(self.predictions)
+        report += ' Ground Truth Labels: {} \n'.format(self.test_y)
+
         return report

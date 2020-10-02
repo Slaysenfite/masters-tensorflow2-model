@@ -7,11 +7,10 @@ from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
-from configurations.GConstants import IMAGE_DIMS, create_required_directories
+from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories
 from metrics.MetricsReporter import MetricReporter
-from model.DataSet import ddsm_data_set as data_set
-from model.Hyperparameters import hyperparameters, create_callbacks
-from networks.NetworkHelper import compile_with_regularization
+from configurations.DataSet import ddsm_data_set as data_set
+from configurations.TrainingConfig import hyperparameters, create_callbacks
 from networks.UNet import UNet
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_greyscale_images, supplement_training_data
@@ -46,7 +45,7 @@ aug = ImageDataGenerator(
     zoom_range=0.05,
     fill_mode="nearest")
 
-#train_x, train_y = supplement_training_data(aug, train_x, train_y)
+train_x, train_y = supplement_training_data(aug, train_x, train_y)
 
 print("[INFO] Training data shape: " + str(train_x.shape))
 print("[INFO] Training label shape: " + str(train_y.shape))

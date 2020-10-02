@@ -12,8 +12,8 @@ PATH_TO_INBREAST = '/inbreast'
 
 # Dataset labels
 
-ddsm_label_map = {'B': 0, 'M': 1, 'N': 2}
-ddsm_class_names = ['Benign', 'Malignant', 'Normal']
+three_class_label_map = {'B': 0, 'M': 1, 'N': 2}
+three_class_names = ['Benign', 'Malignant', 'Normal']
 
 
 class DataSet:
@@ -32,6 +32,7 @@ class DataSet:
 
 class DataSetNames(Enum):
     DDSM = 'Digital Database for Screening Mammography'
+    CBIS_DDSM = 'Curated Breast Imaging Subset of DDSM'
     MIAS = 'Mammographic Image Analysis Homepage'
     InBreast = 'IN'
 
@@ -42,8 +43,8 @@ def create_ddsm_dataset_singleton():
         ROOT_DIRECTORY + PATH_TO_DDSM,
         ROOT_DIRECTORY + PATH_TO_DDSM + '/ddsm.csv',
         1,
-        ddsm_label_map,
-        ddsm_class_names
+        three_class_label_map,
+        three_class_names
     )
 
 
@@ -53,8 +54,8 @@ def create_mias_dataset_singleton():
         ROOT_DIRECTORY + PATH_TO_MIAS,
         ROOT_DIRECTORY + PATH_TO_MIAS + '/info.csv',
         3,
-        ddsm_label_map,
-        ddsm_class_names
+        three_class_label_map,
+        three_class_names
     )
 
 ddsm_data_set = create_ddsm_dataset_singleton()

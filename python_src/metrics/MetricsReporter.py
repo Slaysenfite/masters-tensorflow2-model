@@ -9,7 +9,7 @@ import numpy as np
 from scipy import interp
 from sklearn.metrics import roc_curve, auc
 
-import configurations.GConstants as constants
+import configurations.TrainingConfig as constants
 
 NETWORK_METRIC_PLOT = '_network_metric_plot.png'
 ROC_PLOT = '_roc_plot.png'
