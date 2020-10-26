@@ -10,6 +10,7 @@ from configurations.DataSet import ddsm_data_set as data_set
 from configurations.TrainingConfig import create_required_directories, IMAGE_DIMS, hyperparameters
 from metrics.MetricsReporter import MetricReporter
 from networks.MiniGoogLeNet import SmallGoogLeNet
+from networks.NetworkHelper import compile_with_regularization
 from training_loops.PsoTrainingLoop import training_loop
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
@@ -47,8 +48,8 @@ model = SmallGoogLeNet.build(IMAGE_DIMS[0], IMAGE_DIMS[1], IMAGE_DIMS[2], classe
 # opt = PsoOptimizer()
 opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
 
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-
+compile_with_regularization(model, loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'],
+                            regularization_type='l2', attrs=['weight_regularizer'], l2=0.005)
 H = training_loop(model, hyperparameters, train_x, train_y, test_x, test_y)
 
 # evaluate the network
