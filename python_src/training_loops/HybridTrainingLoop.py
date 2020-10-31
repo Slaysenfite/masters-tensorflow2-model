@@ -25,7 +25,7 @@ def train_on_batch(model, optimizer, X, y, previous_loss_scalar, accuracy_metric
 
 
 def compute_loss_via_pso(X, loss_metric, model, y):
-    pso = PsoEnv(8, 5, model, X, y)
+    pso = PsoEnv(swarm_size=8, iterations=5, model=model, X=X, y=y)
     model = pso.get_pso_model()
     ŷ = model(X, training=True)
     loss = loss_metric(y, ŷ)

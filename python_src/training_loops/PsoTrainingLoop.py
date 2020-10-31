@@ -6,7 +6,7 @@ from training_loops.TrainingHelper import print_metrics, append_epoch_metrics, r
 
 
 def train_on_batch(model, X, y, accuracy_metric, loss_metric):
-    pso = PsoEnv(8, 5, model, X, y)
+    pso = PsoEnv(swarm_size=8, iterations=5, model=model, X=X, y=y)
     model = pso.get_pso_model()
 
     ŷ = model(X, training=True)

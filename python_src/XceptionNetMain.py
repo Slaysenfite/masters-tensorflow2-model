@@ -58,8 +58,8 @@ lb = LabelBinarizer()
 train_y = lb.fit_transform(train_y)
 test_y = lb.transform(test_y)
 
-base_model = Xception(input_shape=IMAGE_DIMS, classes=len(lb.classes_), weights=None, include_top=False)
-model = create_classification_layers(base_model, classes=len(lb.classes_), dropout_prob=hyperparameters.dropout)
+base_model = Xception(input_shape=IMAGE_DIMS, classes=len(data_set.class_names), weights=None, include_top=False)
+model = create_classification_layers(base_model, classes=len(data_set.class_names), dropout_prob=hyperparameters.dropout)
 
 opt = SGD(learning_rate=hyperparameters.init_lr, decay=True)
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
