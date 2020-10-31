@@ -1,7 +1,5 @@
 import os
 
-from configurations.DataSet import ddsm_data_set
-
 
 def gen_ddsm_metadata(rootDir):
     csv_path = rootDir + '/ddsm.csv'
