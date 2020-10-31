@@ -65,4 +65,4 @@ def curate_cbis_ddsm_folder(path_to_dir, ext_sequence, strip_sequence):
 
 
 #curate_cbis_ddsm_folder('/media/slaysenfite/Windows/dev/cbis-ddsm/CBIS-DDSM', '.dcm', '_result')
-gen_binary_classification_ddsm_metadata(ddsm_data_set.root_path)
+gen_binary_classification_ddsm_metadata('/home/g215029263/dev/data/ddsm_lr')
