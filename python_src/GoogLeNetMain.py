@@ -9,7 +9,7 @@ from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras.utils import to_categorical
 
-from configurations.DataSet import ddsm_data_set as data_set
+from configurations.DataSet import binary_ddsm_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks
 from metrics.MetricsReporter import MetricReporter
 from networks.NetworkHelper import compile_with_regularization, create_classification_layers

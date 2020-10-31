@@ -27,7 +27,7 @@ def gen_binary_classification_ddsm_metadata(rootDir):
                 if 'normal' in dirName:
                     append_to_ddsm_csv(csv_path, fname + ',N')
                 elif 'benign' in dirName and check_for_overlay(fname, dirName) is True:
-                    append_to_ddsm_csv(csv_path, fname + ',N')
+                    append_to_ddsm_csv(csv_path, fname + ',P')
                 elif 'cancer' in dirName and check_for_overlay(fname, dirName) is True:
                     append_to_ddsm_csv(csv_path, fname + ',P')
                 else:
@@ -65,4 +65,4 @@ def curate_cbis_ddsm_folder(path_to_dir, ext_sequence, strip_sequence):
 
 
 #curate_cbis_ddsm_folder('/media/slaysenfite/Windows/dev/cbis-ddsm/CBIS-DDSM', '.dcm', '_result')
-gen_ddsm_metadata(ddsm_data_set.root_path)
+gen_binary_classification_ddsm_metadata(ddsm_data_set.root_path)

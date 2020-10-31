@@ -6,7 +6,7 @@ import pandas as pd
 # Dataset paths
 
 ROOT_DIRECTORY = '/home/slaysenfite/dev/data'
-PATH_TO_DDSM = '/ddsm_lr_sample'
+PATH_TO_DDSM = '/ddsm_lr'
 PATH_TO_MIAS = '/mias'
 PATH_TO_INBREAST = '/inbreast'
 
