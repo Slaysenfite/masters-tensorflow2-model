@@ -36,8 +36,7 @@ data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
 
 # partition the data into training and testing splits using 70% of
 # the data for training and the remaining 30% for testing
-(train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7,
-                                                      random_state=42)
+(train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7, random_state=42)
 
 if data_set.is_multiclass:
     print('[INFO] Configure for multiclass classification')
