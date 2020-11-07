@@ -43,13 +43,12 @@ class PsoEnv():
         self.set_gbest(swarm, best_particle)
 
         while iteration < self.iterations:
-            print(' PSO training for iteration {}'.format(iteration + 1))
-
             self.update_positions(swarm, self.model, loss_metric, self.X, self.y)
 
             self.update_gbest(swarm)
 
-            print(' Best loss of {} for iteration {}'.format(swarm[0].gbest_loss, iteration + 1))
+            print(' PSO training for iteration {}'.format(iteration + 1) + ' - Best loss of {}'.format(
+                swarm[0].gbest_loss))
             iteration += 1
         best_weights = swarm[0].gbest
 
