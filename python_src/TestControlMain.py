@@ -4,13 +4,17 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
+from tensorflow.python.keras.applications import ResNet50
+from tensorflow.python.keras.applications.xception import Xception
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
+from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
 from configurations.DataSet import binary_ddsm_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks
 from metrics.MetricsReporter import MetricReporter
 from networks.MiniGoogLeNet import SmallGoogLeNet
+from networks.NetworkHelper import create_classification_layers
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
@@ -36,6 +40,14 @@ data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
 # the data for training and the remaining 30% for testing
 (train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7, random_state=42)
 
+print('[INFO] Augmenting data set')
+aug = ImageDataGenerator(
+    horizontal_flip=True,
+    fill_mode="nearest")
+
+print("[INFO] Training data shape: " + str(train_x.shape))
+print("[INFO] Training label shape: " + str(train_y.shape))
+
 if data_set.is_multiclass:
     print('[INFO] Configure for multiclass classification')
     lb = LabelBinarizer()
@@ -48,7 +60,13 @@ else:
     test_y = to_categorical(test_y)
     loss = 'binary_crossentropy'
 
-model = SmallGoogLeNet.build(IMAGE_DIMS[0], IMAGE_DIMS[1], IMAGE_DIMS[2], classes=len(data_set.class_names))
+base_model = ResNet50(include_top=False,
+                 weights=None,
+                 input_tensor=None,
+                 input_shape=IMAGE_DIMS,
+                 pooling=None,
+                 classes=2)
+model = create_classification_layers(base_model, classes=len(data_set.class_names), dropout_prob=hyperparameters.dropout)
 
 opt = SGD(learning_rate=hyperparameters.init_lr, decay=True)
 
