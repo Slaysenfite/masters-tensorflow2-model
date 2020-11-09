@@ -44,7 +44,7 @@ def create_standard_hyperparameter_singleton():
         50,
         5e-3,
         32,
-        LearningOptimization.ADAM,
+        LearningOptimization.SGD,
         0.25
     )
 
