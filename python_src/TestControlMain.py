@@ -5,15 +5,13 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras.applications import ResNet50
-from tensorflow.python.keras.applications.xception import Xception
-from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
+from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
 from configurations.DataSet import binary_ddsm_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks
 from metrics.MetricsReporter import MetricReporter
-from networks.MiniGoogLeNet import SmallGoogLeNet
 from networks.NetworkHelper import create_classification_layers
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
@@ -68,7 +66,7 @@ base_model = ResNet50(include_top=False,
                  classes=2)
 model = create_classification_layers(base_model, classes=len(data_set.class_names), dropout_prob=hyperparameters.dropout)
 
-opt = SGD(learning_rate=hyperparameters.init_lr, decay=True)
+opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
 
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
