@@ -57,7 +57,6 @@ def training_loop(model, hyperparameters, train_x, train_y, test_x, test_y, call
         # Reset metrics
         reset_metrics(train_acc_metric, val_acc_metric)
 
-
-        print('\rTime taken: ' + str(timedelta((time.time() - start_time))))
+        print('\rTime taken: ' + str(timedelta(seconds=(time.time() - start_time))))
 
     return generate_tf_history(accuracy, hyperparameters, loss, model, val_accuracy, val_loss)
