@@ -3,11 +3,11 @@ https://androidkt.com/resnet-implementation-in-tensorflow-keras/
 """
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.layers import Input, Activation, BatchNormalization, Dense, add, GlobalAveragePooling2D, \
-    ZeroPadding2D, Conv2D
-from tensorflow.python.keras.layers.core import Lambda
-from tensorflow.python.keras.layers.pooling import MaxPooling2D
+    ZeroPadding2D, Conv2D, Lambda, MaxPooling2D, Dropout
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.regularizers import l2
+from configurations.TrainingConfig import hyperparameters
+
 
 L2_WEIGHT_DECAY = 0.0001
 
@@ -32,7 +32,7 @@ def identity_block(input_tensor, kernel_size, filters):
 
     x = BatchNormalization(axis=bn_axis, )(x)
     x = Activation('relu')(x)
-
+    x = Dropout(hyperparameters.dropout)(x)
     x = Conv2D(filters2, kernel_size,
                padding='same', use_bias=False,
                kernel_initializer='he_normal',
@@ -41,7 +41,7 @@ def identity_block(input_tensor, kernel_size, filters):
     x = BatchNormalization(axis=bn_axis)(x)
 
     x = Activation('relu')(x)
-
+    x = Dropout(hyperparameters.dropout)(x)
     x = Conv2D(filters3, (1, 1), use_bias=False,
                kernel_initializer='he_normal',
                kernel_regularizer=l2(L2_WEIGHT_DECAY))(x)
@@ -50,6 +50,7 @@ def identity_block(input_tensor, kernel_size, filters):
 
     x = add([x, input_tensor])
     x = Activation('relu')(x)
+    x = Dropout(hyperparameters.dropout)(x)
     return x
 
 
@@ -80,13 +81,13 @@ def conv_block(input_tensor, kernel_size, filters, strides=(2, 2)):
                kernel_regularizer=l2(L2_WEIGHT_DECAY))(input_tensor)
     x = BatchNormalization(axis=bn_axis)(x)
     x = Activation('relu')(x)
-
+    x = Dropout(hyperparameters.dropout)(x)
     x = Conv2D(filters2, kernel_size, strides=strides, padding='same',
                use_bias=False, kernel_initializer='he_normal',
                kernel_regularizer=l2(L2_WEIGHT_DECAY))(x)
     x = BatchNormalization(axis=bn_axis)(x)
     x = Activation('relu')(x)
-
+    x = Dropout(hyperparameters.dropout)(x)
     x = Conv2D(filters3, (1, 1), use_bias=False,
                kernel_initializer='he_normal',
                kernel_regularizer=l2(L2_WEIGHT_DECAY))(x)
@@ -99,6 +100,7 @@ def conv_block(input_tensor, kernel_size, filters, strides=(2, 2)):
 
     x = add([x, shortcut])
     x = Activation('relu')(x)
+    x = Dropout(hyperparameters.dropout)(x)
     return x
 
 
@@ -123,6 +125,7 @@ def resnet50(input_shape, num_classes):
                kernel_regularizer=l2(L2_WEIGHT_DECAY))(x)
     x = BatchNormalization(axis=bn_axis)(x)
     x = Activation('relu')(x)
+    x = Dropout(hyperparameters.dropout)(x)
     x = ZeroPadding2D(padding=(1, 1))(x)
 
     # 3x3 max pool,stride=2

@@ -25,7 +25,7 @@ class Particle:
 
 
 class PsoEnv():
-    def __init__(self, iterations, swarm_size, model, X, y):
+    def __init__(self, iterations=5, swarm_size=8, model=None, X=None, y=None):
         self.iterations = iterations
         self.swarm_size = swarm_size
         self.model = model
@@ -42,16 +42,13 @@ class PsoEnv():
         best_particle = self.find_best_particle(swarm)
         self.set_gbest(swarm, best_particle)
 
-        # TODO: Figure out why best loss is not transfering from batch to batch
-        # Unless it is transfering but the loss changes because of the inputs
         while iteration < self.iterations:
-            print(' PSO training for iteration {}'.format(iteration + 1))
-
             self.update_positions(swarm, self.model, loss_metric, self.X, self.y)
 
             self.update_gbest(swarm)
 
-            print(' Best loss of {} for iteration {}'.format(swarm[0].gbest_loss, iteration + 1))
+            print(' PSO training for iteration {}'.format(iteration + 1) + ' - Best loss of {}'.format(
+                swarm[0].gbest_loss))
             iteration += 1
         best_weights = swarm[0].gbest
 

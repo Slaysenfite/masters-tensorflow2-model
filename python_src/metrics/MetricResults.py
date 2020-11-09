@@ -39,10 +39,10 @@ class MetricResult:
                                                  target_names=data_set.class_names)
 
     def get_best_network_metrics(self, H):
-        idx, min_loss = min(enumerate(H.history['loss']), key=operator.itemgetter(1))
+        idx, min_loss = min(enumerate(H.history['val_loss']), key=operator.itemgetter(1))
 
         self.best_epoch = idx + 1
-        self.best_training_loss = min_loss
+        self.best_training_loss = H.history['loss'][idx]
         self.best_validation_loss = H.history['val_loss'][idx]
         self.best_training_accuracy = H.history['accuracy'][idx]
         self.best_validation_accuracy = H.history['val_accuracy'][idx]
@@ -73,5 +73,9 @@ class MetricResult:
         report += ' Best Validation Loss: {:.4f} \n'.format(self.best_validation_loss)
         report += ' Best Training Accuracy: {:.2f}% \n'.format(self.best_training_accuracy)
         report += ' Best Validation Accuracy: {:.2f}% \n\n'.format(self.best_validation_accuracy)
+
+        report += '*** Predictions *** \n'
+        report += ' Predictions: {} \n'.format(self.predictions)
+        report += ' Ground Truth Labels: {} \n'.format(self.test_y)
 
         return report

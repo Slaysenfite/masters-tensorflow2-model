@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from configurations.GConstants import output_dir
+from configurations.TrainingConfig import output_dir
 from metrics.MetricResults import MetricResult
 
 

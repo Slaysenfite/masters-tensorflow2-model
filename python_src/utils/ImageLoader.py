@@ -3,9 +3,7 @@ import gc
 import cv2
 import numpy as np
 from imutils import paths
-from skimage.transform import resize
-from tensorflow.python.keras.preprocessing.image import load_img, img_to_array
-
+from numpy import ma, asarray
 
 
 def load_rgb_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
@@ -73,6 +71,34 @@ def load_greyscale_images(data, labels, dataset, image_dimensions=(128, 128, 1))
     print("[INFO] Label shape: " + str(labels.shape))
 
     return data, labels
+
+
+def supplement_training_data(aug, train_x, train_y, multiclass=True):
+    abnormal_data = []
+    abnormal_labels = []
+
+    if multiclass:
+        append_three_class(abnormal_data, abnormal_labels, train_x, train_y)
+    else:
+        append_two_class(abnormal_data, abnormal_labels, train_x, train_y)
+    append_three_class(abnormal_data, abnormal_labels, train_x, train_y)
+    aug_output = aug.flow(asarray(abnormal_data), asarray(abnormal_labels), batch_size=len(abnormal_data),
+                          shuffle=False)
+    return ma.concatenate([train_x, aug_output.x]), ma.concatenate([train_y, aug_output.y])
+
+
+def append_three_class(abnormal_data, abnormal_labels, train_x, train_y):
+    for i, label in enumerate(train_y):
+        if label == 0 or label == 1:
+            abnormal_data.append(train_x[i])
+            abnormal_labels.append(train_y[i])
+
+
+def append_two_class(abnormal_data, abnormal_labels, train_x, train_y):
+    for i, label in enumerate(train_y):
+        if label == 0:
+            abnormal_data.append(train_x[i])
+            abnormal_labels.append(train_y[i])
 
 
 # Print iterations progress

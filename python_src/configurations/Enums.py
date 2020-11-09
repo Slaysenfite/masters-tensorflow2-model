@@ -5,7 +5,7 @@ class LearningOptimization(Enum):
     SGD = "Stochastic gradient descent"
     ADAM = "Adam"
     PSO = "Particle swarm optimization"
-    GA = "genetic algorithm"
+    HYBRID = "PSO and Gradient Descent Hybrid"
 
 
 class ActivationFunctions(Enum):
