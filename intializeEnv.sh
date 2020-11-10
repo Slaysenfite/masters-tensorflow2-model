@@ -2,6 +2,7 @@
 
 # Run this script in the users root folder i.e. home/user
 
+cd $HOME
 
 # Pull git repos
 
@@ -14,12 +15,11 @@ mkvirtualenv wesselsenv -p python3
 workon wesselsenv
 
 cd masters-tensorflow2-model/
-
-git checkout instance/uber
-
 pip install -r requirements.txt
 
 # Create metadata file for the DDSM
+
+git checkout instance/uber
 
 python python_src/configurations/DdsmMetadataGenerator.py
 

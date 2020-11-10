@@ -2,7 +2,9 @@
 
 # Run script but detach process and capture output in a log file
 
-cd masters-tensorflow2-model/
+cd cd $HOME/masters-tensorflow2-model/
+
+git checkout instance/uber
 
 workon wesselsenv
 
