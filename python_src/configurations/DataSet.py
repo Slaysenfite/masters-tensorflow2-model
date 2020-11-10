@@ -2,10 +2,13 @@ from enum import Enum
 
 import numpy as np
 import pandas as pd
+from os.path import expanduser
+
+home = expanduser("~")
 
 # Dataset paths
 
-ROOT_DIRECTORY = '/home/g215029263/'
+ROOT_DIRECTORY = home + '/data'
 PATH_TO_DDSM = '/ddsm_lr'
 PATH_TO_MIAS = '/mias'
 PATH_TO_INBREAST = '/inbreast'

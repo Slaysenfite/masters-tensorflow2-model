@@ -1,5 +1,7 @@
 import os
 
+from configurations.DataSet import ddsm_data_set
+
 
 def gen_ddsm_metadata(rootDir):
     csv_path = rootDir + '/ddsm.csv'
@@ -62,4 +64,4 @@ def curate_cbis_ddsm_folder(path_to_dir, ext_sequence, strip_sequence):
                 os.rename(os.path.join(fileList[0], fname), os.path.join(fileList[0], new_fname))
 
 
-gen_binary_classification_ddsm_metadata('/home/g215029263/ddsm_lr')
+gen_binary_classification_ddsm_metadata(ddsm_data_set.root_path)
