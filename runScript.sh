@@ -4,6 +4,8 @@
 
 cd masters-tensorflow2-model/
 
+git checkout instance/uber
+
 workon wesselsenv
 
 nohup python python_src/TestPsoMain.py > log-pso.txt &
