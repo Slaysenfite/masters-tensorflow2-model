@@ -20,7 +20,7 @@ def train_on_batch(model, X, y, accuracy_metric, loss_metric):
 
 
 ### The Custom Loop For The PSO based optimizer
-def training_loop(model, hyperparameters, train_x, train_y, test_x, test_y, callbacks):
+def training_loop(model, hyperparameters, train_x, train_y, test_x, test_y):
     # Separate into batches
     test_data, train_data = batch_data_set(hyperparameters, test_x, test_y, train_x, train_y)
 

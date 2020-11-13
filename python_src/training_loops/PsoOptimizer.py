@@ -1,6 +1,8 @@
 from random import uniform, seed
 
 import numpy as np
+from tensorflow.python.keras.layers.convolutional import Conv2D
+from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.losses import CategoricalCrossentropy
 
 from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights
@@ -25,17 +27,18 @@ class Particle:
 
 
 class PsoEnv():
-    def __init__(self, iterations=5, swarm_size=8, model=None, X=None, y=None):
+    def __init__(self, iterations=5, swarm_size=8, model=None, X=None, y=None, layers_to_optimize=(Conv2D, Dense)):
         self.iterations = iterations
         self.swarm_size = swarm_size
         self.model = model
         self.X = X
         self.y = y
+        self.layers_to_optimize = layers_to_optimize
 
     def get_pso_model(self):
         iteration = 0;
         loss_metric = CategoricalCrossentropy(from_logits=True)
-        weights = get_trainable_weights(self.model)
+        weights = get_trainable_weights(self.model, self.layers_to_optimize)
 
         swarm = self.initialize_swarm(self.swarm_size, weights, self.model, loss_metric, self.X, self.y)
 
@@ -54,7 +57,7 @@ class PsoEnv():
 
         swarm = None
 
-        return set_trainable_weights(self.model, best_weights)
+        return set_trainable_weights(self.model, best_weights, self.layers_to_optimize)
 
     def initialize_swarm(self, swarm_size, weights, model, loss_metric, X, y):
         particles = [None] * swarm_size
@@ -66,7 +69,7 @@ class PsoEnv():
         return particles
 
     def calc_position_loss(self, weights, model, loss_metric, X, y):
-        set_trainable_weights(model, weights)
+        set_trainable_weights(model, weights, self.layers_to_optimize)
         ŷ = model(X, training=True)
         return loss_metric(y, ŷ).numpy()
 

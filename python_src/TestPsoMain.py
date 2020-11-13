@@ -9,7 +9,7 @@ from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
 from configurations.DataSet import binary_ddsm_data_set as data_set
-from configurations.TrainingConfig import create_required_directories, IMAGE_DIMS, pso_hyperparameters, create_callbacks
+from configurations.TrainingConfig import create_required_directories, IMAGE_DIMS, pso_hyperparameters
 from metrics.MetricsReporter import MetricReporter
 from networks.NetworkHelper import compile_with_regularization, create_classification_layers
 from training_loops.PsoTrainingLoop import training_loop
@@ -65,10 +65,7 @@ opt = SGD(lr=pso_hyperparameters.init_lr, decay=pso_hyperparameters.init_lr / ps
 compile_with_regularization(model, loss=loss, optimizer=opt, metrics=['accuracy'],
                             regularization_type='l2', attrs=['weight_regularizer'], l2=0.005)
 
-print('[INFO] Adding callbacks')
-callbacks = create_callbacks()
-
-H = training_loop(model, pso_hyperparameters, train_x, train_y, test_x, test_y, callbacks)
+H = training_loop(model, pso_hyperparameters, train_x, train_y, test_x, test_y)
 
 # evaluate the network
 print('[INFO] evaluating network...')
