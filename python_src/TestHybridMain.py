@@ -9,7 +9,8 @@ from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.utils import to_categorical
 
 from configurations.DataSet import binary_ddsm_data_set as data_set
-from configurations.TrainingConfig import create_required_directories, IMAGE_DIMS, hyperparameters
+from configurations.TrainingConfig import create_required_directories, IMAGE_DIMS
+from configurations.TrainingConfig import hybrid_hyperparameters as hyperparameters
 from metrics.MetricsReporter import MetricReporter
 from networks.NetworkHelper import compile_with_regularization, create_classification_layers
 from training_loops.HybridTrainingLoop import training_loop
@@ -84,7 +85,6 @@ reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
 reporter.plot_roc(data_set.class_names, test_y, predictions)
 
 reporter.plot_network_metrics(H, 'testnet-hybrid')
-
 
 print('[INFO] emailing result...')
 

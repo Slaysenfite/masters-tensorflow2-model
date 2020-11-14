@@ -44,7 +44,7 @@ def create_standard_hyperparameter_singleton():
         50,
         5e-3,
         32,
-        LearningOptimization.SGD,
+        LearningOptimization.ADAM,
         0.25
     )
 
@@ -54,6 +54,15 @@ def create_pso_hyperparameter_singleton():
         0,
         96,
         LearningOptimization.PSO,
+        0.25
+    )
+
+def create_hybrid_hyperparameter_singleton():
+    return Hyperparameters(
+        30,
+        5e-3,
+        96,
+        LearningOptimization.HYBRID,
         0.25
     )
 
@@ -70,3 +79,4 @@ def create_callbacks():
 
 hyperparameters = create_standard_hyperparameter_singleton()
 pso_hyperparameters = create_pso_hyperparameter_singleton()
+hybrid_hyperparameters = create_hybrid_hyperparameter_singleton()
