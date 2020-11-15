@@ -74,7 +74,7 @@ print('[INFO] Adding callbacks')
 callbacks = create_callbacks()
 
 # train the network
-H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
               steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
               callbacks=callbacks)
 
