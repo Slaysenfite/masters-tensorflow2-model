@@ -4,14 +4,15 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
+from tensorflow.python.keras.applications import ResNet50
+from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.utils import to_categorical
 
-from configurations.DataSet import ddsm_data_set as data_set
-from configurations.TrainingConfig import create_required_directories, IMAGE_DIMS, hyperparameters
+from configurations.DataSet import binary_ddsm_data_set as data_set
+from configurations.TrainingConfig import create_required_directories, IMAGE_DIMS
+from configurations.TrainingConfig import hybrid_hyperparameters as hyperparameters
 from metrics.MetricsReporter import MetricReporter
-from networks.MiniGoogLeNet import SmallGoogLeNet
-from networks.NetworkHelper import compile_with_regularization
+from networks.NetworkHelper import compile_with_regularization, create_classification_layers
 from training_loops.HybridTrainingLoop import training_loop
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
@@ -51,9 +52,16 @@ else:
     test_y = to_categorical(test_y)
     loss = 'binary_crossentropy'
 
-model = SmallGoogLeNet.build(IMAGE_DIMS[0], IMAGE_DIMS[1], IMAGE_DIMS[2], classes=len(lb.classes_))
+base_model = ResNet50(include_top=False,
+                      weights=None,
+                      input_tensor=None,
+                      input_shape=IMAGE_DIMS,
+                      pooling=None,
+                      classes=2)
+model = create_classification_layers(base_model, classes=len(data_set.class_names),
+                                     dropout_prob=hyperparameters.dropout)
 
-opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
+opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
 
 compile_with_regularization(model, loss=loss, optimizer=opt, metrics=['accuracy'],
                             regularization_type='l2', attrs=['weight_regularizer'], l2=0.005)
@@ -77,10 +85,6 @@ reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
 reporter.plot_roc(data_set.class_names, test_y, predictions)
 
 reporter.plot_network_metrics(H, 'testnet-hybrid')
-
-print('[INFO] serializing network and label binarizer...')
-
-reporter.save_model_to_file(model, lb)
 
 print('[INFO] emailing result...')
 
