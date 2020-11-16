@@ -59,7 +59,7 @@ def create_pso_hyperparameter_singleton():
 
 def create_hybrid_hyperparameter_singleton():
     return Hyperparameters(
-        30,
+        15,
         5e-3,
         96,
         LearningOptimization.HYBRID,
