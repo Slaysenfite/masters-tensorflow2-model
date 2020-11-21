@@ -11,11 +11,11 @@ from training_loops.TrainingHelper import print_metrics, append_epoch_metrics, r
     batch_data_set, prepare_metrics, generate_tf_history
 
 
-def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric):
+def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric, pso_layer, gd_layer):
     with GradientTape() as tape:
         ŷ = model(X, training=True)
         loss_value = loss_metric(y, ŷ)
-    conv2dWeights = get_trainable_weights(model, keras_layers=(Conv2D), as_numpy_array=False)
+    conv2dWeights = get_trainable_weights(model, keras_layers=gd_layer, as_numpy_array=False)
     grads = tape.gradient(loss_value, conv2dWeights)
     optimizer.apply_gradients(zip(grads, conv2dWeights))
 
@@ -31,22 +31,8 @@ def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric):
     return accuracy.numpy(), loss.numpy()
 
 
-def compute_loss_via_pso(X, loss_metric, model, y):
-    pso = PsoEnv(swarm_size=8, iterations=5, model=model, X=X, y=y)
-    model = pso.get_pso_model()
-    ŷ = model(X, training=True)
-    loss = loss_metric(y, ŷ)
-    return loss, ŷ
-
-
-def compute_loss_via_gradient_descent(X, loss_metric, model, optimizer, y):
-    ŷ = model(X, training=True)
-    loss = loss_metric(y, ŷ)
-    return loss, ŷ
-
-
 ### The Custom Loop For The SGD-PSO based optimizer
-def training_loop(model, optimizer, hyperparameters, train_x, train_y, test_x, test_y):
+def training_loop(model, optimizer, hyperparameters, train_x, train_y, test_x, test_y, pso_layer=(Dense), gd_layer=(Conv2D)):
     # Separate into batches
     test_data, train_data = batch_data_set(hyperparameters, test_x, test_y, train_x, train_y)
 
@@ -70,7 +56,7 @@ def training_loop(model, optimizer, hyperparameters, train_x, train_y, test_x, t
                   end='')
 
             train_acc_score, train_loss_score = train_on_batch(model, optimizer, X, y, train_acc_metric,
-                                                               train_loss_metric)
+                                                               train_loss_metric, pso_layer, gd_layer)
 
         # Run a validation loop at the end of each epoch.
         for (X, y) in test_data:
