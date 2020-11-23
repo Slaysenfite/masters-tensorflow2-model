@@ -16,17 +16,19 @@ def get_trainable_weights(model, keras_layers=(Dense, Conv2D), as_numpy_array=Tr
     if as_numpy_array:
         return np.array(weights, dtype=object)
     else:
-        return weights[0]
+        return weights
 
 
-def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D)):
+def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D), as_numpy_array=True):
     i = 0
     for layer in model.layers:
         if (layer.trainable != True or len(layer.weights) == 0):
             pass
         if isinstance(layer, keras_layers):
-            weight = weights[i]
-            layer.set_weights(weights[i].tolist())
+            if as_numpy_array:
+                layer.set_weights(weights[i].tolist())
+            else:
+                layer._trainable_weights = weights[i]
             i += 1
     return model
 
