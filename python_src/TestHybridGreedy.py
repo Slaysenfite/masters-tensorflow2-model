@@ -5,6 +5,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras.applications import ResNet50
+from tensorflow.python.keras.layers.convolutional import Conv2D
+from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.utils import to_categorical
 
@@ -66,7 +68,8 @@ opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
 compile_with_regularization(model, loss=loss, optimizer=opt, metrics=['accuracy'],
                             regularization_type='l2', attrs=['weight_regularizer'], l2=0.005)
 
-H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y)
+H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y, pso_layer=(Conv2D, Dense),
+                  gd_layer=(Conv2D, Dense))
 
 # evaluate the network
 print('[INFO] evaluating network...')
