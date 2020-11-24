@@ -15,7 +15,7 @@ from configurations.TrainingConfig import create_required_directories, IMAGE_DIM
 from configurations.TrainingConfig import hybrid_hyperparameters as hyperparameters
 from metrics.MetricsReporter import MetricReporter
 from networks.NetworkHelper import compile_with_regularization, create_classification_layers
-from training_loops.HybridTrainingLoop import training_loop
+from training_loops.CustomTrainingLoop import training_loop
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import read_cmd_line_args, generate_script_report
