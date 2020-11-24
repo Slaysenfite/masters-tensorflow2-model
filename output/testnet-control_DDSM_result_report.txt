@@ -1,0 +1,49 @@
+*** Script Hyperparameters ***
+ Epochs: 50
+ Initial learning rate: 0.005
+ Batch size: 32
+ Dropout: 0.25
+ Learning optimization: LearningOptimization.SGD
+*** Classification Report *** 
+               precision    recall  f1-score   support
+
+    Positive       0.50      0.38      0.44      1217
+    Negative       0.66      0.76      0.70      1892
+
+    accuracy                           0.61      3109
+   macro avg       0.58      0.57      0.57      3109
+weighted avg       0.60      0.61      0.60      3109
+ 
+*** General Metrics *** 
+ Accuracy Score: 61.08% 
+ Precision Score: 58.00% 
+ Recall Score: 57.03% 
+
+*** Final Network Metrics *** 
+ Final Training Loss: 0.6209 
+ Final Validation Loss: 0.6190 
+ Final Training Accuracy: 0.63% 
+ Final Validation Accuracy: 0.61% 
+
+*** Best Network Metrics *** 
+ Best Epoch: 17 
+ Best Training Loss: 0.6236 
+ Best Validation Loss: 0.6186 
+ Best Training Accuracy: 0.64% 
+ Best Validation Accuracy: 0.61% 
+
+*** Predictions *** 
+ Predictions: [[0.19216605 0.80783397]
+ [0.03246865 0.9675313 ]
+ [0.46919394 0.5308061 ]
+ ...
+ [0.5104629  0.4895371 ]
+ [0.5152272  0.48477283]
+ [0.28942177 0.7105782 ]] 
+ Ground Truth Labels: [[0. 1.]
+ [0. 1.]
+ [1. 0.]
+ ...
+ [0. 1.]
+ [1. 0.]
+ [0. 1.]] 

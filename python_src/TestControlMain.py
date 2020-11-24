@@ -4,7 +4,7 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.python.keras.applications import ResNet50
+from tensorflow.keras.applications import ResNet50
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras.utils.np_utils import to_categorical
