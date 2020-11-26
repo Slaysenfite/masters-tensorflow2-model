@@ -17,11 +17,18 @@ def reset_metrics(train_acc_metric, val_acc_metric):
     val_acc_metric.reset_states()
 
 
-def print_metrics(train_acc_score, train_loss_score, val_acc_score, val_loss_score):
+def print_metrics(train_acc_score, train_loss_score, train_precision_score, train_recall_score, val_acc_score,
+                  val_loss_score, val_precision_score, val_recall_score):
+    print('--- Training Scores ---')
     print('Training acc over epoch: %s' % (float(train_acc_score)))
     print('Training loss over epoch: %s' % (float(train_loss_score)))
+    print('Training precision over epoch: %s' % (float(train_precision_score)))
+    print('Training recall over epoch: %s' % (float(train_recall_score)))
+    print('--- Validation Scores ---')
     print('Validation acc over epoch: %s' % (float(val_acc_score)))
     print('Validation loss over epoch: %s' % (float(val_loss_score)))
+    print('Validation precision over epoch: %s' % (float(val_precision_score)))
+    print('Validation recall over epoch: %s' % (float(val_recall_score)))
 
 
 def generate_tf_history(accuracy, hyperparameters, loss, model, val_accuracy, val_loss):
@@ -56,13 +63,3 @@ def batch_data_set(hyperparameters, test_x, test_y, train_x, train_y):
         hyperparameters.batch_size)
     return test_data, train_data
 
-
-# The validate_on_batch function
-# Find out how the model works
-# @tf.function
-def validate_on_batch(model, X, y, accuracy_metric, loss_metric):
-    ŷ = model(X, training=False)
-    accuracy = accuracy_metric(y, ŷ)
-    loss = loss_metric(y, ŷ)
-
-    return accuracy.numpy(), loss .numpy()

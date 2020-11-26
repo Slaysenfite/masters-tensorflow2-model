@@ -4,6 +4,8 @@ import numpy as np
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.losses import CategoricalCrossentropy
+from tensorflow.python.keras.metrics import TrueNegatives, FalseNegatives, TruePositives, \
+    FalsePositives, Recall, Precision, Accuracy, CategoricalAccuracy
 
 from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights
 
@@ -16,14 +18,14 @@ V_MAX = 2
 
 
 class Particle:
-    def __init__(self, position, loss, velocity=0.0):
+    def __init__(self, position, fitness, velocity=0.0):
         self.position = position
         self.velocity = velocity
         self.gbest = None
         self.pbest = position
-        self.current_loss = loss
-        self.best_loss = loss
-        self.gbest_loss = None
+        self.current_fitness = fitness
+        self.best_fitness = fitness
+        self.gbest_fitness = None
 
 
 class PsoEnv():
@@ -50,8 +52,8 @@ class PsoEnv():
 
             self.update_gbest(swarm)
 
-            print(' PSO training for iteration {}'.format(iteration + 1) + ' - Best loss of {}'.format(
-                swarm[0].gbest_loss))
+            print(' PSO training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
+                swarm[0].gbest_fitness))
             iteration += 1
         best_weights = swarm[0].gbest
 
@@ -61,45 +63,60 @@ class PsoEnv():
 
     def initialize_swarm(self, swarm_size, weights, model, loss_metric, X, y):
         particles = [None] * swarm_size
-        particles[0] = Particle(weights, self.calc_position_loss(weights, model, loss_metric, X, y))
+        particles[0] = Particle(weights, self.calc_position_fitness(weights, model, loss_metric, X, y))
         for p in range(1, swarm_size):
             new_weights = [w * uniform(-1, 1) for w in weights]
-            initial_loss = self.calc_position_loss(new_weights, model, loss_metric, X, y)
-            particles[p] = Particle(np.array(new_weights), initial_loss)
+            initial_fitness = self.calc_position_fitness(new_weights, model, loss_metric, X, y)
+            particles[p] = Particle(np.array(new_weights), initial_fitness)
         return particles
 
-    def calc_position_loss(self, weights, model, loss_metric, X, y):
+    def calc_position_fitness(self, weights, model, loss_metric, X, y):
         set_trainable_weights(model, weights, self.layers_to_optimize)
         ŷ = model(X, training=True)
-        return loss_metric(y, ŷ).numpy()
+
+        accuracy_metric = CategoricalAccuracy()
+        recall_metric = Recall()
+        precision_metric = Precision()
+
+        accuracy = accuracy_metric(y, ŷ).numpy()
+        recall = recall_metric(y, ŷ).numpy()
+        precision = precision_metric(y, ŷ).numpy()
+        loss = loss_metric(y, ŷ).numpy()
+
+        accuracy_metric.reset_states()
+        recall_metric.reset_states()
+        precision_metric.reset_states()
+
+        return 2*(1 - recall) + 2*(1 - precision) + (1 - accuracy) + loss
+
 
     def set_gbest(self, particles, best_particle):
         for particle in particles:
             particle.gbest = best_particle.position
-            particle.gbest_loss = best_particle.best_loss
+            particle.gbest_fitness = best_particle.best_fitness
 
     def update_positions(self, particles, model, loss_metric, X, y):
         for particle in particles:
             particle.velocity = self.update_velocity(particle, INERTIA, [C1, C2])
             particle.position = self.calc_new_position(particle)
-            particle.current_loss = self.calc_position_loss(particle.position, model, loss_metric, X, y)
-            if particle.current_loss < particle.best_loss:
+            particle.current_fitness = self.calc_position_fitness(particle.position, model, loss_metric, X, y)
+            if particle.current_fitness < particle.best_fitness:
                 particle.pbest = particle.position
-                particle.best_loss = particle.current_loss
+                particle.best_fitness = particle.current_fitness
 
     def update_gbest(self, swarm):
         best_particle = swarm[0]
-        initial_best_loss = best_particle.gbest_loss
+        initial_best_fitness = best_particle.gbest_fitness
         for i in range(1, len(swarm)):
-            if swarm[i].best_loss < best_particle.gbest_loss:
+            if swarm[i].best_fitness < best_particle.gbest_fitness:
                 best_particle = swarm[i]
-        if best_particle.best_loss < initial_best_loss:
+        if best_particle.best_fitness < initial_best_fitness:
             self.set_gbest(swarm, best_particle)
 
     def find_best_particle(self, particles):
         best_particle = particles[0]
         for i in range(1, len(particles)):
-            if particles[i].current_loss < best_particle.current_loss:
+            if particles[i].current_fitness < best_particle.current_fitness:
                 best_particle = particles[i]
         return best_particle
 

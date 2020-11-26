@@ -4,14 +4,15 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.python.keras.applications.resnet50 import ResNet50
-from tensorflow.python.keras.layers import Conv2D, Dense
-from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
-from tensorflow.python.keras.utils.np_utils import to_categorical
+from tensorflow.python.keras.applications import ResNet50
+from tensorflow.python.keras.layers.convolutional import Conv2D
+from tensorflow.python.keras.layers.core import Dense
+from tensorflow.python.keras.optimizer_v2.adam import Adam
+from tensorflow.python.keras.utils import to_categorical
 
 from configurations.DataSet import binary_ddsm_data_set as data_set
 from configurations.TrainingConfig import create_required_directories, IMAGE_DIMS
-from configurations.TrainingConfig import pso_hyperparameters as hyperparameters
+from configurations.TrainingConfig import hybrid_hyperparameters as hyperparameters
 from metrics.MetricsReporter import MetricReporter
 from networks.NetworkHelper import compile_with_regularization, create_classification_layers
 from training_loops.CustomTrainingLoop import training_loop
@@ -38,7 +39,8 @@ data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
 
 # partition the data into training and testing splits using 70% of
 # the data for training and the remaining 30% for testing
-(train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7, random_state=42)
+(train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7,
+                                                      random_state=42)
 
 if data_set.is_multiclass:
     print('[INFO] Configure for multiclass classification')
@@ -61,12 +63,12 @@ base_model = ResNet50(include_top=False,
 model = create_classification_layers(base_model, classes=len(data_set.class_names),
                                      dropout_prob=hyperparameters.dropout)
 
-opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
+opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
 
 compile_with_regularization(model, loss=loss, optimizer=opt, metrics=['accuracy'],
                             regularization_type='l2', attrs=['weight_regularizer'], l2=0.005)
 
-H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y, pso_layer=(Conv2D, Dense), gd_layer=None)
+H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y, pso_layer=(Dense), gd_layer=(Conv2D))
 
 # evaluate the network
 print('[INFO] evaluating network...')
@@ -75,23 +77,19 @@ predictions = model.predict(test_x, batch_size=32)
 
 print('[INFO] generating metrics...')
 
-generate_script_report(H, test_y, predictions, data_set, hyperparameters, 'testnet-pso')
+generate_script_report(H, test_y, predictions, data_set, hyperparameters, 'testnet-hybrid')
 
-reporter = MetricReporter(data_set.name, 'testnet-pso')
+reporter = MetricReporter(data_set.name, 'testnet-hybrid')
 cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
 reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
                                title='Confusion matrix, without normalization')
 
 reporter.plot_roc(data_set.class_names, test_y, predictions)
 
-reporter.plot_network_metrics(H, 'testnet-pso')
-
-# print('[INFO] serializing network and label binarizer...')
-#
-# reporter.save_model_to_file(model, lb)
+reporter.plot_network_metrics(H, 'testnet-hybrid')
 
 print('[INFO] emailing result...')
 
-results_dispatch(data_set.name, 'testnet-pso')
+results_dispatch(data_set.name, 'testnet-hybrid')
 
 print('[END] Finishing script...\n')
