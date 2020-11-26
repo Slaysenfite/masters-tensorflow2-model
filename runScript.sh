@@ -8,6 +8,4 @@ git checkout instance/uber
 
 workon wesselsenv
 
-nohup python python_src/TestPsoMain.py > log-pso.txt &
-
-nohup python python_src/TestControlMain.py > log-control.txt &
+nohup python python_src/TestHybridGreedy.py > log-pso.txt &
