@@ -5,14 +5,16 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras.applications.resnet50 import ResNet50
+from tensorflow.python.keras.layers import Conv2D, Dense
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
 from configurations.DataSet import binary_ddsm_data_set as data_set
-from configurations.TrainingConfig import create_required_directories, IMAGE_DIMS, pso_hyperparameters
+from configurations.TrainingConfig import create_required_directories, IMAGE_DIMS
+from configurations.TrainingConfig import pso_hyperparameters as hyperparameters
 from metrics.MetricsReporter import MetricReporter
 from networks.NetworkHelper import compile_with_regularization, create_classification_layers
-from training_loops.PsoTrainingLoop import training_loop
+from training_loops.CustomTrainingLoop import training_loop
 from utils.Emailer import results_dispatch
 from utils.ImageLoader import load_rgb_images
 from utils.ScriptHelper import read_cmd_line_args, generate_script_report
@@ -20,9 +22,9 @@ from utils.ScriptHelper import read_cmd_line_args, generate_script_report
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
 print('[BEGIN] Start script...\n')
-read_cmd_line_args(data_set, pso_hyperparameters, IMAGE_DIMS)
+read_cmd_line_args(data_set, hyperparameters, IMAGE_DIMS)
 print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
-print(pso_hyperparameters.report_hyperparameters())
+print(hyperparameters.report_hyperparameters())
 
 print('[INFO] Creating required directories...')
 create_required_directories()
@@ -58,14 +60,14 @@ base_model = ResNet50(include_top=False,
                       pooling=None,
                       classes=2)
 model = create_classification_layers(base_model, classes=len(data_set.class_names),
-                                     dropout_prob=pso_hyperparameters.dropout)
+                                     dropout_prob=hyperparameters.dropout)
 
-opt = SGD(lr=pso_hyperparameters.init_lr, decay=pso_hyperparameters.init_lr / pso_hyperparameters.epochs)
+opt = SGD(lr=hyperparameters.init_lr, decay=hyperparameters.init_lr / hyperparameters.epochs)
 
 compile_with_regularization(model, loss=loss, optimizer=opt, metrics=['accuracy'],
                             regularization_type='l2', attrs=['weight_regularizer'], l2=0.005)
 
-H = training_loop(model, pso_hyperparameters, train_x, train_y, test_x, test_y)
+H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y, pso_layer=(Conv2D, Dense), gd_layer=None)
 
 # evaluate the network
 print('[INFO] evaluating network...')
@@ -74,7 +76,7 @@ predictions = model.predict(test_x, batch_size=32)
 
 print('[INFO] generating metrics...')
 
-generate_script_report(H, test_y, predictions, data_set, pso_hyperparameters, 'testnet-pso')
+generate_script_report(H, test_y, predictions, data_set, hyperparameters, 'testnet-pso')
 
 reporter = MetricReporter(data_set.name, 'testnet-pso')
 cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
