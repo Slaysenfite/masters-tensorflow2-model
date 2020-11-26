@@ -4,7 +4,8 @@ import numpy as np
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.losses import CategoricalCrossentropy
-from tensorflow.python.keras.metrics import Precision, Recall
+from tensorflow.python.keras.metrics import TrueNegatives, FalseNegatives, TruePositives, \
+    FalsePositives, Recall, Precision, Accuracy, CategoricalAccuracy
 
 from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights
 
@@ -71,14 +72,22 @@ class PsoEnv():
 
     def calc_position_fitness(self, weights, model, loss_metric, X, y):
         set_trainable_weights(model, weights, self.layers_to_optimize)
-        precision_metric = Precision()
-        recall_metric = Recall()
         ŷ = model(X, training=True)
-        loss = loss_metric(y, ŷ).numpy()
-        precision = precision_metric(y, ŷ).numpy()
+
+        accuracy_metric = CategoricalAccuracy()
+        recall_metric = Recall()
+        precision_metric = Precision()
+
+        accuracy = accuracy_metric(y, ŷ).numpy()
         recall = recall_metric(y, ŷ).numpy()
-        #figute out why precision and recall don't calculate correctly
-        return (1 - precision) + (1 - recall)
+        precision = precision_metric(y, ŷ).numpy()
+        loss = loss_metric(y, ŷ).numpy()
+
+        accuracy_metric.reset_states()
+        recall_metric.reset_states()
+        precision_metric.reset_states()
+
+        return 2*(1 - recall) + 2*(1 - precision) + (1 - accuracy) + loss
 
 
     def set_gbest(self, particles, best_particle):
