@@ -2,13 +2,20 @@ import gc
 
 import cv2
 import numpy as np
+import pandas as pd
 from imutils import paths
 from numpy import ma, asarray
 
 
 def load_rgb_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
-    # grab the image paths and randomly shuffle them
-    image_paths = list(paths.list_images(dataset.root_path))
+    image_paths = []
+
+     #get image paths
+    if dataset.name == 'CBIS_DDSM':
+        df_paths = pd.read_csv(dataset.test_metadata_path)
+        image_paths = df_paths['image'].tolist()
+    else:
+        image_paths = list(paths.list_images(dataset.root_path))
 
     i = 0
     # loop over the input images
