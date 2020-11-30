@@ -4,7 +4,7 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow.python.keras.applications import ResNet50
+from tensorflow.keras.applications import ResNet50
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras.utils.np_utils import to_categorical
@@ -36,7 +36,7 @@ data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
 
 # partition the data into training and testing splits using 70% of
 # the data for training and the remaining 30% for testing
-(train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7, random_state=42)
+(train_x, test_x, train_y, test_y) = data_set.split_data_set(data, labels)
 
 print('[INFO] Augmenting data set')
 aug = ImageDataGenerator(
@@ -46,17 +46,7 @@ aug = ImageDataGenerator(
 print("[INFO] Training data shape: " + str(train_x.shape))
 print("[INFO] Training label shape: " + str(train_y.shape))
 
-if data_set.is_multiclass:
-    print('[INFO] Configure for multiclass classification')
-    lb = LabelBinarizer()
-    train_y = lb.fit_transform(train_y)
-    test_y = lb.transform(test_y)
-    loss = 'categorical_crossentropy'
-else:
-    print('[INFO] Configure for binary classification')
-    train_y = to_categorical(train_y)
-    test_y = to_categorical(test_y)
-    loss = 'binary_crossentropy'
+loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
 base_model = ResNet50(include_top=False,
                  weights=None,

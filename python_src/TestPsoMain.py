@@ -2,7 +2,6 @@ import sys
 
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import train_test_split
 from tensorflow.keras.applications.resnet50 import ResNet50
 from tensorflow.python.keras.layers import Conv2D, Dense
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
@@ -35,8 +34,7 @@ data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
 
 # partition the data into training and testing splits using 70% of
 # the data for training and the remaining 30% for testing
-(train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.3, train_size=0.7,
-                                                      random_state=42)
+(train_x, test_x, train_y, test_y) = data_set.split_data_set(data, labels)
 
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
