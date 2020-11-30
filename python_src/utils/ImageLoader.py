@@ -2,25 +2,17 @@ import gc
 
 import cv2
 import numpy as np
-import pandas as pd
-from imutils import paths
 from numpy import ma, asarray
 
 
 def load_rgb_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
-    image_paths = []
-
-     #get image paths
-    if dataset.name == 'CBIS_DDSM':
-        df_paths = pd.read_csv(dataset.test_metadata_path)
-        image_paths = df_paths['image'].tolist()
-    else:
-        image_paths = list(paths.list_images(dataset.root_path))
+    #get image paths and metadata
+    image_paths = dataset.get_image_paths()
+    metadata = dataset.get_image_metadata()
 
     i = 0
     # loop over the input images
     for image_path in image_paths:
-        #print(image_path)
         print_progress_bar(i + 1, len(image_paths), prefix=' Progress:', suffix='Complete')
 
         image = cv2.imread(image_path)
@@ -29,12 +21,11 @@ def load_rgb_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
 
         # extract the class label from the image path and update the
         # labels list
-        label = dataset.label_map[dataset.get_image_metadata()[i][dataset.class_label_index]]
+        raw_label = metadata[i][dataset.class_label_index]
+        label = dataset.label_map[raw_label]
 
         labels.append(label)
         i += 1
-
-    gc.collect()
 
     # scale the raw pixel intensities to the range [0, 1]
     data = np.array(data, dtype="float32") / 255.0
@@ -47,8 +38,9 @@ def load_rgb_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
 
 
 def load_greyscale_images(data, labels, dataset, image_dimensions=(128, 128, 1)):
-    # grab the image paths and randomly shuffle them
-    image_paths = list(paths.list_images(dataset.root_path))
+    # get image paths
+    image_paths = dataset.get_image_paths()
+    metadata = dataset.get_image_metadata()
 
     i = 0
     # loop over the input images
@@ -63,12 +55,11 @@ def load_greyscale_images(data, labels, dataset, image_dimensions=(128, 128, 1))
 
         # extract the class label from the image path and update the
         # labels list
-        label = dataset.label_map[dataset.get_image_metadata()[i][dataset.class_label_index]]
+        raw_label = metadata[i][dataset.class_label_index]
+        label = dataset.label_map[raw_label]
 
         labels.append(label)
         i += 1
-
-    gc.collect()
 
     # scale the raw pixel intensities to the range [0, 1]
     data = np.array(data, dtype="float") / 255.0

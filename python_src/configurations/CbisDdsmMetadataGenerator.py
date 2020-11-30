@@ -5,7 +5,7 @@ import pandas as pd
 home = expanduser("~")
 
 IMAGE_COL_NAME = 'cropped image file path'
-RELATIVE_DATA_SET_PATH = '/dev/data/CBIS-DDSM_CLASSIC_PNG/'
+RELATIVE_DATA_SET_PATH = '/data/CBIS-DDSM_CLASSIC_PNG/'
 
 
 def append_to_ddsm_csv(path, string):

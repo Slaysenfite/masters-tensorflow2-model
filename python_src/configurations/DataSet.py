@@ -3,12 +3,16 @@ from os.path import expanduser
 
 import numpy as np
 import pandas as pd
+from imutils import paths
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelBinarizer
+from tensorflow.python.keras.utils.np_utils import to_categorical
 
 home = expanduser("~")
 
 # Dataset paths
 
-ROOT_DIRECTORY = home + '/dev/data'
+ROOT_DIRECTORY = home + '/data'
 PATH_TO_DDSM = '/ddsm_lr_sample'
 PATH_TO_MIAS = '/mias'
 PATH_TO_CBIS_DDSM = '/CBIS-DDSM_CLASSIC_PNG'
@@ -22,6 +26,12 @@ two_class_names = ['Positive', 'Negative']
 three_class_label_map = {'B': 0, 'M': 1, 'N': 2}
 three_class_names = ['Benign', 'Malignant', 'Normal']
 
+
+class DataSetNames(Enum):
+    DDSM = 'Digital Database for Screening Mammography'
+    CBIS_DDSM = 'Curated Breast Imaging Subset of DDSM'
+    MIAS = 'Mammographic Image Analysis Homepage'
+    InBreast = 'IN'
 
 class DataSet:
     def __init__(self, name, root_path, train_metadata_path, test_metadata_path, class_label_index, label_map,
@@ -39,13 +49,47 @@ class DataSet:
         df_images = pd.read_csv(self.train_metadata_path)
         return np.array(df_images)
 
+    def split_data_set(self, data, labels):
+        return train_test_split(data, labels, test_size=0.3, train_size=0.7,
+                                random_state=42)
 
-class DataSetNames(Enum):
-    DDSM = 'Digital Database for Screening Mammography'
-    CBIS_DDSM = 'Curated Breast Imaging Subset of DDSM'
-    MIAS = 'Mammographic Image Analysis Homepage'
-    InBreast = 'IN'
+    def get_dataset_labels(self, train_y, test_y):
+        if self.is_multiclass:
+            print('[INFO] Configure for multiclass classification')
+            lb = LabelBinarizer()
+            train_y = lb.fit_transform(train_y)
+            test_y = lb.transform(test_y)
+            loss = 'categorical_crossentropy'
+        else:
+            print('[INFO] Configure for binary classification')
+            train_y = to_categorical(train_y)
+            test_y = to_categorical(test_y)
+            loss = 'binary_crossentropy'
+        return loss, train_y, test_y
 
+    def get_image_paths(self):
+        return list(paths.list_images(self.root_path))
+
+    def get_ground_truth_lables(label_index):
+        return
+
+
+class MultiPartDataset(DataSet):
+
+    def get_image_paths(self):
+        df_paths = pd.read_csv(self.train_metadata_path)
+        df_paths.append(pd.read_csv(self.test_metadata_path))
+        return df_paths['image'].to_list()
+
+    def get_image_metadata(self):
+        df_train_metadata = pd.read_csv(self.train_metadata_path)[['image', 'label']]
+        df_test_metadata = pd.read_csv(self.test_metadata_path)[['image', 'label']]
+        total_metadata = df_train_metadata
+        total_metadata.append(df_test_metadata)
+        return np.array(total_metadata)
+
+    def split_data_set(self, data, labels):
+        return train_test_split(data, labels, test_size=0.25, train_size=0.75, random_state=None, shuffle=False)
 
 def create_ddsm_three_class_dataset_singleton():
     return DataSet(
@@ -86,7 +130,7 @@ def create_mias_dataset_singleton():
 
 
 def create_cbis_ddsm_dataset_singleton():
-    return DataSet(
+    return MultiPartDataset(
         DataSetNames.CBIS_DDSM.name,
         ROOT_DIRECTORY + PATH_TO_CBIS_DDSM,
         ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/train_cbis-ddsm.csv',
