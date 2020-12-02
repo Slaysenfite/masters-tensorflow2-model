@@ -7,7 +7,7 @@ from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 
-from configurations.DataSet import binary_ddsm_data_set as data_set
+from configurations.DataSet import cbis_ddsm_data_set as data_set
 from configurations.TrainingConfig import create_required_directories, IMAGE_DIMS
 from configurations.TrainingConfig import hybrid_hyperparameters as hyperparameters
 from metrics.MetricsReporter import MetricReporter
