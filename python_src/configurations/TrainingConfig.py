@@ -57,6 +57,18 @@ def create_pso_hyperparameter_singleton():
         0.25
     )
 
+<<<<<<< Updated upstream
+=======
+def create_hybrid_hyperparameter_singleton():
+    return Hyperparameters(
+        30,
+        5e-3,
+        32,
+        LearningOptimization.HYBRID,
+        0.25
+    )
+
+>>>>>>> Stashed changes
 def create_callbacks():
     return [
         EarlyStopping(
@@ -70,3 +82,4 @@ def create_callbacks():
 
 hyperparameters = create_standard_hyperparameter_singleton()
 pso_hyperparameters = create_pso_hyperparameter_singleton()
+hybrid_hyperparameters = create_hybrid_hyperparameter_singleton()
