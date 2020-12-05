@@ -6,23 +6,29 @@ from tensorflow.python.keras.layers import Conv2D, Activation, BatchNormalizatio
 from tensorflow.python.keras.models import Sequential
 
 
-def get_trainable_weights(model):
+def get_trainable_weights(model, keras_layers=(Dense, Conv2D), as_numpy_array=True):
     weights = []
     for layer in model.layers:
         if (layer.trainable != True or len(layer.trainable_weights) == 0):
             pass
-        if isinstance(layer, (Dense, Conv2D)):
-            weights.append(layer.get_weights())
-    return np.array(weights)
+        if isinstance(layer, keras_layers):
+            weights.append(layer.get_weights()) if as_numpy_array else weights.append(layer.trainable_weights)
+    if as_numpy_array:
+        return np.array(weights, dtype=object)
+    else:
+        return weights
 
 
-def set_trainable_weights(model, weights):
+def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D), as_numpy_array=True):
     i = 0
     for layer in model.layers:
         if (layer.trainable != True or len(layer.weights) == 0):
             pass
-        if isinstance(layer, (Dense, Conv2D)):
-            layer.set_weights(weights[i])
+        if isinstance(layer, keras_layers):
+            if as_numpy_array:
+                layer.set_weights(weights[i].tolist())
+            else:
+                layer._trainable_weights = weights[i]
             i += 1
     return model
 

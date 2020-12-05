@@ -64,5 +64,4 @@ def curate_cbis_ddsm_folder(path_to_dir, ext_sequence, strip_sequence):
                 os.rename(os.path.join(fileList[0], fname), os.path.join(fileList[0], new_fname))
 
 
-#curate_cbis_ddsm_folder('/media/slaysenfite/Windows/dev/cbis-ddsm/CBIS-DDSM', '.dcm', '_result')
 gen_binary_classification_ddsm_metadata(ddsm_data_set.root_path)
