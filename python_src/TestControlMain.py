@@ -45,19 +45,19 @@ print("[INFO] Training label shape: " + str(train_y.shape))
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
 base_model = ResNet50(include_top=False,
-                 weights=None,
-                 input_tensor=None,
-                 input_shape=IMAGE_DIMS,
-                 pooling=None,
-                 classes=2)
+                      weights=None,
+                      input_tensor=None,
+                      input_shape=IMAGE_DIMS,
+                      pooling=None,
+                      classes=len(data_set.class_names))
 model = create_classification_layers(base_model, classes=len(data_set.class_names), dropout_prob=hyperparameters.dropout)
 
 opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
 
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=[tf.keras.metrics.Precision(),
-                                                                       tf.keras.metrics.Recall(),
-                                                                       tf.keras.metrics.Accuracy(),
-                                                                       tf.keras.metrics.BinaryAccuracy()])
+model.compile(loss=loss, optimizer=opt, metrics=[tf.keras.metrics.Precision(),
+                                                 tf.keras.metrics.Recall(),
+                                                 tf.keras.metrics.Accuracy(),
+                                                 tf.keras.metrics.BinaryAccuracy()])
 
 print('[INFO] Adding callbacks')
 callbacks = create_callbacks()
