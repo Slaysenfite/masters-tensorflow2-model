@@ -34,7 +34,7 @@ def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric, pso_lay
 
 
 def apply_swarm_optimization(X, model, pso_layer, y):
-    pso = PsoEnv(swarm_size=8, iterations=4, model=model, X=X, y=y, layers_to_optimize=pso_layer)
+    pso = PsoEnv(swarm_size=10, iterations=10, model=model, X=X, y=y, layers_to_optimize=pso_layer)
     model = pso.get_pso_model()
     return model
 

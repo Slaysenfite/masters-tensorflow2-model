@@ -141,8 +141,21 @@ def create_cbis_ddsm_dataset_singleton():
         False
     )
 
+
+def create_cbis_ddsm_five_class_dataset_singleton():
+    return MultiPartDataset(
+        DataSetNames.CBIS_DDSM.name,
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM,
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/train_cbis-ddsm_five.csv',
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/test_cbis-ddsm_five.csv',
+        1,
+        {0:0, 1:1, 2:2, 3:3, 4:4, 5:5},
+        ['0', '1', '2', '3', '4', '5'],
+        True
+    )
+
 ddsm_data_set = create_ddsm_three_class_dataset_singleton()
 binary_ddsm_data_set = create_ddsm_two_class_dataset_singleton()
 mias_data_set = create_mias_dataset_singleton()
 cbis_ddsm_data_set = create_cbis_ddsm_dataset_singleton()
-
+cbis_ddsm_five_data_set = create_cbis_ddsm_five_class_dataset_singleton()

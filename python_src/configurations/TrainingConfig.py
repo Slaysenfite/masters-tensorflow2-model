@@ -50,7 +50,7 @@ def create_standard_hyperparameter_singleton():
 
 def create_pso_hyperparameter_singleton():
     return Hyperparameters(
-        10,
+        4,
         0,
         96,
         LearningOptimization.PSO,
