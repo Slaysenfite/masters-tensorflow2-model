@@ -4,8 +4,6 @@ import numpy as np
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.losses import CategoricalCrossentropy
-from tensorflow.python.keras.metrics import CategoricalAccuracy, TrueNegatives, TruePositives, \
-    FalsePositives, FalseNegatives
 
 from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights
 
@@ -38,7 +36,7 @@ class PsoEnv():
         self.layers_to_optimize = layers_to_optimize
 
     def get_pso_model(self):
-        iteration = 0;
+        iteration = 0
         loss_metric = CategoricalCrossentropy(from_logits=True)
         weights = get_trainable_weights(self.model, self.layers_to_optimize)
 
@@ -74,31 +72,32 @@ class PsoEnv():
         set_trainable_weights(model, weights, self.layers_to_optimize)
         ŷ = model(X, training=True)
 
-        accuracy_metric = CategoricalAccuracy()
-        tn = TrueNegatives()
-        tp = TruePositives()
-        fp = FalsePositives()
-        fn = FalseNegatives()
-
-        accuracy = accuracy_metric(y, ŷ).numpy()
+        # accuracy_metric = CategoricalAccuracy()
+        # tn = TrueNegatives()
+        # tp = TruePositives()
+        # fp = FalsePositives()
+        # fn = FalseNegatives()
+        #
+        # accuracy = accuracy_metric(y, ŷ).numpy()
         loss = loss_metric(y, ŷ).numpy()
-        tn_score = tn(y, ŷ).numpy()
-        tp_score = tp(y, ŷ).numpy()
-        fp_score = fp(y, ŷ).numpy()
-        fn_score = fn(y, ŷ).numpy()
-
-        recall = tp_score / (tp_score + fn_score)
-        precision = tp_score / (tp_score + fn_score)
-        specificity = tn_score / (tn_score + fp_score)
-
-        if loss <= 2.00:
-            loss_contribution = 2 - loss
-        elif loss > 2 & loss <= 5:
-            loss_contribution = 5 - loss
-        elif loss > 5:
-            loss_contribution = loss
-
-        return (1 - recall) + (1 - precision) + (1 - accuracy) + (2 * loss_contribution) + (1 - specificity)
+        # tn_score = tn(y, ŷ).numpy()
+        # tp_score = tp(y, ŷ).numpy()
+        # fp_score = fp(y, ŷ).numpy()
+        # fn_score = fn(y, ŷ).numpy()
+        #
+        # recall = tp_score / (tp_score + fn_score)
+        # precision = tp_score / (tp_score + fn_score)
+        # specificity = tn_score / (tn_score + fp_score)
+        #
+        # if loss <= 2.00:
+        #     loss_contribution = 2 - loss
+        # elif loss > 2 and loss <= 5:
+        #     loss_contribution = 5 - loss
+        # elif loss > 5:
+        #     loss_contribution = loss
+        #
+        # return (1 - recall) + (1 - precision) + (1 - accuracy) + (2 * loss_contribution) + (1 - specificity)
+        return loss
 
     def set_gbest(self, particles, best_particle):
         for particle in particles:
@@ -131,12 +130,23 @@ class PsoEnv():
         return best_particle
 
     def update_velocity(self, particle, inertia_weight, acc_c):
-        # TODO: Look into clamping the velocity
         initial = (inertia_weight) * (particle.velocity)
         cognitive_component = (acc_c[0]) * (uniform(0, 1)) * (particle.pbest - particle.position)
         social_component = (acc_c[1]) * (uniform(0, 1)) * (particle.gbest - particle.position)
 
-        return initial + cognitive_component + social_component
+        new_velocity = initial + cognitive_component + social_component
+
+        self.clamp_velocity(new_velocity)
+
+        return new_velocity
 
     def calc_new_position(self, particle):
         return particle.position + particle.velocity
+
+    def clamp_velocity(self, new_velocity):
+        for v in new_velocity.flat:
+            for v1 in v.flat:
+                if v1 < -V_MAX:
+                    v1 = -V_MAX
+                if v1 > V_MAX:
+                    v1 = V_MAX

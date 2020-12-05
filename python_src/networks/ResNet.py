@@ -3,7 +3,7 @@ https://androidkt.com/resnet-implementation-in-tensorflow-keras/
 """
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.layers import Input, Activation, BatchNormalization, Dense, add, GlobalAveragePooling2D, \
-    ZeroPadding2D, Conv2D, Lambda, MaxPooling2D, Dropout
+    ZeroPadding2D, Conv2D, Lambda, MaxPooling2D, Dropout, Flatten
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.regularizers import l2
 from configurations.TrainingConfig import hyperparameters
@@ -172,8 +172,11 @@ def resnet50(input_shape, num_classes):
 
     # average pool, 1000-d fc, softmax
     x = GlobalAveragePooling2D()(x)
+    x = Flatten()(x)
+    x = Dense(512, activation='relu', kernel_initializer='he_uniform')(x)
+    x = Dropout(0.25)(x)
     x = Dense(
-        num_classes, activation='softmax',
+        num_classes, activation='softmax', name='predictions',
         kernel_regularizer=l2(L2_WEIGHT_DECAY),
         bias_regularizer=l2(L2_WEIGHT_DECAY))(x)
 
