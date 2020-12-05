@@ -9,7 +9,7 @@ from tensorflow.python.keras.models import Sequential
 def get_trainable_weights(model, keras_layers=(Dense, Conv2D), as_numpy_array=True):
     weights = []
     for layer in model.layers:
-        if (layer.trainable != True or len(layer.trainable_weights) == 0):
+        if (layer.trainable != True or len(layer.trainable_weights) == 0 or layer.name == 'predictions'):
             pass
         if isinstance(layer, keras_layers):
             weights.append(layer.get_weights()) if as_numpy_array else weights.append(layer.trainable_weights)
@@ -22,7 +22,7 @@ def get_trainable_weights(model, keras_layers=(Dense, Conv2D), as_numpy_array=Tr
 def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D), as_numpy_array=True):
     i = 0
     for layer in model.layers:
-        if (layer.trainable != True or len(layer.weights) == 0):
+        if (layer.trainable != True or len(layer.weights) == 0 or layer.name == 'predictions'):
             pass
         if isinstance(layer, keras_layers):
             if as_numpy_array:

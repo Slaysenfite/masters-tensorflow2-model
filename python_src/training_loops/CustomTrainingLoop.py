@@ -18,6 +18,8 @@ def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric, pso_lay
         model = apply_swarm_optimization(X, model, pso_layer, y)
     elif (pso_layer == (Conv2D, Dense)) & (gd_layer == None):
         model = apply_swarm_optimization(X, model, pso_layer, y)
+    elif (pso_layer == None) & (gd_layer == (Conv2D, Dense)):
+        apply_gradient_descent(X, gd_layer, loss_metric, model, optimizer, y)
     else:
         model = apply_swarm_optimization(X, model, pso_layer, y)
         apply_gradient_descent(X, gd_layer, loss_metric, model, optimizer, y)
