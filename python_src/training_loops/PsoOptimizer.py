@@ -131,12 +131,23 @@ class PsoEnv():
         return best_particle
 
     def update_velocity(self, particle, inertia_weight, acc_c):
-        # TODO: Look into clamping the velocity
         initial = (inertia_weight) * (particle.velocity)
         cognitive_component = (acc_c[0]) * (uniform(0, 1)) * (particle.pbest - particle.position)
         social_component = (acc_c[1]) * (uniform(0, 1)) * (particle.gbest - particle.position)
+
+        new_velocity = initial + cognitive_component + social_component
+
+        self.clamp_velocity(new_velocity)
 
         return initial + cognitive_component + social_component
 
     def calc_new_position(self, particle):
         return particle.position + particle.velocity
+
+    def clamp_velocity(self, new_velocity):
+        for v in new_velocity.flat:
+            for v1 in v.flat:
+                if v1 < -V_MAX:
+                    v1 = -V_MAX
+                if v1 > V_MAX:
+                    v1 = V_MAX
