@@ -63,7 +63,7 @@ class PsoEnv():
         particles = [None] * swarm_size
         particles[0] = Particle(weights, self.calc_position_fitness(weights, model, loss_metric, X, y))
         for p in range(1, swarm_size):
-            new_weights = [w * uniform(-1, 1) for w in weights]
+            new_weights = [w * uniform(0, 1) for w in weights]
             initial_fitness = self.calc_position_fitness(new_weights, model, loss_metric, X, y)
             particles[p] = Particle(np.array(new_weights), initial_fitness)
         return particles

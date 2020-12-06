@@ -4,7 +4,7 @@ import pandas as pd
 
 home = expanduser("~")
 
-IMAGE_COL_NAME = 'cropped image file path'
+IMAGE_COL_NAME = 'image file path'
 RELATIVE_DATA_SET_PATH = '/data/CBIS-DDSM_CLASSIC_PNG/'
 
 
