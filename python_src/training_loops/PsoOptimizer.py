@@ -87,7 +87,6 @@ class PsoEnv():
         fp_score = fp(y, ŷ).numpy()
         fn_score = fn(y, ŷ).numpy()
 
-        recall = tp_score / (tp_score + fn_score)
         precision = tp_score / (tp_score + fn_score)
         specificity = tn_score / (tn_score + fp_score)
 
@@ -98,7 +97,8 @@ class PsoEnv():
         elif loss > 5:
             loss_contribution = loss
 
-        return (1 - recall) + (1 - precision) + (1 - accuracy) + (2 * loss_contribution) + (1 - specificity)
+        fpr = fp_score / (tn_score + fn_score + tp_score + fp_score)
+        return (fpr) + (loss_contribution) + (1 - specificity)
 
     def set_gbest(self, particles, best_particle):
         for particle in particles:
