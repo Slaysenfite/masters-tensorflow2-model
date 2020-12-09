@@ -1,9 +1,7 @@
-import gc
-
 import cv2
 import numpy as np
+from matplotlib import pyplot
 from numpy import ma, asarray
-
 
 def load_rgb_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
     #get image paths and metadata
@@ -98,6 +96,18 @@ def append_two_class(abnormal_data, abnormal_labels, train_x, train_y):
             abnormal_data.append(train_x[i])
             abnormal_labels.append(train_y[i])
 
+
+def show_examples(train_x, test_x, train_y, test_y, items=9):
+    print('Train: X=%s, y=%s' % (train_x.shape, train_y.shape))
+    print('Test: X=%s, y=%s' % (test_x.shape, test_y.shape))
+    # plot first few images
+    for i in range(items):
+        # define subplot
+        pyplot.subplot(330 + 1 + i)
+        # plot raw pixel data
+        pyplot.imshow(train_x[i], cmap=pyplot.get_cmap('gray'))
+    # show the figure
+    pyplot.show()
 
 # Print iterations progress
 def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd="\r"):

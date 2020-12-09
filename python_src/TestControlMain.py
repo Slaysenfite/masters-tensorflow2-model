@@ -6,11 +6,11 @@ from tensorflow.keras.applications import ResNet50
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
-from configurations.DataSet import cbis_ddsm_five_data_set as data_set
+from configurations.DataSet import cbis_ddsm_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks
 from metrics.MetricsReporter import MetricReporter
 from networks.NetworkHelper import create_classification_layers
-from utils.ImageLoader import load_rgb_images
+from utils.ImageLoader import load_rgb_images, show_examples
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
 
 print('Python version: {}'.format(sys.version))
@@ -44,20 +44,19 @@ print("[INFO] Training label shape: " + str(train_y.shape))
 
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
+show_examples(train_x, test_x, train_y, test_y, items=9)
+
 base_model = ResNet50(include_top=False,
-                      weights=None,
-                      input_tensor=None,
-                      input_shape=IMAGE_DIMS,
-                      pooling=None,
-                      classes=len(data_set.class_names))
+                 weights=None,
+                 input_tensor=None,
+                 input_shape=IMAGE_DIMS,
+                 pooling=None,
+                 classes=2)
 model = create_classification_layers(base_model, classes=len(data_set.class_names), dropout_prob=hyperparameters.dropout)
 
 opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
 
-model.compile(loss=loss, optimizer=opt, metrics=[tf.keras.metrics.Precision(),
-                                                 tf.keras.metrics.Recall(),
-                                                 tf.keras.metrics.Accuracy(),
-                                                 tf.keras.metrics.BinaryAccuracy()])
+model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 print('[INFO] Adding callbacks')
 callbacks = create_callbacks()
