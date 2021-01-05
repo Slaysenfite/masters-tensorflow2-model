@@ -36,7 +36,7 @@ def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric, pso_lay
 
 
 def apply_swarm_optimization(X, model, pso_layer, y):
-    pso = PsoEnv(swarm_size=10, iterations=5, model=model, X=X, y=y, layers_to_optimize=pso_layer)
+    pso = PsoEnv(swarm_size=25, iterations=10, model=model, X=X, y=y, layers_to_optimize=pso_layer)
     model = pso.get_pso_model()
     return model
 
@@ -44,7 +44,7 @@ def apply_swarm_optimization(X, model, pso_layer, y):
 def apply_gradient_descent(X, gd_layer, loss_metric, model, optimizer, y):
     with GradientTape() as tape:
         ŷ = model(X, training=True)
-        loss_value = loss_metric(y, ŷ)
+        loss_value = loss_metric()(y, ŷ)
     gd_weights = get_trainable_weights(model, keras_layers=gd_layer, as_numpy_array=False)
     grads = tape.gradient(loss_value, gd_weights[0])
     optimizer.apply_gradients(zip(grads, gd_weights[0]))

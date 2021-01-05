@@ -61,13 +61,13 @@ print('[INFO] Adding callbacks')
 callbacks = create_callbacks()
 
 
-def define_model():
-    input = Input(shape=(28, 28, 1))
+def define_model(input=(28, 28, 1), classes=10):
+    input = Input(shape=input)
     x = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform')(input)
     x = MaxPooling2D((2, 2))(input)
     x = Flatten()(x)
-    x = Dense(100, activation='relu', kernel_initializer='he_uniform')(x)
-    output = Dense(10, activation='softmax')(x)
+    x = Dense(256, activation='relu', kernel_initializer='he_uniform')(x)
+    output = Dense(classes, activation='softmax')(x)
     model = Model(inputs=input, outputs=output)
 
     # model = resnet50(num_classes=10,

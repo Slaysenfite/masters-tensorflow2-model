@@ -1,5 +1,7 @@
 from sklearn.metrics import confusion_matrix
+from tensorflow.python.keras import Input, Model
 from tensorflow.python.keras.datasets import mnist
+from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
 from tensorflow.python.keras.metrics import Precision, Recall, Accuracy
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
@@ -47,6 +49,17 @@ def prep_pixels(train, test):
     # return normalized images
     return train_norm, test_norm
 
+def define_model(input=(28, 28, 1), classes=10):
+    input = Input(shape=input)
+    x = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform')(input)
+    x = MaxPooling2D((2, 2))(input)
+    x = Flatten()(x)
+    x = Dense(256, activation='relu', kernel_initializer='he_uniform')(x)
+    output = Dense(classes, activation='softmax')(x)
+    model = Model(inputs=input, outputs=output)
+    opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
+    model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+    return model
 
 train_x, test_x = prep_pixels(train_x, test_x)
 
@@ -54,22 +67,13 @@ train_x, test_x = prep_pixels(train_x, test_x)
 print("[INFO] Training data shape: " + str(train_x.shape))
 print("[INFO] Training label shape: " + str(train_y.shape))
 
-model = resnet50(num_classes=10,
-                 input_shape=(28, 28, 1))
-
-opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
-
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy',
-                                                                       Precision(),
-                                                                       Recall()])
+model = define_model()
 
 print('[INFO] Adding callbacks')
 callbacks = create_callbacks()
 
 # train the network
-H = model.fit(x=train_x, y=train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
-              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
-              callbacks=callbacks)
+H = model.fit(train_x, train_y, epochs=150, batch_size=32, validation_data=(train_x, train_y), verbose=1)
 
 # evaluate the network
 print('[INFO] evaluating network...')

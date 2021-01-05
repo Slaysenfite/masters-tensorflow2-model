@@ -2,14 +2,14 @@ import sys
 
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
-from tensorflow.keras.applications import ResNet50
-from tensorflow.python.keras.optimizer_v2.adam import Adam
+from tensorflow.python.keras import Input, Model
+from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import cbis_ddsm_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks
 from metrics.MetricsReporter import MetricReporter
-from networks.NetworkHelper import create_classification_layers
 from utils.ImageLoader import load_rgb_images, show_examples
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
 
@@ -46,17 +46,22 @@ loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
 show_examples(train_x, test_x, train_y, test_y, items=9)
 
-base_model = ResNet50(include_top=False,
-                 weights=None,
-                 input_tensor=None,
-                 input_shape=IMAGE_DIMS,
-                 pooling=None,
-                 classes=2)
-model = create_classification_layers(base_model, classes=len(data_set.class_names), dropout_prob=hyperparameters.dropout)
+def define_model(input=(28, 28, 1), classes=10):
+    input = Input(shape=input)
+    x = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform')(input)
+    x = MaxPooling2D((2, 2))(input)
+    x = Flatten()(x)
+    x = Dense(256, activation='relu', kernel_initializer='he_uniform')(x)
+    output = Dense(classes, activation='softmax')(x)
+    model = Model(inputs=input, outputs=output)
 
-opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
+    # model = resnet50(num_classes=10,
+    #                  input_shape=(28, 28, 1))
+    opt = SGD(lr=0.01, momentum=0.9)
+    model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+    return model, opt
 
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+model, opt = define_model(IMAGE_DIMS, len(data_set.class_names))
 
 print('[INFO] Adding callbacks')
 callbacks = create_callbacks()

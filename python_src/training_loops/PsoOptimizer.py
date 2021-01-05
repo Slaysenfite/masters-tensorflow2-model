@@ -3,7 +3,7 @@ from random import uniform, seed
 import numpy as np
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
-from tensorflow.python.keras.losses import CategoricalCrossentropy
+from tensorflow.python.keras.losses import CategoricalCrossentropy, SparseCategoricalCrossentropy
 from tensorflow.python.keras.metrics import CategoricalAccuracy, TrueNegatives, TruePositives, \
     FalsePositives, FalseNegatives
 
@@ -39,7 +39,7 @@ class PsoEnv():
 
     def get_pso_model(self):
         iteration = 0;
-        loss_metric = CategoricalCrossentropy(from_logits=True)
+        loss_metric = CategoricalCrossentropy()
         weights = get_trainable_weights(self.model, self.layers_to_optimize)
 
         swarm = self.initialize_swarm(self.swarm_size, weights, self.model, loss_metric, self.X, self.y)
@@ -75,30 +75,31 @@ class PsoEnv():
         ŷ = model(X, training=True)
 
         accuracy_metric = CategoricalAccuracy()
-        tn = TrueNegatives()
-        tp = TruePositives()
-        fp = FalsePositives()
-        fn = FalseNegatives()
+        # tn = TrueNegatives()
+        # tp = TruePositives()
+        # fp = FalsePositives()
+        # fn = FalseNegatives()
 
         accuracy = accuracy_metric(y, ŷ).numpy()
         loss = loss_metric(y, ŷ).numpy()
-        tn_score = tn(y, ŷ).numpy()
-        tp_score = tp(y, ŷ).numpy()
-        fp_score = fp(y, ŷ).numpy()
-        fn_score = fn(y, ŷ).numpy()
-
-        precision = tp_score / (tp_score + fn_score)
-        specificity = tn_score / (tn_score + fp_score)
-
-        if loss <= 2.00:
-            loss_contribution = 2 - loss
-        elif loss > 2 & loss <= 5:
-            loss_contribution = 5 - loss
-        elif loss > 5:
-            loss_contribution = loss
-
-        fpr = fp_score / (tn_score + fn_score + tp_score + fp_score)
-        return (fpr) + (loss_contribution) + (1 - specificity)
+        return loss
+        # tn_score = tn(y, ŷ).numpy()
+        # tp_score = tp(y, ŷ).numpy()
+        # fp_score = fp(y, ŷ).numpy()
+        # fn_score = fn(y, ŷ).numpy()
+        #
+        # precision = tp_score / (tp_score + fn_score)
+        # specificity = tn_score / (tn_score + fp_score)
+        #
+        # if loss <= float(2):
+        #     loss_contribution = float(2) - loss
+        # elif (loss > float(2)) & (loss <= float(5)):
+        #     loss_contribution = float(5) - loss
+        # elif loss > float(5):
+        #     loss_contribution = loss
+        #
+        # fpr = fp_score / (tn_score + fn_score + tp_score + fp_score)
+        # return (fpr) + (loss_contribution) + (1 - specificity)
 
     def set_gbest(self, particles, best_particle):
         for particle in particles:
@@ -137,9 +138,9 @@ class PsoEnv():
 
         new_velocity = initial + cognitive_component + social_component
 
-        self.clamp_velocity(new_velocity)
+        # self.clamp_velocity(new_velocity)
 
-        return initial + cognitive_component + social_component
+        return new_velocity
 
     def calc_new_position(self, particle):
         return particle.position + particle.velocity
