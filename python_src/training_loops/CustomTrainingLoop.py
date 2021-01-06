@@ -13,6 +13,7 @@ from training_loops.TrainingHelper import print_metrics, append_epoch_metrics, r
 
 
 def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric, pso_layer, gd_layer):
+    model.reset_metrics()
     if ((pso_layer == (Dense)) & (gd_layer == (Conv2D))) | ((pso_layer == (Conv2D, Dense)) & (gd_layer == (Conv2D, Dense))):
         apply_gradient_descent(X, gd_layer, loss_metric, model, optimizer, y)
         model = apply_swarm_optimization(X, model, pso_layer, y)
@@ -28,7 +29,7 @@ def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric, pso_lay
     precision_metric = Precision()
     recall_metric = Recall()
     accuracy = accuracy_metric(y, ŷ)
-    loss = loss_metric(y, ŷ)
+    loss = loss_metric()(y, ŷ)
     precision = precision_metric(y, ŷ)
     recall = recall_metric(y, ŷ)
     # Update training metric.
@@ -58,7 +59,7 @@ def validate_on_batch(model, X, y, accuracy_metric, loss_metric):
     precision_metric = Precision()
     recall_metric = Recall()
     accuracy = accuracy_metric(y, ŷ)
-    loss = loss_metric(y, ŷ)
+    loss = loss_metric()(y, ŷ)
     precision = precision_metric(y, ŷ)
     recall = recall_metric(y, ŷ)
     return accuracy.numpy(), loss.numpy(), precision.numpy(), recall.numpy()

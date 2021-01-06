@@ -10,6 +10,7 @@ from tensorflow.python.keras.utils.np_utils import to_categorical
 from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, create_callbacks
 from metrics.MetricsReporter import MetricReporter
 from networks.ResNet import resnet50
+from training_loops.CustomTrainingLoop import training_loop
 
 
 def load_dataset():
@@ -59,7 +60,7 @@ def define_model(input=(28, 28, 1), classes=10):
     model = Model(inputs=input, outputs=output)
     opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
     model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
-    return model
+    return model, opt
 
 train_x, test_x = prep_pixels(train_x, test_x)
 
@@ -67,13 +68,14 @@ train_x, test_x = prep_pixels(train_x, test_x)
 print("[INFO] Training data shape: " + str(train_x.shape))
 print("[INFO] Training label shape: " + str(train_y.shape))
 
-model = define_model()
+model, opt = define_model()
 
 print('[INFO] Adding callbacks')
 callbacks = create_callbacks()
 
 # train the network
-H = model.fit(train_x, train_y, epochs=150, batch_size=32, validation_data=(train_x, train_y), verbose=1)
+H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y, pso_layer=(Conv2D, Dense),
+                  gd_layer=None)
 
 # evaluate the network
 print('[INFO] evaluating network...')

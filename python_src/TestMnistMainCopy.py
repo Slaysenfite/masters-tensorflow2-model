@@ -1,5 +1,6 @@
 from matplotlib import pyplot
 from numpy import mean, std
+from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import KFold
 from tensorflow.python.keras import Model, Input
 from tensorflow.python.keras.datasets import mnist
@@ -7,10 +8,16 @@ from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
-from configurations.TrainingConfig import  create_callbacks
+from configurations.TrainingConfig import create_callbacks, create_required_directories, FIGURE_OUTPUT
 from configurations.TrainingConfig import mnist_hyperparameters as hyperparameters
+from metrics.MetricsReporter import MetricReporter
 from training_loops.CustomTrainingLoop import training_loop
 
+print('[BEGIN] Start script...\n')
+print(hyperparameters.report_hyperparameters())
+
+print('[INFO] Creating required directories...')
+create_required_directories()
 
 def load_dataset():
     # load dataset
@@ -82,8 +89,10 @@ def evaluate_model(dataX, dataY, n_folds=5):
     scores, histories = list(), list()
     # prepare cross validation
     kfold = KFold(n_folds, shuffle=True, random_state=1)
+    k = 1
     # enumerate splits
     for train_ix, test_ix in kfold.split(dataX):
+        print('K-Fold: {}'.format(k))
         # define model
         model, opt = define_model()
         # select rows for train and test
@@ -98,6 +107,17 @@ def evaluate_model(dataX, dataY, n_folds=5):
         # stores scores
         scores.append(acc)
         histories.append(history)
+
+        predictions = model.predict(testX, batch_size=hyperparameters.batch_size)
+
+        reporter = MetricReporter("mnist", 'testnet-control', '-fold-' + str(k))
+        cm1 = confusion_matrix(testY.argmax(axis=1), predictions.argmax(axis=1))
+        class_names = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine']
+        reporter.plot_confusion_matrix(cm1, classes=class_names, title='Confusion matrix, without normalization')
+
+        reporter.plot_roc(class_names, testY, predictions)
+
+        k = k + 1
     return scores, histories
 
 
@@ -114,7 +134,8 @@ def summarize_diagnostics(histories):
         pyplot.title('Classification Accuracy')
         pyplot.plot(histories[i].history['accuracy'], color='blue', label='train')
         pyplot.plot(histories[i].history['val_accuracy'], color='orange', label='test')
-    pyplot.show()
+    pyplot.savefig(FIGURE_OUTPUT + 'network-diagnostics.png')
+    pyplot.clf()
 
 
 # summarize model performance
@@ -123,7 +144,8 @@ def summarize_performance(scores):
     print('Accuracy: mean=%.3f std=%.3f, n=%d' % (mean(scores) * 100, std(scores) * 100, len(scores)))
     # box and whisker plots of results
     pyplot.boxplot(scores)
-    pyplot.show()
+    pyplot.savefig(FIGURE_OUTPUT + 'box-and-whisker.png')
+    pyplot.clf()
 
 
 # run the test harness for evaluating a model

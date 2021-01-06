@@ -82,7 +82,7 @@ class PsoEnv():
 
         accuracy = accuracy_metric(y, ŷ).numpy()
         loss = loss_metric(y, ŷ).numpy()
-        return loss
+        return 2 *loss + (1 - accuracy)
         # tn_score = tn(y, ŷ).numpy()
         # tp_score = tp(y, ŷ).numpy()
         # fp_score = fp(y, ŷ).numpy()

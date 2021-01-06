@@ -4,6 +4,7 @@ from itertools import cycle
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import pyplot
 from scipy import interp
 from sklearn.metrics import roc_curve, auc
 
@@ -12,12 +13,15 @@ import configurations.TrainingConfig as constants
 NETWORK_METRIC_PLOT = '_network_metric_plot.png'
 ROC_PLOT = '_roc_plot.png'
 CONFUSION_MATRIX_PLOT = '_confusion_matrix_plot.png'
+BOX_WHISKER_PLOT = 'box_and_whisker_plot.png'
+SUMMARY_PLOT = 'summary_plot.png'
 
 
 class MetricReporter:
-    def __init__(self, dataset_name, model_name):
+    def __init__(self, dataset_name, model_name, metadata_string=''):
         self.dataset_name = dataset_name
         self.model_name = model_name
+        self.metadata_string = metadata_string
 
     def plot_confusion_matrix(self, cm, classes, normalize=False, title='Confusion matrix', cmap=plt.cm.Greens):
         """
@@ -47,9 +51,11 @@ class MetricReporter:
         plt.tight_layout()
         plt.ylabel('True label')
         plt.xlabel('Predicted label')
-        plt.savefig(constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + CONFUSION_MATRIX_PLOT)
+        plt.savefig(
+            constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + self.metadata_string + CONFUSION_MATRIX_PLOT)
+        plt.clf()
 
-    def plot_roc(self, class_names, test_y, predictions):
+    def plot_roc(self, class_names, test_y, predictions, metadata_string=''):
         # Compute ROC curve and ROC area for each class
         fpr = dict()
         tpr = dict()
@@ -107,7 +113,9 @@ class MetricReporter:
         # Put a legend below current axis
         # plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), fancybox=True, shadow=True, ncol=2)
         plt.legend(loc='lower right')
-        plt.savefig(constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + ROC_PLOT)
+        plt.savefig(
+            constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + self.metadata_string + ROC_PLOT)
+        plt.clf()
 
     def plot_network_metrics(self, H, model_name):
         # plot the training loss and accuracy
@@ -122,7 +130,9 @@ class MetricReporter:
         plt.xlabel('Epoch #')
         plt.ylabel('Loss/Accuracy')
         plt.legend()
-        plt.savefig(constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + NETWORK_METRIC_PLOT)
+        plt.savefig(
+            constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + self.metadata_string + NETWORK_METRIC_PLOT)
+        plt.clf()
 
     def save_model_to_file(self, model, lb):
         # save the model and label binarizer to disk
@@ -131,3 +141,27 @@ class MetricReporter:
                  'wb')
         f.write(pickle.dumps(lb))
         f.close()
+
+    # plot diagnostic learning curves
+    def summarize_diagnostics(self, histories):
+        for i in range(len(histories)):
+            # plot loss
+            pyplot.subplot(2, 1, 1)
+            pyplot.title('Cross-Entropy Loss')
+            pyplot.plot(histories[i].history['loss'], color='blue', label='train')
+            pyplot.plot(histories[i].history['val_loss'], color='orange', label='test')
+            # plot accuracy
+            pyplot.subplot(2, 1, 2)
+            pyplot.title('Classification Accuracy')
+            pyplot.plot(histories[i].history['accuracy'], color='blue', label='train')
+            pyplot.plot(histories[i].history['val_accuracy'], color='orange', label='test')
+        pyplot.savefig(constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + self.metadata_string + SUMMARY_PLOT)
+
+    # summarize model performance
+    def summarize_performance(self, scores):
+        # print summary
+        print('Accuracy: mean=%.3f std=%.3f, n=%d' % (np.mean(scores) * 100, np.std(scores) * 100, len(scores)))
+        # box and whisker plots of results
+        pyplot.boxplot(scores)
+        pyplot.title('Box and Whisker Plot of Each Fold')
+        pyplot.savefig(constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + self.metadata_string + BOX_WHISKER_PLOT)
