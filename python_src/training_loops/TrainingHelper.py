@@ -5,11 +5,13 @@ from tensorflow.python.keras.metrics import CategoricalAccuracy
 
 
 def append_epoch_metrics(accuracy, loss, train_acc_score, train_loss_score, val_acc_score, val_accuracy, val_loss,
-                         val_loss_score):
+                             val_loss_score, val_precision, val_precision_score, val_recall, val_recall_score):
     loss.append(train_loss_score)
     accuracy.append(train_acc_score)
     val_loss.append(val_loss_score)
     val_accuracy.append(val_acc_score)
+    val_precision.append(val_precision_score)
+    val_recall.append(val_recall_score)
 
 
 def reset_metrics(train_acc_metric, val_acc_metric):
@@ -31,19 +33,21 @@ def print_metrics(train_acc_score, train_loss_score, train_precision_score, trai
     print('Validation recall over epoch: %s' % (float(val_recall_score)))
 
 
-def generate_tf_history(accuracy, hyperparameters, loss, model, val_accuracy, val_loss):
+def generate_tf_history(model, hyperparameters, accuracy, loss, val_accuracy, val_loss, val_precision, val_recall):
     H = History()
     H.set_model(model)
     H.set_params({
         'batch_size': hyperparameters.batch_size,
         'epochs': hyperparameters.epochs,
-        'metrics': ['loss', 'accuracy', 'val_loss', 'val_accuracy']
+        'metrics': ['loss', 'accuracy', 'val_loss', 'val_accuracy', 'val_precision', 'val_recall']
     })
-    history = {'loss': [], 'accuracy': [], 'val_loss': [], 'val_accuracy': []}
+    history = {'loss': [], 'accuracy': [], 'val_loss': [], 'val_accuracy': [],'val_precision': [], 'val_recall': []}
     history['loss'] = loss
     history['accuracy'] = accuracy
     history['val_loss'] = val_loss
     history['val_accuracy'] = val_accuracy
+    history['val_precision'] = val_precision
+    history['val_recall'] = val_recall
     H.history = history
     return H
 

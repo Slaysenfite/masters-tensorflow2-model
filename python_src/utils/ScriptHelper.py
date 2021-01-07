@@ -4,9 +4,10 @@ from configurations.TrainingConfig import output_dir
 from metrics.MetricResults import MetricResult
 
 
-def generate_script_report(H, test_y, predictions, data_set, hyperparameters, model_name):
+def generate_script_report(H, test_y, predictions, data_set, hyperparameters, model_name, metadata_string=''):
     metric_result = MetricResult(H, test_y, predictions, data_set)
-    with open(output_dir + model_name + '_' + data_set.name + '_result_report.txt', 'w+') as text_file:
+    with open(output_dir + model_name + '_' + data_set.name + '_' + metadata_string + '_result_report.txt',
+              'w+') as text_file:
         text_file.write(
             hyperparameters.report_hyperparameters() + metric_result.report_result()
         )

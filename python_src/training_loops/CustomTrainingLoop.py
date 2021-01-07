@@ -74,6 +74,8 @@ def training_loop(model, optimizer, hyperparameters, train_x, train_y, test_x, t
     accuracy = []
     val_loss = []
     val_accuracy = []
+    val_precision = []
+    val_recall = []
 
     # Enumerating the Dataset
     for epoch in range(0, hyperparameters.epochs):
@@ -106,11 +108,12 @@ def training_loop(model, optimizer, hyperparameters, train_x, train_y, test_x, t
 
         # Append metrics
         append_epoch_metrics(accuracy, loss, train_acc_score, train_loss_score, val_acc_score, val_accuracy, val_loss,
-                             val_loss_score)
+                             val_loss_score, val_precision, val_precision_score, val_recall, val_recall_score)
 
         # Reset metrics
         reset_metrics(train_acc_metric, val_acc_metric)
 
         print('\rTime taken: ' + str(timedelta(seconds=(time.time() - start_time))))
 
-    return generate_tf_history(accuracy, hyperparameters, loss, model, val_accuracy, val_loss)
+    return generate_tf_history(model, hyperparameters, accuracy, loss, val_accuracy, val_loss, val_precision,
+                               val_recall)

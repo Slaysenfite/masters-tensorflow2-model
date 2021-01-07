@@ -1,5 +1,5 @@
 from matplotlib import pyplot
-from numpy import mean, std
+from numpy import mean, std, arange
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import KFold
 from tensorflow.python.keras import Model, Input
@@ -8,10 +8,12 @@ from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
-from configurations.TrainingConfig import create_callbacks, create_required_directories, FIGURE_OUTPUT
+from configurations.DataSet import mnist_data_set as data_set
+from configurations.TrainingConfig import create_callbacks, create_required_directories, FIGURE_OUTPUT, output_dir
 from configurations.TrainingConfig import mnist_hyperparameters as hyperparameters
 from metrics.MetricsReporter import MetricReporter
 from training_loops.CustomTrainingLoop import training_loop
+from utils.ScriptHelper import generate_script_report
 
 print('[BEGIN] Start script...\n')
 print(hyperparameters.report_hyperparameters())
@@ -109,8 +111,9 @@ def evaluate_model(dataX, dataY, n_folds=5):
         histories.append(history)
 
         predictions = model.predict(testX, batch_size=hyperparameters.batch_size)
-
+        generate_script_report(history, testY, predictions, data_set, hyperparameters, 'mnistnet', '-fold-' + str(k))
         reporter = MetricReporter("mnist", 'testnet-control', '-fold-' + str(k))
+
         cm1 = confusion_matrix(testY.argmax(axis=1), predictions.argmax(axis=1))
         class_names = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine']
         reporter.plot_confusion_matrix(cm1, classes=class_names, title='Confusion matrix, without normalization')
@@ -123,43 +126,51 @@ def evaluate_model(dataX, dataY, n_folds=5):
 
 # plot diagnostic learning curves
 def summarize_diagnostics(histories):
+    pyplot.style.use('ggplot')
     for i in range(len(histories)):
-        # plot loss
-        pyplot.subplot(2, 1, 1)
-        pyplot.title('Cross Entropy Loss')
-        pyplot.plot(histories[i].history['loss'], color='blue', label='train')
-        pyplot.plot(histories[i].history['val_loss'], color='orange', label='test')
-        # plot accuracy
-        pyplot.subplot(2, 1, 2)
-        pyplot.title('Classification Accuracy')
-        pyplot.plot(histories[i].history['accuracy'], color='blue', label='train')
-        pyplot.plot(histories[i].history['val_accuracy'], color='orange', label='test')
-    pyplot.savefig(FIGURE_OUTPUT + 'network-diagnostics.png')
+        N = arange(0, len(histories[i].history['val_loss']))
+        pyplot.plot(N, histories[i].history['loss'], label='training loss ' + str(i+1))
+        pyplot.plot(N, histories[i].history['val_loss'], label='validation loss ' + str(i+1))
+        pyplot.plot(N, histories[i].history['accuracy'], label='training acc ' + str(i+1))
+        pyplot.plot(N, histories[i].history['val_accuracy'], label='validation acc ' + str(i+1))
+        pyplot.title('Training Loss and Accuracy')
+        pyplot.xlabel('Epoch')
+        pyplot.ylabel('Loss/Accuracy')
+    pyplot.legend(title='Metric', bbox_to_anchor=(1.05, 1), loc='upper left')
+    pyplot.tight_layout()
+    pyplot.savefig(FIGURE_OUTPUT + 'network-diagnostics.png', bbox_inches='tight')
     pyplot.clf()
 
 
 # summarize model performance
 def summarize_performance(scores):
     # print summary
+    pyplot.style.use('ggplot')
     print('Accuracy: mean=%.3f std=%.3f, n=%d' % (mean(scores) * 100, std(scores) * 100, len(scores)))
     # box and whisker plots of results
     pyplot.boxplot(scores)
-    pyplot.savefig(FIGURE_OUTPUT + 'box-and-whisker.png')
+    pyplot.savefig(FIGURE_OUTPUT + 'box-and-whisker.png', bbox_inches='tight')
     pyplot.clf()
 
 
 # run the test harness for evaluating a model
-def run_test_harness():
-    # load dataset
-    trainX, trainY, testX, testY = load_dataset()
-    # prepare pixel data
-    trainX, testX = prep_pixels(trainX, testX)
-    # evaluate model
-    scores, histories = evaluate_model(trainX, trainY)
-    # learning curves
-    summarize_diagnostics(histories)
-    summarize_performance(scores)
+def process_histories(histories):
+    ave_dict = {}
+    for H in histories:
+        for i, metric in enumerate(H.history):
+            ave_value = mean(H.history.get(metric))
+            ave_dict[metric] = ave_value
+    with open(output_dir +'average_scores.txt', 'w+') as text_file:
+        text_file.write(average_history_printer(ave_dict))
 
+def average_history_printer(ave_dict):
+    out = ''
+    for i, metric in enumerate(ave_dict):
+        if 'loss' in metric:
+            out += '{} : {:.4f}\n'.format(metric, ave_dict[metric])
+        else:
+            out += '{} : {:.4f}%\n'.format(metric, ave_dict[metric]*100)
+    return out
 
 # evaluate model
 scores, histories = evaluate_model(train_x, train_y)
@@ -167,5 +178,6 @@ scores, histories = evaluate_model(train_x, train_y)
 summarize_diagnostics(histories)
 # summarize estimated performance
 summarize_performance(scores)
+process_histories(histories)
 
 print('[END] Finishing script...\n')

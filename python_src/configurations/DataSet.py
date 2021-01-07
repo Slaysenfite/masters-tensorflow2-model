@@ -32,6 +32,7 @@ class DataSetNames(Enum):
     CBIS_DDSM = 'Curated Breast Imaging Subset of DDSM'
     MIAS = 'Mammographic Image Analysis Homepage'
     InBreast = 'IN'
+    MNIST = 'Modified National Institute of Standards and Technology'
 
 class DataSet:
     def __init__(self, name, root_path, train_metadata_path, test_metadata_path, class_label_index, label_map,
@@ -154,8 +155,23 @@ def create_cbis_ddsm_five_class_dataset_singleton():
         True
     )
 
+
+def create_mnist_dataset_singleton():
+    return DataSet(
+        DataSetNames.MNIST.name,
+        None,
+        None,
+        None,
+        0,
+        {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9},
+        ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'],
+        True
+    )
+
+
 ddsm_data_set = create_ddsm_three_class_dataset_singleton()
 binary_ddsm_data_set = create_ddsm_two_class_dataset_singleton()
 mias_data_set = create_mias_dataset_singleton()
 cbis_ddsm_data_set = create_cbis_ddsm_dataset_singleton()
 cbis_ddsm_five_data_set = create_cbis_ddsm_five_class_dataset_singleton()
+mnist_data_set = create_mnist_dataset_singleton()
