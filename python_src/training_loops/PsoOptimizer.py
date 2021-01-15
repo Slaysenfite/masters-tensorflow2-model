@@ -75,31 +75,24 @@ class PsoEnv():
         ŷ = model(X, training=True)
 
         accuracy_metric = CategoricalAccuracy()
-        # tn = TrueNegatives()
-        # tp = TruePositives()
-        # fp = FalsePositives()
-        # fn = FalseNegatives()
+        tn = TrueNegatives()
+        tp = TruePositives()
+        fp = FalsePositives()
+        fn = FalseNegatives()
 
         accuracy = accuracy_metric(y, ŷ).numpy()
         loss = loss_metric(y, ŷ).numpy()
-        return 2 *loss + (1 - accuracy)
-        # tn_score = tn(y, ŷ).numpy()
-        # tp_score = tp(y, ŷ).numpy()
-        # fp_score = fp(y, ŷ).numpy()
-        # fn_score = fn(y, ŷ).numpy()
-        #
-        # precision = tp_score / (tp_score + fn_score)
-        # specificity = tn_score / (tn_score + fp_score)
-        #
-        # if loss <= float(2):
-        #     loss_contribution = float(2) - loss
-        # elif (loss > float(2)) & (loss <= float(5)):
-        #     loss_contribution = float(5) - loss
-        # elif loss > float(5):
-        #     loss_contribution = loss
-        #
-        # fpr = fp_score / (tn_score + fn_score + tp_score + fp_score)
-        # return (fpr) + (loss_contribution) + (1 - specificity)
+        tn_score = tn(y, ŷ).numpy()
+        tp_score = tp(y, ŷ).numpy()
+        fp_score = fp(y, ŷ).numpy()
+        fn_score = fn(y, ŷ).numpy()
+
+        precision = tp_score / (tp_score + fn_score)
+        specificity = tn_score / (tn_score + fp_score)
+
+
+        fpr = fp_score / (tn_score + fn_score + tp_score + fp_score)
+        return (fpr) + (2*loss) + (1 - specificity)+(1-accuracy)
 
     def set_gbest(self, particles, best_particle):
         for particle in particles:

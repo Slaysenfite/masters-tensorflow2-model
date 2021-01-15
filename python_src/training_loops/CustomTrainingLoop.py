@@ -6,6 +6,7 @@ from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.metrics import Precision, Recall
 
+from training_loops.GAOptimizer import GaEnv
 from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights
 from training_loops.PsoOptimizer import PsoEnv
 from training_loops.TrainingHelper import print_metrics, append_epoch_metrics, reset_metrics, \
@@ -37,8 +38,10 @@ def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric, pso_lay
 
 
 def apply_swarm_optimization(X, model, pso_layer, y):
-    pso = PsoEnv(swarm_size=25, iterations=10, model=model, X=X, y=y, layers_to_optimize=pso_layer)
-    model = pso.get_pso_model()
+    # pso = PsoEnv(swarm_size=25, iterations=10, model=model, X=X, y=y, layers_to_optimize=pso_layer)
+    # model = pso.get_pso_model()
+    ga= GaEnv(model=model, X=X, y=y, layers_to_optimize=pso_layer)
+    model = ga.get_ga_model()
     return model
 
 
@@ -80,6 +83,8 @@ def training_loop(model, optimizer, hyperparameters, train_x, train_y, test_x, t
     # Enumerating the Dataset
     for epoch in range(0, hyperparameters.epochs):
         start_time = time.time()
+
+        model.reset_metrics()
 
         # Prepare the metrics.
         train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric = prepare_metrics()

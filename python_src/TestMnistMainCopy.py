@@ -4,7 +4,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import KFold
 from tensorflow.python.keras import Model, Input
 from tensorflow.python.keras.datasets import mnist
-from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
+from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Activation, BatchNormalization
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
@@ -79,8 +79,6 @@ def define_model(input=(28, 28, 1), classes=10):
     output = Dense(classes, activation='softmax')(x)
     model = Model(inputs=input, outputs=output)
 
-    # model = resnet50(num_classes=10,
-    #                  input_shape=(28, 28, 1))
     opt = SGD(lr=0.01, momentum=0.9)
     model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
     return model, opt
