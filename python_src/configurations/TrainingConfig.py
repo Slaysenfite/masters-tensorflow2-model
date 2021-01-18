@@ -52,7 +52,7 @@ def create_mnist_hyperparameter_singleton():
     return Hyperparameters(
         10,
         5e-3,
-        2000,
+        1975,
         LearningOptimization.SGD,
         0.25
     )

@@ -99,7 +99,7 @@ def evaluate_model(dataX, dataY, n_folds=5):
         trainX, trainY, testX, testY = dataX[train_ix], dataY[train_ix], dataX[test_ix], dataY[test_ix]
         # fit model
         history = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y, pso_layer=(Conv2D, Dense),
-                  gd_layer=(Conv2D, Dense))
+                  gd_layer=None)
         # evaluate model
         acc = model.evaluate(testX, testY)
         print(str(model.metrics_names))

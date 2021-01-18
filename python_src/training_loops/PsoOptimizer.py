@@ -57,8 +57,6 @@ class PsoEnv():
             iteration += 1
         best_weights = swarm[0].gbest
 
-        swarm = None
-
         return set_trainable_weights(self.model, best_weights, self.layers_to_optimize)
 
     def initialize_swarm(self, swarm_size, weights, model, loss_metric, X, y):

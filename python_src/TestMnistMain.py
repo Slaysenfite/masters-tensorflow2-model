@@ -2,16 +2,18 @@ from sklearn.metrics import confusion_matrix
 from tensorflow.python.keras import Input, Model
 from tensorflow.python.keras.datasets import mnist
 from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
-from tensorflow.python.keras.metrics import Precision, Recall, Accuracy
 from tensorflow.python.keras.optimizer_v2.adam import Adam
-from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
-from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, create_callbacks
+from configurations.TrainingConfig import mnist_hyperparameters as hyperparameters, create_required_directories
 from metrics.MetricsReporter import MetricReporter
-from networks.ResNet import resnet50
-from training_loops.CustomTrainingLoop import training_loop
+from training_loops.GaTrainingLoop import training_loop
 
+print('[BEGIN] Start script...\n')
+print(hyperparameters.report_hyperparameters())
+
+print('[INFO] Creating required directories...')
+create_required_directories()
 
 def load_dataset():
     # load dataset
@@ -70,11 +72,8 @@ print("[INFO] Training label shape: " + str(train_y.shape))
 
 model, opt = define_model()
 
-print('[INFO] Adding callbacks')
-callbacks = create_callbacks()
-
 # train the network
-H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y, pso_layer=(Conv2D, Dense),
+H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y, ga_layer=(Conv2D, Dense),
                   gd_layer=None)
 
 # evaluate the network
