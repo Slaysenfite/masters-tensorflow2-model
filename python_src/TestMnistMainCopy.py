@@ -2,9 +2,9 @@ from matplotlib import pyplot
 from numpy import mean, std, arange
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import KFold
-from tensorflow.python.keras import Model, Input
+from tensorflow.python.keras import Sequential, Input, Model
 from tensorflow.python.keras.datasets import mnist
-from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Activation, BatchNormalization
+from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
@@ -72,8 +72,8 @@ callbacks = create_callbacks()
 
 def define_model(input=(28, 28, 1), classes=10):
     input = Input(shape=input)
-    x = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform')(input)
-    x = MaxPooling2D((2, 2))(input)
+    x = Conv2D(8, (3, 3), activation='relu', kernel_initializer='he_uniform')(input)
+    x = MaxPooling2D((2, 2))(x)
     x = Flatten()(x)
     x = Dense(256, activation='relu', kernel_initializer='he_uniform')(x)
     output = Dense(classes, activation='softmax')(x)
@@ -98,8 +98,8 @@ def evaluate_model(dataX, dataY, n_folds=5):
         # select rows for train and test
         trainX, trainY, testX, testY = dataX[train_ix], dataY[train_ix], dataX[test_ix], dataY[test_ix]
         # fit model
-        history = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y, pso_layer=(Conv2D, Dense),
-                  gd_layer=None)
+        history = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y, pso_layer=None,
+                  gd_layer=(Conv2D, Dense))
         # evaluate model
         acc = model.evaluate(testX, testY)
         print(str(model.metrics_names))

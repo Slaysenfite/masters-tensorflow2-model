@@ -55,7 +55,7 @@ def prep_pixels(train, test):
 def define_model(input=(28, 28, 1), classes=10):
     input = Input(shape=input)
     x = Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform')(input)
-    x = MaxPooling2D((2, 2))(input)
+    x = MaxPooling2D((2, 2))(x)
     x = Flatten()(x)
     x = Dense(256, activation='relu', kernel_initializer='he_uniform')(x)
     output = Dense(classes, activation='softmax')(x)

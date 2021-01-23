@@ -23,14 +23,14 @@ def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric, pso_lay
     elif (pso_layer == None) & (gd_layer == (Conv2D, Dense)):
         apply_gradient_descent(X, gd_layer, loss_metric, model, optimizer, y)
     else:
-        model = apply_swarm_optimization(X, model, pso_layer, y)
-        apply_gradient_descent(X, gd_layer, loss_metric, model, optimizer, y)
+        model = apply_swarm_optimization(X, model, (Conv2D, Dense), y)
+        apply_gradient_descent(X, (Conv2D, Dense), loss_metric, model, optimizer, y)
     ŷ = model(X, training=True)
     # Calculate loss after pso weight updating
     precision_metric = Precision()
     recall_metric = Recall()
     accuracy = accuracy_metric(y, ŷ)
-    loss = loss_metric()(y, ŷ)
+    loss = loss_metric(y, ŷ)
     precision = precision_metric(y, ŷ)
     recall = recall_metric(y, ŷ)
     # Update training metric.
@@ -38,21 +38,19 @@ def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric, pso_lay
 
 
 def apply_swarm_optimization(X, model, pso_layer, y):
-    # pso = PsoEnv(swarm_size=25, iterations=10, model=model, X=X, y=y, layers_to_optimize=pso_layer)
-    # model = pso.get_pso_model()
-    ga= GaEnv(model=model, X=X, y=y, layers_to_optimize=pso_layer)
-    model = ga.get_ga_model()
+    pso = PsoEnv(swarm_size=25, iterations=10, model=model, X=X, y=y, layers_to_optimize=pso_layer)
+    model = pso.get_pso_model()
     return model
 
 
 def apply_gradient_descent(X, gd_layer, loss_metric, model, optimizer, y):
     with GradientTape() as tape:
         ŷ = model(X, training=True)
-        loss_value = loss_metric()(y, ŷ)
-    gd_weights = get_trainable_weights(model, keras_layers=gd_layer, as_numpy_array=False)
-    grads = tape.gradient(loss_value, gd_weights[0])
-    optimizer.apply_gradients(zip(grads, gd_weights[0]))
-    set_trainable_weights(model, gd_weights, gd_layer, as_numpy_array=False)
+        loss_value = model.compiled_loss(y, ŷ, regularization_losses=model.losses)
+    gd_weights = model.trainable_variables
+    grads = tape.gradient(loss_value, gd_weights)
+    optimizer.apply_gradients(zip(grads, gd_weights))
+    model._trainable_variables = gd_weights
 
 # The validate_on_batch function
 # Find out how the model works
@@ -62,7 +60,7 @@ def validate_on_batch(model, X, y, accuracy_metric, loss_metric):
     precision_metric = Precision()
     recall_metric = Recall()
     accuracy = accuracy_metric(y, ŷ)
-    loss = loss_metric()(y, ŷ)
+    loss = loss_metric(y, ŷ)
     precision = precision_metric(y, ŷ)
     recall = recall_metric(y, ŷ)
     return accuracy.numpy(), loss.numpy(), precision.numpy(), recall.numpy()
@@ -83,15 +81,14 @@ def training_loop(model, optimizer, hyperparameters, train_x, train_y, test_x, t
     # Enumerating the Dataset
     for epoch in range(0, hyperparameters.epochs):
         start_time = time.time()
-
         model.reset_metrics()
-
         # Prepare the metrics.
         train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric = prepare_metrics()
 
+
         for batch, (X, y) in enumerate(train_data):
-            print('\rEpoch [%d/%d] Batch: %d%s \n' % (epoch + 1, hyperparameters.epochs, batch, '.' * (batch % 10)),
-                  end='')
+            # print('\rEpoch [%d/%d] Batch: %d%s \n' % (epoch + 1, hyperparameters.epochs, batch, '.' * (batch % 10)),
+            #       end='')
 
             train_acc_score, train_loss_score, train_precision_score, train_recall_score = train_on_batch(model,
                                                                                                           optimizer,

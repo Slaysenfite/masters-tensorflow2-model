@@ -30,7 +30,7 @@ def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric, ga_laye
     precision_metric = Precision()
     recall_metric = Recall()
     accuracy = accuracy_metric(y, ŷ)
-    loss = loss_metric()(y, ŷ)
+    loss = loss_metric(y, ŷ)
     precision = precision_metric(y, ŷ)
     recall = recall_metric(y, ŷ)
     # Update training metric.
@@ -46,7 +46,7 @@ def apply_genetic_algorithm(X, model, ga_layer, y):
 def apply_gradient_descent(X, gd_layer, loss_metric, model, optimizer, y):
     with GradientTape() as tape:
         ŷ = model(X, training=True)
-        loss_value = loss_metric()(y, ŷ)
+        loss_value = loss_metric(y, ŷ)
     gd_weights = get_trainable_weights(model, keras_layers=gd_layer, as_numpy_array=False)
     grads = tape.gradient(loss_value, gd_weights[0])
     optimizer.apply_gradients(zip(grads, gd_weights[0]))
@@ -61,7 +61,7 @@ def validate_on_batch(model, X, y, accuracy_metric, loss_metric):
     precision_metric = Precision()
     recall_metric = Recall()
     accuracy = accuracy_metric(y, ŷ)
-    loss = loss_metric()(y, ŷ)
+    loss = loss_metric(y, ŷ)
     precision = precision_metric(y, ŷ)
     recall = recall_metric(y, ŷ)
     return accuracy.numpy(), loss.numpy(), precision.numpy(), recall.numpy()

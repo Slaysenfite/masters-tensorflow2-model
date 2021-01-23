@@ -55,8 +55,8 @@ def generate_tf_history(model, hyperparameters, accuracy, loss, val_accuracy, va
 def prepare_metrics():
     train_acc_metric = CategoricalAccuracy()
     val_acc_metric = CategoricalAccuracy()
-    train_loss_metric = CategoricalCrossentropy
-    val_loss_metric = CategoricalCrossentropy
+    train_loss_metric = CategoricalCrossentropy()
+    val_loss_metric = CategoricalCrossentropy()
     return train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric
 
 
