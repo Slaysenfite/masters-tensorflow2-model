@@ -40,6 +40,7 @@ class PsoEnv():
     def get_pso_model(self):
         iteration = 0;
         loss_metric = CategoricalCrossentropy()
+        self.model.reset_metrics()
         weights = get_trainable_weights(self.model, self.layers_to_optimize)
 
         swarm = self.initialize_swarm(self.swarm_size, weights, self.model, loss_metric, self.X, self.y)
@@ -85,7 +86,7 @@ class PsoEnv():
         fp_score = fp(y, ŷ).numpy()
         fn_score = fn(y, ŷ).numpy()
 
-        precision = tp_score / (tp_score + fn_score)
+        # precision = tp_score / (tp_score + fn_score)
         specificity = tn_score / (tn_score + fp_score)
 
 

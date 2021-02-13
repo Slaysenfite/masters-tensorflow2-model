@@ -67,10 +67,9 @@ class GaEnv():
     def calc_fitness(self, weights, model, loss_metric, X, y):
         set_trainable_weights(model, weights, self.layers_to_optimize)
         ŷ = model(X, training=True)
-        accuracy_metric = CategoricalAccuracy()
+        loss = loss_metric(y, ŷ).numpy()
 
-        accuracy = accuracy_metric(y, ŷ).numpy()
-        return 1-accuracy
+        return loss
 
     def find_best_individual(self, individuals):
         best_individual = individuals[0]

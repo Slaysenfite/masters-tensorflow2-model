@@ -5,6 +5,8 @@ from sklearn.model_selection import KFold
 from tensorflow.python.keras import Sequential, Input, Model
 from tensorflow.python.keras.datasets import mnist
 from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
+from tensorflow.python.keras.metrics import Precision, Recall
+from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
@@ -79,8 +81,8 @@ def define_model(input=(28, 28, 1), classes=10):
     output = Dense(classes, activation='softmax')(x)
     model = Model(inputs=input, outputs=output)
 
-    opt = SGD(lr=0.01, momentum=0.9)
-    model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
+    opt = SGD(lr=hyperparameters.init_lr, momentum=0.9)
+    model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy', Precision(), Recall()])
     return model, opt
 
 
@@ -98,8 +100,8 @@ def evaluate_model(dataX, dataY, n_folds=5):
         # select rows for train and test
         trainX, trainY, testX, testY = dataX[train_ix], dataY[train_ix], dataX[test_ix], dataY[test_ix]
         # fit model
-        history = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y, pso_layer=None,
-                  gd_layer=(Conv2D, Dense))
+        history = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
+                                )
         # evaluate model
         acc = model.evaluate(testX, testY)
         print(str(model.metrics_names))
@@ -152,12 +154,22 @@ def summarize_performance(scores):
 
 
 # run the test harness for evaluating a model
-def process_histories(histories):
+def process_scores(scores):
     ave_dict = {}
-    for H in histories:
-        for i, metric in enumerate(H.history):
-            ave_value = mean(H.history.get(metric))
-            ave_dict[metric] = ave_value
+    ave_loss = []
+    ave_acc = []
+    ave_precision = []
+    ave_recall = []
+    for s in scores:
+        ave_loss.append(s[0])
+        ave_acc.append(s[1])
+        ave_precision.append(s[2])
+        ave_recall.append(s[3])
+    ave_dict['val_loss'] = mean(ave_loss)
+    ave_dict['val_accuracy'] = mean(ave_acc)
+    ave_dict['val_precision'] = mean(ave_precision)
+    ave_dict['val_recall'] = mean(ave_recall)
+
     with open(output_dir +'average_scores.txt', 'w+') as text_file:
         text_file.write(average_history_printer(ave_dict))
 
@@ -176,6 +188,6 @@ scores, histories = evaluate_model(train_x, train_y)
 summarize_diagnostics(histories)
 # summarize estimated performance
 summarize_performance(scores)
-process_histories(histories)
+process_scores(scores)
 
 print('[END] Finishing script...\n')

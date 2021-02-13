@@ -7,7 +7,7 @@ from tensorflow.python.keras.utils.np_utils import to_categorical
 
 from configurations.TrainingConfig import mnist_hyperparameters as hyperparameters, create_required_directories
 from metrics.MetricsReporter import MetricReporter
-from training_loops.GaTrainingLoop import training_loop
+from training_loops.CustomTrainingLoop import training_loop
 
 print('[BEGIN] Start script...\n')
 print(hyperparameters.report_hyperparameters())

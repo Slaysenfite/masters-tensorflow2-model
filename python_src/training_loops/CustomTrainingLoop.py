@@ -7,24 +7,13 @@ from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.metrics import Precision, Recall
 
 from training_loops.GAOptimizer import GaEnv
-from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights
 from training_loops.PsoOptimizer import PsoEnv
 from training_loops.TrainingHelper import print_metrics, append_epoch_metrics, reset_metrics, \
     batch_data_set, prepare_metrics, generate_tf_history
 
 
-def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric, pso_layer, gd_layer):
-    model.reset_metrics()
-    if ((pso_layer == (Dense)) & (gd_layer == (Conv2D))) | ((pso_layer == (Conv2D, Dense)) & (gd_layer == (Conv2D, Dense))):
-        apply_gradient_descent(X, gd_layer, loss_metric, model, optimizer, y)
-        model = apply_swarm_optimization(X, model, pso_layer, y)
-    elif (pso_layer == (Conv2D, Dense)) & (gd_layer == None):
-        model = apply_swarm_optimization(X, model, pso_layer, y)
-    elif (pso_layer == None) & (gd_layer == (Conv2D, Dense)):
-        apply_gradient_descent(X, gd_layer, loss_metric, model, optimizer, y)
-    else:
-        model = apply_swarm_optimization(X, model, (Conv2D, Dense), y)
-        apply_gradient_descent(X, (Conv2D, Dense), loss_metric, model, optimizer, y)
+def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric):
+    apply_gradient_descent(X, model, optimizer, y)
     ŷ = model(X, training=True)
     # Calculate loss after pso weight updating
     precision_metric = Precision()
@@ -37,13 +26,19 @@ def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric, pso_lay
     return accuracy.numpy(), loss.numpy(), precision.numpy(), recall.numpy()
 
 
-def apply_swarm_optimization(X, model, pso_layer, y):
-    pso = PsoEnv(swarm_size=25, iterations=10, model=model, X=X, y=y, layers_to_optimize=pso_layer)
+def apply_swarm_optimization(X, model, y):
+    pso = PsoEnv(swarm_size=25, iterations=5, model=model, X=X, y=y)
     model = pso.get_pso_model()
     return model
 
 
-def apply_gradient_descent(X, gd_layer, loss_metric, model, optimizer, y):
+def apply_genetic_algorithm(X, model, y):
+    ga = GaEnv(population_size=20, iterations=100, model=model, X=X, y=y)
+    model = ga.get_ga_model()
+    return model
+
+
+def apply_gradient_descent(X, model, optimizer, y):
     with GradientTape() as tape:
         ŷ = model(X, training=True)
         loss_value = model.compiled_loss(y, ŷ, regularization_losses=model.losses)
@@ -67,7 +62,22 @@ def validate_on_batch(model, X, y, accuracy_metric, loss_metric):
 
 
 # The Custom Loop For The SGD-PSO based optimizer
-def training_loop(model, optimizer, hyperparameters, train_x, train_y, test_x, test_y, pso_layer=(Dense), gd_layer=(Conv2D)):
+def training_loop(model,
+                  optimizer,
+                  hyperparameters,
+                  train_x,
+                  train_y,
+                  test_x,
+                  test_y,
+                  metaheuristic=None,
+                  metaheuristic_order=None
+                  ):
+    # Validate input params
+
+    if (metaheuristic == None and metaheuristic_order != None) or (
+            metaheuristic != None and metaheuristic_order == None):
+        raise Exception('Must specify metaheuristic with order of execution')
+
     # Separate into batches
     test_data, train_data = batch_data_set(hyperparameters, test_x, test_y, train_x, train_y)
 
@@ -81,22 +91,28 @@ def training_loop(model, optimizer, hyperparameters, train_x, train_y, test_x, t
     # Enumerating the Dataset
     for epoch in range(0, hyperparameters.epochs):
         start_time = time.time()
-        model.reset_metrics()
         # Prepare the metrics.
         train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric = prepare_metrics()
 
+        if (metaheuristic != None and metaheuristic == 'pso' and metaheuristic_order == 'first'):
+            apply_swarm_optimization(train_x, model, train_y)
+        if (metaheuristic != None and metaheuristic == 'ga' and metaheuristic_order == 'first'):
+            apply_genetic_algorithm(train_x, model, train_y)
 
         for batch, (X, y) in enumerate(train_data):
-            # print('\rEpoch [%d/%d] Batch: %d%s \n' % (epoch + 1, hyperparameters.epochs, batch, '.' * (batch % 10)),
-            #       end='')
+            print('\rEpoch [%d/%d] Batch: %d%s \n' % (epoch + 1, hyperparameters.epochs, batch, '.' * (batch % 10)),
+                  end='')
 
             train_acc_score, train_loss_score, train_precision_score, train_recall_score = train_on_batch(model,
                                                                                                           optimizer,
                                                                                                           X, y,
                                                                                                           train_acc_metric,
-                                                                                                          train_loss_metric,
-                                                                                                          pso_layer,
-                                                                                                          gd_layer)
+                                                                                                          train_loss_metric)
+
+        if (metaheuristic != None and metaheuristic == 'pso' and metaheuristic_order == 'second'):
+            apply_swarm_optimization(train_x, model, train_y)
+        if (metaheuristic != None and metaheuristic == 'ga' and metaheuristic_order == 'second'):
+            apply_genetic_algorithm(train_x, model, train_y)
 
         # Run a validation loop at the end of each epoch.
         for (X, y) in test_data:
