@@ -2,8 +2,6 @@ import time
 from datetime import timedelta
 
 from tensorflow import GradientTape
-from tensorflow.python.keras.layers.convolutional import Conv2D
-from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.metrics import Precision, Recall
 
 from training_loops.GAOptimizer import GaEnv
@@ -27,13 +25,13 @@ def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric):
 
 
 def apply_swarm_optimization(X, model, y):
-    pso = PsoEnv(swarm_size=25, iterations=5, model=model, X=X, y=y)
+    pso = PsoEnv(swarm_size=25, iterations=10, model=model, X=X, y=y)
     model = pso.get_pso_model()
     return model
 
 
 def apply_genetic_algorithm(X, model, y):
-    ga = GaEnv(population_size=20, iterations=100, model=model, X=X, y=y)
+    ga = GaEnv(population_size=25, iterations=20, model=model, X=X, y=y)
     model = ga.get_ga_model()
     return model
 
@@ -74,9 +72,7 @@ def training_loop(model,
                   ):
     # Validate input params
 
-    if (metaheuristic == None and metaheuristic_order != None) or (
-            metaheuristic != None and metaheuristic_order == None):
-        raise Exception('Must specify metaheuristic with order of execution')
+    perform_input_validation(metaheuristic, metaheuristic_order)
 
     # Separate into batches
     test_data, train_data = batch_data_set(hyperparameters, test_x, test_y, train_x, train_y)
@@ -94,10 +90,7 @@ def training_loop(model,
         # Prepare the metrics.
         train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric = prepare_metrics()
 
-        if (metaheuristic != None and metaheuristic == 'pso' and metaheuristic_order == 'first'):
-            apply_swarm_optimization(train_x, model, train_y)
-        if (metaheuristic != None and metaheuristic == 'ga' and metaheuristic_order == 'first'):
-            apply_genetic_algorithm(train_x, model, train_y)
+        run_metaheuristic(metaheuristic, 'first', metaheuristic_order, model, train_x, train_y)
 
         for batch, (X, y) in enumerate(train_data):
             print('\rEpoch [%d/%d] Batch: %d%s \n' % (epoch + 1, hyperparameters.epochs, batch, '.' * (batch % 10)),
@@ -109,10 +102,7 @@ def training_loop(model,
                                                                                                           train_acc_metric,
                                                                                                           train_loss_metric)
 
-        if (metaheuristic != None and metaheuristic == 'pso' and metaheuristic_order == 'second'):
-            apply_swarm_optimization(train_x, model, train_y)
-        if (metaheuristic != None and metaheuristic == 'ga' and metaheuristic_order == 'second'):
-            apply_genetic_algorithm(train_x, model, train_y)
+        run_metaheuristic(metaheuristic, 'second', metaheuristic_order, model, train_x, train_y)
 
         # Run a validation loop at the end of each epoch.
         for (X, y) in test_data:
@@ -135,3 +125,16 @@ def training_loop(model,
 
     return generate_tf_history(model, hyperparameters, accuracy, loss, val_accuracy, val_loss, val_precision,
                                val_recall)
+
+
+def run_metaheuristic(metaheuristic, prefered_order, metaheuristic_order, model, train_x, train_y):
+    if (metaheuristic != None and metaheuristic == 'pso' and metaheuristic_order == prefered_order):
+        apply_swarm_optimization(train_x, model, train_y)
+    if (metaheuristic != None and metaheuristic == 'ga' and metaheuristic_order == prefered_order):
+        apply_genetic_algorithm(train_x, model, train_y)
+
+
+def perform_input_validation(metaheuristic, metaheuristic_order):
+    if (metaheuristic == None and metaheuristic_order != None) or (
+            metaheuristic != None and metaheuristic_order == None):
+        raise Exception('Must specify metaheuristic with order of execution')

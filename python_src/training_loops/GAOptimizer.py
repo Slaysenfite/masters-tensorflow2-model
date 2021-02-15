@@ -4,10 +4,8 @@ import numpy as np
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.losses import CategoricalCrossentropy
-from tensorflow.python.keras.metrics import CategoricalAccuracy, TrueNegatives, TruePositives, \
-    FalsePositives, FalseNegatives
 
-from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights
+from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights, calc_solution_fitness
 
 CROSSOVER_THRESHOLD = 85
 
@@ -57,17 +55,13 @@ class GaEnv():
 
     def initialize_population(self, population_size, weights, model, loss_metric, X, y):
         individuals = [None] * population_size
-        individuals[0] = Solution(weights, self.calc_fitness(weights, model, loss_metric, X, y))
+        fitness = calc_solution_fitness(weights, model, loss_metric, X, y)
+        individuals[0] = Solution(weights, fitness)
         for p in range(1, population_size):
             new_weights = [w * uniform(-2, 1) for w in weights]
-            initial_fitness = self.calc_fitness(new_weights, model, loss_metric, X, y)
+            initial_fitness = calc_solution_fitness(new_weights, model, loss_metric, X, y)
             individuals[p] = Solution(np.array(new_weights), initial_fitness)
         return individuals
-
-    def calc_fitness(self, weights, model, loss_metric, X, y):
-        set_trainable_weights(model, weights, self.layers_to_optimize)
-        ŷ = model(X, training=True)
-        loss = loss_metric(y, ŷ).numpy()
 
         return loss
 
@@ -80,7 +74,7 @@ class GaEnv():
 
     def update_fitness(self, individuals, model, loss_metric, X, y):
         for individual in individuals:
-            individual.fitness = self.calc_fitness(individual.weights_arr, model, loss_metric, X, y)
+            individual.fitness = calc_solution_fitness(individual.weights_arr, model, loss_metric, X, y)
 
     def update_weight_arr(self, individuals):
         for individual in individuals:
@@ -130,7 +124,7 @@ class GaEnv():
         new_weight = np.array(offspring).reshape(shape)
 
         return Solution(new_weight,
-                        self.calc_fitness(new_weight, self.model, CategoricalCrossentropy(), self.X, self.y))
+                        calc_solution_fitness(new_weight, self.model, CategoricalCrossentropy(), self.X, self.y))
 
     def perform_element_level_crossover(self, one_element, two_element):
         rand_num = uniform(0, 100)
@@ -153,7 +147,7 @@ class GaEnv():
 
         new_weight = np.array(offspring).reshape(shape)
         return Solution(new_weight,
-                        self.calc_fitness(new_weight, self.model, CategoricalCrossentropy(), self.X, self.y))
+                        calc_solution_fitness(new_weight, self.model, CategoricalCrossentropy(), self.X, self.y))
 
     def gen_rand_num_list(self, size, a, b):
         l = list()

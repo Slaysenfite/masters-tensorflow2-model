@@ -2,11 +2,10 @@ from matplotlib import pyplot
 from numpy import mean, std, arange
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import KFold
-from tensorflow.python.keras import Sequential, Input, Model
+from tensorflow.python.keras import Input, Model
 from tensorflow.python.keras.datasets import mnist
 from tensorflow.python.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
 from tensorflow.python.keras.metrics import Precision, Recall
-from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
@@ -82,6 +81,7 @@ def define_model(input=(28, 28, 1), classes=10):
     model = Model(inputs=input, outputs=output)
 
     opt = SGD(lr=hyperparameters.init_lr, momentum=0.9)
+
     model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy', Precision(), Recall()])
     return model, opt
 

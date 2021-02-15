@@ -3,11 +3,9 @@ from random import uniform, seed
 import numpy as np
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
-from tensorflow.python.keras.losses import CategoricalCrossentropy, SparseCategoricalCrossentropy
-from tensorflow.python.keras.metrics import CategoricalAccuracy, TrueNegatives, TruePositives, \
-    FalsePositives, FalseNegatives
+from tensorflow.python.keras.losses import CategoricalCrossentropy
 
-from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights
+from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights, calc_solution_fitness
 
 seed(1)
 
@@ -62,36 +60,12 @@ class PsoEnv():
 
     def initialize_swarm(self, swarm_size, weights, model, loss_metric, X, y):
         particles = [None] * swarm_size
-        particles[0] = Particle(weights, self.calc_position_fitness(weights, model, loss_metric, X, y))
+        particles[0] = Particle(weights, calc_solution_fitness(weights, model, loss_metric, X, y))
         for p in range(1, swarm_size):
             new_weights = [w * uniform(0, 1) for w in weights]
-            initial_fitness = self.calc_position_fitness(new_weights, model, loss_metric, X, y)
+            initial_fitness = calc_solution_fitness(new_weights, model, loss_metric, X, y)
             particles[p] = Particle(np.array(new_weights), initial_fitness)
         return particles
-
-    def calc_position_fitness(self, weights, model, loss_metric, X, y):
-        set_trainable_weights(model, weights, self.layers_to_optimize)
-        ŷ = model(X, training=True)
-
-        accuracy_metric = CategoricalAccuracy()
-        tn = TrueNegatives()
-        tp = TruePositives()
-        fp = FalsePositives()
-        fn = FalseNegatives()
-
-        accuracy = accuracy_metric(y, ŷ).numpy()
-        loss = loss_metric(y, ŷ).numpy()
-        tn_score = tn(y, ŷ).numpy()
-        tp_score = tp(y, ŷ).numpy()
-        fp_score = fp(y, ŷ).numpy()
-        fn_score = fn(y, ŷ).numpy()
-
-        # precision = tp_score / (tp_score + fn_score)
-        specificity = tn_score / (tn_score + fp_score)
-
-
-        fpr = fp_score / (tn_score + fn_score + tp_score + fp_score)
-        return (fpr) + (2*loss) + (1 - specificity)+(1-accuracy)
 
     def set_gbest(self, particles, best_particle):
         for particle in particles:
@@ -102,7 +76,7 @@ class PsoEnv():
         for particle in particles:
             particle.velocity = self.update_velocity(particle, INERTIA, [C1, C2])
             particle.position = self.calc_new_position(particle)
-            particle.current_fitness = self.calc_position_fitness(particle.position, model, loss_metric, X, y)
+            particle.current_fitness = calc_solution_fitness(particle.position, model, loss_metric, X, y)
             if particle.current_fitness < particle.best_fitness:
                 particle.pbest = particle.position
                 particle.best_fitness = particle.current_fitness

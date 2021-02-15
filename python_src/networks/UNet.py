@@ -7,7 +7,7 @@ https://github.com/zizhaozhang/unet-tensorflow-keras/blob/master/model.py
 
 from tensorflow.python.keras import backend as K, Input
 from tensorflow.python.keras.layers import Conv2D, Activation, MaxPooling2D, Flatten, \
-    Dense, ZeroPadding2D, concatenate, Cropping2D, UpSampling2D, Dropout, AveragePooling2D
+    Dense, ZeroPadding2D, concatenate, Cropping2D, UpSampling2D, AveragePooling2D
 from tensorflow.python.keras.models import Model
 
 
@@ -104,9 +104,7 @@ class UNet:
         fc = (Dense(512))(flatten)
         act = Activation('relu')(fc)
 
-        drop = Dropout(0.3)(act)
-
-        dense = Dense(classes)(drop)
+        dense = Dense(classes)(act)
         final_layer = Activation("softmax")(dense)
 
         return Model(inputs=inputs, outputs=final_layer)

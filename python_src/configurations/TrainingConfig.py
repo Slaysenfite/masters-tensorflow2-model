@@ -11,7 +11,7 @@ def create_required_directories():
     os.makedirs(output_dir + 'model/', 0o777, True)
 
 
-IMAGE_DIMS = (256, 256, 3)
+IMAGE_DIMS = (16, 16, 3)
 
 output_dir = 'output/'
 
@@ -41,7 +41,7 @@ class Hyperparameters:
 
 def create_standard_hyperparameter_singleton():
     return Hyperparameters(
-        50,
+        1,
         5e-3,
         32,
         LearningOptimization.ADAM,
