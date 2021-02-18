@@ -8,4 +8,17 @@ git checkout instance/uber
 
 workon wesselsenv
 
-nohup python python_src/TestHybridGreedy.py > log-pso.txt &
+# No metaheuristic (sgd)
+nohup python python_src/ResNetMain.py > log-pso.txt &
+
+# Pso First (sgd)
+#nohup python python_src/ResNetMain.py --meta_heuristic=pso --meta_heuristic_order=first > log-pso.txt &
+
+# Pso Last (sgd)
+#nohup python python_src/ResNetMain.py --meta_heuristic=pso --meta_heuristic_order=last > log-pso.txt &
+
+# Ga First (sgd)
+#nohup python python_src/ResNetMain.py --meta_heuristic=ga --meta_heuristic_order=first > log-pso.txt &
+
+# Ga First (sgd)
+#nohup python python_src/ResNetMain.py --meta_heuristic=ga --meta_heuristic_order=last > log-pso.txt &
