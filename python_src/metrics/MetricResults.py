@@ -1,5 +1,6 @@
-from sklearn.metrics import accuracy_score, precision_score, recall_score, classification_report
 import operator
+
+from sklearn.metrics import accuracy_score, precision_score, recall_score, classification_report
 
 
 class MetricResult:
@@ -8,6 +9,7 @@ class MetricResult:
     precision = 0.0
     recall = 0.0
     report_dict = {}
+    internal_metrics = None
 
     # Final network metric
     final_training_loss = 0.0
@@ -22,14 +24,17 @@ class MetricResult:
     best_training_accuracy = 0.0
     best_validation_accuracy = 0.0
 
-    def __init__(self, H, test_y, predictions, data_set):
+    def __init__(self, model, H, test_x, test_y, predictions, data_set):
         self.H = H
+        self.test_x = test_x
         self.test_y = test_y
         self.predictions = predictions
         self.data_set = data_set
+        self.model = model
         self.get_general_metrics(test_y, predictions, data_set)
         self.get_best_network_metrics(H)
         self.get_final_network_metrics(H)
+        self.get_model_internal_metrics(model, test_x, test_y)
 
     def get_general_metrics(self, test_y, predictions, data_set):
         self.accuracy = accuracy_score(test_y.argmax(axis=1), predictions.argmax(axis=1)) * 100
@@ -53,8 +58,12 @@ class MetricResult:
         self.final_training_accuracy = H.history['accuracy'][-1]
         self.final_validation_accuracy = H.history['val_accuracy'][-1]
 
+    def get_model_internal_metrics(self, model, test_x, test_y):
+        self.internal_metrics = model.evaluate(test_x, test_y)
+
     def report_result(self):
-        report = '*** Classification Report *** \n {} \n'.format(self.report_dict)
+        report = '*** SCI-KIT METRICS ***\n\n'
+        report += '*** Classification Report *** \n {} \n'.format(self.report_dict)
 
         report += '*** General Metrics *** \n'
         report += ' Accuracy Score: {:.2f}% \n'.format(self.accuracy)
@@ -73,6 +82,10 @@ class MetricResult:
         report += ' Best Validation Loss: {:.4f} \n'.format(self.best_validation_loss)
         report += ' Best Training Accuracy: {:.2f}% \n'.format(self.best_training_accuracy)
         report += ' Best Validation Accuracy: {:.2f}% \n\n'.format(self.best_validation_accuracy)
+
+        report += '*** INTERNAL METRICS ***\n'
+        report += str(self.model.metrics_names) + '\n'
+        report += str(self.internal_metrics)
 
         report += '*** Predictions *** \n'
         report += ' Predictions: {} \n'.format(self.predictions)
