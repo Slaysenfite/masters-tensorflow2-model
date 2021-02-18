@@ -4,10 +4,8 @@ import numpy as np
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.losses import CategoricalCrossentropy
-from tensorflow.python.keras.metrics import TrueNegatives, FalseNegatives, TruePositives, \
-    FalsePositives, Recall, Precision, Accuracy, CategoricalAccuracy
 
-from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights
+from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights, calc_solution_fitness
 
 seed(1)
 
@@ -39,7 +37,8 @@ class PsoEnv():
 
     def get_pso_model(self):
         iteration = 0;
-        loss_metric = CategoricalCrossentropy(from_logits=True)
+        loss_metric = CategoricalCrossentropy()
+        self.model.reset_metrics()
         weights = get_trainable_weights(self.model, self.layers_to_optimize)
 
         swarm = self.initialize_swarm(self.swarm_size, weights, self.model, loss_metric, self.X, self.y)
@@ -57,38 +56,16 @@ class PsoEnv():
             iteration += 1
         best_weights = swarm[0].gbest
 
-        swarm = None
-
         return set_trainable_weights(self.model, best_weights, self.layers_to_optimize)
 
     def initialize_swarm(self, swarm_size, weights, model, loss_metric, X, y):
         particles = [None] * swarm_size
-        particles[0] = Particle(weights, self.calc_position_fitness(weights, model, loss_metric, X, y))
+        particles[0] = Particle(weights, calc_solution_fitness(weights, model, loss_metric, X, y))
         for p in range(1, swarm_size):
-            new_weights = [w * uniform(-1, 1) for w in weights]
-            initial_fitness = self.calc_position_fitness(new_weights, model, loss_metric, X, y)
+            new_weights = [w * uniform(0, 1) for w in weights]
+            initial_fitness = calc_solution_fitness(new_weights, model, loss_metric, X, y)
             particles[p] = Particle(np.array(new_weights), initial_fitness)
         return particles
-
-    def calc_position_fitness(self, weights, model, loss_metric, X, y):
-        set_trainable_weights(model, weights, self.layers_to_optimize)
-        ŷ = model(X, training=True)
-
-        accuracy_metric = CategoricalAccuracy()
-        recall_metric = Recall()
-        precision_metric = Precision()
-
-        accuracy = accuracy_metric(y, ŷ).numpy()
-        recall = recall_metric(y, ŷ).numpy()
-        precision = precision_metric(y, ŷ).numpy()
-        loss = loss_metric(y, ŷ).numpy()
-
-        accuracy_metric.reset_states()
-        recall_metric.reset_states()
-        precision_metric.reset_states()
-
-        return 2*(1 - recall) + 2*(1 - precision) + (1 - accuracy) + loss
-
 
     def set_gbest(self, particles, best_particle):
         for particle in particles:
@@ -99,7 +76,7 @@ class PsoEnv():
         for particle in particles:
             particle.velocity = self.update_velocity(particle, INERTIA, [C1, C2])
             particle.position = self.calc_new_position(particle)
-            particle.current_fitness = self.calc_position_fitness(particle.position, model, loss_metric, X, y)
+            particle.current_fitness = calc_solution_fitness(particle.position, model, loss_metric, X, y)
             if particle.current_fitness < particle.best_fitness:
                 particle.pbest = particle.position
                 particle.best_fitness = particle.current_fitness
@@ -121,12 +98,23 @@ class PsoEnv():
         return best_particle
 
     def update_velocity(self, particle, inertia_weight, acc_c):
-        # TODO: Look into clamping the velocity
         initial = (inertia_weight) * (particle.velocity)
         cognitive_component = (acc_c[0]) * (uniform(0, 1)) * (particle.pbest - particle.position)
         social_component = (acc_c[1]) * (uniform(0, 1)) * (particle.gbest - particle.position)
 
-        return initial + cognitive_component + social_component
+        new_velocity = initial + cognitive_component + social_component
+
+        # self.clamp_velocity(new_velocity)
+
+        return new_velocity
 
     def calc_new_position(self, particle):
         return particle.position + particle.velocity
+
+    def clamp_velocity(self, new_velocity):
+        for v in new_velocity.flat:
+            for v1 in v.flat:
+                if v1 < -V_MAX:
+                    v1 = -V_MAX
+                if v1 > V_MAX:
+                    v1 = V_MAX

@@ -15,7 +15,7 @@ class Vgg19Net:
 
         # if we are using "channels first", update the input shape
         # and channels dimension
-        if K.image_data_format() == "channels_first":
+        if image_data_format() == "channels_first":
             inputShape = (depth, height, width)
             chanDim = 1
         # CONV => RELU => POOL layer set
@@ -110,7 +110,7 @@ class SmallVggNet:
 
         # if we are using "channels first", update the input shape
         # and channels dimension
-        if K.image_data_format() == "channels_first":
+        if image_data_format() == "channels_first":
             inputShape = (depth, height, width)
             chanDim = 1
         # CONV => RELU => POOL layer set

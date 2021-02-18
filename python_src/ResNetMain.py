@@ -1,24 +1,25 @@
 import sys
+import time
+from datetime import timedelta
 
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelBinarizer
-from tensorflow.python.keras.applications import ResNet50
-from tensorflow.python.keras.optimizer_v2.adam import Adam
+from tensorflow.python.keras.metrics import Precision, Recall
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
-from configurations.DataSet import ddsm_data_set as data_set
+from configurations.DataSet import cbis_ddsm_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks
 from metrics.MetricsReporter import MetricReporter
-from utils.Emailer import results_dispatch
+from networks.ResNet import ResnetBuilder
+from training_loops.CustomTrainingLoop import training_loop
 from utils.ImageLoader import load_rgb_images, supplement_training_data
-from utils.ScriptHelper import generate_script_report, read_cmd_line_args
+from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
 print('[BEGIN] Start script...\n')
-read_cmd_line_args(data_set, hyperparameters, IMAGE_DIMS)
+hyperparameters, opt = read_cmd_line_args(hyperparameters)
 print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
 
@@ -50,54 +51,44 @@ train_x, train_y = supplement_training_data(aug, train_x, train_y)
 print("[INFO] Training data shape: " + str(train_x.shape))
 print("[INFO] Training label shape: " + str(train_y.shape))
 
-# binarize the class labels
-lb = LabelBinarizer()
-train_y = lb.fit_transform(train_y)
-test_y = lb.transform(test_y)
+loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
-model = ResNet50(include_top=True,
-                 weights=None,
-                 input_tensor=None,
-                 input_shape=IMAGE_DIMS,
-                 pooling=None,
-                 classes=3)
+model = ResnetBuilder.build_resnet_50(IMAGE_DIMS, len(data_set.class_names))
 
-opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
-
+model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy', Precision(), Recall()])
 
 # Setup callbacks
 callbacks = create_callbacks()
 
 # train the network
-H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
-              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
-              callbacks=callbacks)
+start_time = time.time()
+H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
+                  meta_heuristic=hyperparameters.meta_heuristic,
+                  meta_heuristic_order=hyperparameters.meta_heuristic_order)
+time_taken = timedelta(seconds=(time.time() - start_time))
 
 # evaluate the network
 print('[INFO] evaluating network...')
+
+acc = model.evaluate(test_x, test_y)
+print(str(model.metrics_names))
+print(str(acc))
 
 predictions = model.predict(test_x, batch_size=hyperparameters.batch_size)
 
 print('[INFO] generating metrics...')
 
-generate_script_report(H, test_y, predictions, data_set, hyperparameters, 'resnet')
+file_title = create_file_title('UNet', hyperparameters)
 
-reporter = MetricReporter(data_set.name, 'resnet')
+generate_script_report(H, model, test_x, test_y, predictions, time_taken, data_set, hyperparameters, file_title)
+
+reporter = MetricReporter(data_set.name,file_title)
 cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
 reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
                                title='Confusion matrix, without normalization')
 
 reporter.plot_roc(data_set.class_names, test_y, predictions)
 
-reporter.plot_network_metrics(H, 'ResNet')
-
-# print('[INFO] serializing network and label binarizer...')
-#
-# reporter.save_model_to_file(model, lb)
-
-print('[INFO] emailing result...')
-
-results_dispatch(data_set.name, 'resnet')
+reporter.plot_network_metrics(H, file_title)
 
 print('[END] Finishing script...\n')

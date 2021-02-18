@@ -17,9 +17,10 @@ CONFUSION_MATRIX_PLOT = '_confusion_matrix_plot.png'
 
 
 class MetricReporter:
-    def __init__(self, dataset_name, model_name):
+    def __init__(self, dataset_name, model_name, metadata_string=''):
         self.dataset_name = dataset_name
         self.model_name = model_name
+        self.metadata_string = metadata_string
 
     def plot_confusion_matrix(self, cm, classes, normalize=False, title='Confusion matrix', cmap=plt.cm.Greens):
         """
@@ -49,9 +50,12 @@ class MetricReporter:
         plt.tight_layout()
         plt.ylabel('True label')
         plt.xlabel('Predicted label')
-        plt.savefig(constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + CONFUSION_MATRIX_PLOT)
+        plt.savefig(
+            constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + self.metadata_string + CONFUSION_MATRIX_PLOT,
+            bbox_inches='tight')
+        plt.clf()
 
-    def plot_roc(self, class_names, test_y, predictions):
+    def plot_roc(self, class_names, test_y, predictions, metadata_string=''):
         # Compute ROC curve and ROC area for each class
         fpr = dict()
         tpr = dict()
@@ -109,7 +113,10 @@ class MetricReporter:
         # Put a legend below current axis
         # plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), fancybox=True, shadow=True, ncol=2)
         plt.legend(loc='lower right')
-        plt.savefig(constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + ROC_PLOT)
+        plt.savefig(
+            constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + self.metadata_string + ROC_PLOT,
+            bbox_inches='tight')
+        plt.clf()
 
     def plot_network_metrics(self, H, model_name):
         # plot the training loss and accuracy
@@ -124,7 +131,10 @@ class MetricReporter:
         plt.xlabel('Epoch #')
         plt.ylabel('Loss/Accuracy')
         plt.legend()
-        plt.savefig(constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + NETWORK_METRIC_PLOT)
+        plt.savefig(
+            constants.FIGURE_OUTPUT + self.model_name + '_' + self.dataset_name + self.metadata_string + NETWORK_METRIC_PLOT,
+            bbox_inches='tight')
+        plt.clf()
 
     def save_model_to_file(self, model, lb):
         # save the model and label binarizer to disk

@@ -1,19 +1,16 @@
-import gc
-
 import cv2
 import numpy as np
-from imutils import paths
+from matplotlib import pyplot
 from numpy import ma, asarray
 
-
 def load_rgb_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
-    # grab the image paths and randomly shuffle them
-    image_paths = list(paths.list_images(dataset.root_path))
+    #get image paths and metadata
+    image_paths = dataset.get_image_paths()
+    metadata = dataset.get_image_metadata()
 
     i = 0
     # loop over the input images
     for image_path in image_paths:
-        #print(image_path)
         print_progress_bar(i + 1, len(image_paths), prefix=' Progress:', suffix='Complete')
 
         image = cv2.imread(image_path)
@@ -22,12 +19,11 @@ def load_rgb_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
 
         # extract the class label from the image path and update the
         # labels list
-        label = dataset.label_map[dataset.get_image_metadata()[i][dataset.class_label_index]]
+        raw_label = metadata[i][dataset.class_label_index]
+        label = dataset.label_map[raw_label]
 
         labels.append(label)
         i += 1
-
-    gc.collect()
 
     # scale the raw pixel intensities to the range [0, 1]
     data = np.array(data, dtype="float32") / 255.0
@@ -40,8 +36,9 @@ def load_rgb_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
 
 
 def load_greyscale_images(data, labels, dataset, image_dimensions=(128, 128, 1)):
-    # grab the image paths and randomly shuffle them
-    image_paths = list(paths.list_images(dataset.root_path))
+    # get image paths
+    image_paths = dataset.get_image_paths()
+    metadata = dataset.get_image_metadata()
 
     i = 0
     # loop over the input images
@@ -56,12 +53,11 @@ def load_greyscale_images(data, labels, dataset, image_dimensions=(128, 128, 1))
 
         # extract the class label from the image path and update the
         # labels list
-        label = dataset.label_map[dataset.get_image_metadata()[i][dataset.class_label_index]]
+        raw_label = metadata[i][dataset.class_label_index]
+        label = dataset.label_map[raw_label]
 
         labels.append(label)
         i += 1
-
-    gc.collect()
 
     # scale the raw pixel intensities to the range [0, 1]
     data = np.array(data, dtype="float") / 255.0
@@ -100,6 +96,18 @@ def append_two_class(abnormal_data, abnormal_labels, train_x, train_y):
             abnormal_data.append(train_x[i])
             abnormal_labels.append(train_y[i])
 
+
+def show_examples(train_x, test_x, train_y, test_y, items=9):
+    print('Train: X=%s, y=%s' % (train_x.shape, train_y.shape))
+    print('Test: X=%s, y=%s' % (test_x.shape, test_y.shape))
+    # plot first few images
+    for i in range(items):
+        # define subplot
+        pyplot.subplot(330 + 1 + i)
+        # plot raw pixel data
+        pyplot.imshow(train_x[i], cmap=pyplot.get_cmap('gray'))
+    # show the figure
+    pyplot.show()
 
 # Print iterations progress
 def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd="\r"):
