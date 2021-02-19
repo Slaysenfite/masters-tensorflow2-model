@@ -34,7 +34,7 @@ pandas==0.24.2
 pandocfilters==1.4.2
 pathlib2==2.3.5
 pickleshare==0.7.5
-Pillow==5.1.0
+Pillow==7.1.0
 progressbar2==3.50.1
 protobuf==3.11.3
 ptyprocess==0.6.0
