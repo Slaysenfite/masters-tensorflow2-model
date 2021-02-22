@@ -1,12 +1,22 @@
 #!/bin/bash
 
+cd $HOME
+
+# Pull git repos
+
+git clone https://github.com/Slaysenfite/cbis_ddsm_lr.git
+
 # Run script but detach process and capture output in a log file
 
-cd cd $HOME/masters-tensorflow2-model/
+cd $HOME/masters-tensorflow2-model/
 
 git checkout instance/uber
 
 workon wesselsenv
+
+# create metadata file for CBIS data set
+
+python python_src/configurations/CbisDdsmMetadataGenerator.py
 
 # No metaheuristic (sgd)
 nohup python python_src/ResNetMain.py > log-pso.txt &

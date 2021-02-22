@@ -15,7 +15,7 @@ home = expanduser("~")
 ROOT_DIRECTORY = home + '/data'
 PATH_TO_DDSM = '/ddsm_lr'
 PATH_TO_MIAS = '/mias'
-PATH_TO_CBIS_DDSM = '/CBIS-DDSM_CLASSIC_PNG'
+PATH_TO_CBIS_DDSM = '/cbis_ddsm_lr'
 
 
 # Dataset labels

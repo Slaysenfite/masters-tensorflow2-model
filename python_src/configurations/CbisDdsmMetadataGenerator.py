@@ -84,4 +84,4 @@ def create_cbis_five_metadata_file(tuple=cropped_image_tuple):
 
 
 create_cbis_metadata_file()
-create_cbis_five_metadata_file()
+# create_cbis_five_metadata_file()
