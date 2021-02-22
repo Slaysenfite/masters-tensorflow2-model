@@ -92,6 +92,59 @@ class MultiPartDataset(DataSet):
     def split_data_set(self, data, labels):
         return train_test_split(data, labels, test_size=0.25, train_size=0.75, random_state=None, shuffle=False)
 
+
+class SegmentationDataset(DataSet):
+    def __init__(self, name, root_path, train_metadata_path, test_metadata_path, cropped_train_metadata_path,
+                 cropped_test_metadata_path, roi_train_metadata_path,
+                 roi_test_metadata_path, class_label_index, label_map,
+                 class_names, is_multiclass):
+        super.__init__(self, name, root_path, train_metadata_path, test_metadata_path, class_label_index, label_map,
+                 class_names, is_multiclass)
+        self.cropped_test_metadata_path = cropped_test_metadata_path
+        self.cropped_train_metadata_path = cropped_train_metadata_path
+        self.roi_train_metadata_path = roi_train_metadata_path
+        self.roi_test_metadata_path = roi_test_metadata_path
+
+    def get_image_paths(self):
+        df_paths = pd.read_csv(self.train_metadata_path)
+        df_paths.append(pd.read_csv(self.test_metadata_path))
+        return df_paths['image'].to_list()
+
+    def get_image_metadata(self):
+        df_train_metadata = pd.read_csv(self.train_metadata_path)[['image', 'label']]
+        df_test_metadata = pd.read_csv(self.test_metadata_path)[['image', 'label']]
+        total_metadata = df_train_metadata
+        total_metadata.append(df_test_metadata)
+        return np.array(total_metadata)
+
+    def split_data_set(self, data, labels):
+        return train_test_split(data, labels, test_size=0.25, train_size=0.75, random_state=None, shuffle=False)
+
+    def get_cropped_image_paths(self):
+        df_paths = pd.read_csv(self.cropped_train_metadata_path)
+        df_paths.append(pd.read_csv(self.cropped_test_metadata_path))
+        return df_paths['image'].to_list()
+
+    def get_cropped_image_metadata(self):
+        df_train_metadata = pd.read_csv(self.train_metadata_path)[['image', 'label']]
+        df_test_metadata = pd.read_csv(self.test_metadata_path)[['image', 'label']]
+        total_metadata = df_train_metadata
+        total_metadata.append(df_test_metadata)
+        return np.array(total_metadata)
+
+    def get_roi_image_paths(self):
+        df_paths = pd.read_csv(self.roi_train_metadata_path)
+        df_paths.append(pd.read_csv(self.roi_test_metadata_path))
+        return df_paths['image'].to_list()
+
+    def get_roi_image_metadata(self):
+        df_train_metadata = pd.read_csv(self.roi_train_metadata_path)[['image', 'label']]
+        df_test_metadata = pd.read_csv(self.roi_test_metadata_path)[['image', 'label']]
+        total_metadata = df_train_metadata
+        total_metadata.append(df_test_metadata)
+        return np.array(total_metadata)
+
+
 def create_ddsm_three_class_dataset_singleton():
     return DataSet(
         DataSetNames.DDSM.name,
@@ -134,8 +187,25 @@ def create_cbis_ddsm_dataset_singleton():
     return MultiPartDataset(
         DataSetNames.CBIS_DDSM.name,
         ROOT_DIRECTORY + PATH_TO_CBIS_DDSM,
-        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/train_cbis-ddsm.csv',
-        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/test_cbis-ddsm.csv',
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/full_image_train_cbis-ddsm.csv',
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/full_image_test_cbis-ddsm.csv',
+        1,
+        two_class_label_map,
+        two_class_names,
+        False
+    )
+
+
+def create_cbis_ddsm_segmentation_dataset_singleton():
+    return SegmentationDataset(
+        DataSetNames.CBIS_DDSM.name,
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM,
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/full_image_train_cbis-ddsm.csv',
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/full_image_test_cbis-ddsm.csv',
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/cropped_image_train_cbis-ddsm.csv',
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/cropped_image_test_cbis-ddsm.csv',
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/roi_train_cbis-ddsm.csv',
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/roi_test_cbis-ddsm.csv',
         1,
         two_class_label_map,
         two_class_names,
