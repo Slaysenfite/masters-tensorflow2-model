@@ -4,9 +4,9 @@ import pandas as pd
 
 home = expanduser("~")
 
-image_file_tuple = ('image file path', '1-1')
-cropped_image_tuple = ('cropped image file path', '1-1')
-roi_mask_tuple = ('ROI mask file path', '1-2')
+image_file_tuple = ('image file path', '1-1', 'full_image')
+cropped_image_tuple = ('cropped image file path', '1-1', 'cropped_image')
+roi_mask_tuple = ('ROI mask file path', '1-2', ' roi_image')
 
 RELATIVE_DATA_SET_PATH = '/data/CBIS-DDSM_CLASSIC_PNG/'
 
@@ -66,22 +66,24 @@ def append_fives_row(image_path, metadata_csv_path, path_to_data_folder, row):
 
 
 def create_cbis_metadata_file(tuple=cropped_image_tuple):
-    append_to_ddsm_csv(home + RELATIVE_DATA_SET_PATH + 'train_cbis-ddsm.csv', 'image,label')
-    append_to_ddsm_csv(home + RELATIVE_DATA_SET_PATH + 'test_cbis-ddsm.csv', 'image,label')
-    generate_cbis_ddsm_metadata_file('calc_case_description_train_set.csv', 'train_cbis-ddsm.csv', tuple)
-    generate_cbis_ddsm_metadata_file('mass_case_description_train_set.csv', 'train_cbis-ddsm.csv', tuple)
-    generate_cbis_ddsm_metadata_file('calc_case_description_test_set.csv', 'test_cbis-ddsm.csv', tuple)
-    generate_cbis_ddsm_metadata_file('mass_case_description_test_set.csv', 'test_cbis-ddsm.csv', tuple)
+    append_to_ddsm_csv(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_train_cbis-ddsm.csv', 'image,label')
+    append_to_ddsm_csv(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_test_cbis-ddsm.csv', 'image,label')
+    generate_cbis_ddsm_metadata_file('calc_case_description_train_set.csv', tuple[2] + '_train_cbis-ddsm.csv', tuple)
+    generate_cbis_ddsm_metadata_file('mass_case_description_train_set.csv', tuple[2] + '_train_cbis-ddsm.csv', tuple)
+    generate_cbis_ddsm_metadata_file('calc_case_description_test_set.csv', tuple[2] + '_test_cbis-ddsm.csv', tuple)
+    generate_cbis_ddsm_metadata_file('mass_case_description_test_set.csv', tuple[2] + '_test_cbis-ddsm.csv', tuple)
 
 
 def create_cbis_five_metadata_file(tuple=cropped_image_tuple):
-    append_to_ddsm_csv(home + RELATIVE_DATA_SET_PATH + 'train_cbis-ddsm_five.csv', 'image,label')
-    append_to_ddsm_csv(home + RELATIVE_DATA_SET_PATH + 'test_cbis-ddsm_five.csv', 'image,label')
-    generate_cbis_ddsm_five_metadata_file('calc_case_description_train_set.csv', 'train_cbis-ddsm_five.csv', tuple)
-    generate_cbis_ddsm_five_metadata_file('mass_case_description_train_set.csv', 'train_cbis-ddsm_five.csv', tuple)
-    generate_cbis_ddsm_five_metadata_file('calc_case_description_test_set.csv', 'test_cbis-ddsm_five.csv', tuple)
-    generate_cbis_ddsm_five_metadata_file('mass_case_description_test_set.csv', 'test_cbis-ddsm_five.csv', tuple)
+    append_to_ddsm_csv(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_train_cbis-ddsm_five.csv', 'image,label')
+    append_to_ddsm_csv(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_test_cbis-ddsm_five.csv', 'image,label')
+    generate_cbis_ddsm_five_metadata_file('calc_case_description_train_set.csv', tuple[2] + '_train_cbis-ddsm_five.csv', tuple)
+    generate_cbis_ddsm_five_metadata_file('mass_case_description_train_set.csv', tuple[2] + '_train_cbis-ddsm_five.csv', tuple)
+    generate_cbis_ddsm_five_metadata_file('calc_case_description_test_set.csv', tuple[2] + '_test_cbis-ddsm_five.csv', tuple)
+    generate_cbis_ddsm_five_metadata_file('mass_case_description_test_set.csv', tuple[2] + '_test_cbis-ddsm_five.csv', tuple)
 
 
-create_cbis_metadata_file()
-# create_cbis_five_metadata_file()
+
+create_cbis_metadata_file(image_file_tuple)
+create_cbis_metadata_file(roi_mask_tuple)
+create_cbis_metadata_file(cropped_image_tuple)

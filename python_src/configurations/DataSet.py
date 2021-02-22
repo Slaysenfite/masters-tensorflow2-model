@@ -134,8 +134,8 @@ def create_cbis_ddsm_dataset_singleton():
     return MultiPartDataset(
         DataSetNames.CBIS_DDSM.name,
         ROOT_DIRECTORY + PATH_TO_CBIS_DDSM,
-        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/train_cbis-ddsm.csv',
-        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/test_cbis-ddsm.csv',
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/full_image_train_cbis-ddsm.csv',
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/full_image_test_cbis-ddsm.csv',
         1,
         two_class_label_map,
         two_class_names,
