@@ -98,8 +98,7 @@ class SegmentationDataset(DataSet):
                  cropped_test_metadata_path, roi_train_metadata_path,
                  roi_test_metadata_path, class_label_index, label_map,
                  class_names, is_multiclass):
-        super.__init__(self, name, root_path, train_metadata_path, test_metadata_path, class_label_index, label_map,
-                 class_names, is_multiclass)
+        super().__init__(name, root_path, train_metadata_path, test_metadata_path, class_label_index, label_map, class_names, is_multiclass)
         self.cropped_test_metadata_path = cropped_test_metadata_path
         self.cropped_train_metadata_path = cropped_train_metadata_path
         self.roi_train_metadata_path = roi_train_metadata_path
@@ -204,8 +203,8 @@ def create_cbis_ddsm_segmentation_dataset_singleton():
         ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/full_image_test_cbis-ddsm.csv',
         ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/cropped_image_train_cbis-ddsm.csv',
         ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/cropped_image_test_cbis-ddsm.csv',
-        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/roi_train_cbis-ddsm.csv',
-        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/roi_test_cbis-ddsm.csv',
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/roi_image_train_cbis-ddsm.csv',
+        ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/roi_image_test_cbis-ddsm.csv',
         1,
         two_class_label_map,
         two_class_names,
@@ -245,3 +244,4 @@ mias_data_set = create_mias_dataset_singleton()
 cbis_ddsm_data_set = create_cbis_ddsm_dataset_singleton()
 cbis_ddsm_five_data_set = create_cbis_ddsm_five_class_dataset_singleton()
 mnist_data_set = create_mnist_dataset_singleton()
+cbis_seg_data_set = create_cbis_ddsm_segmentation_dataset_singleton()

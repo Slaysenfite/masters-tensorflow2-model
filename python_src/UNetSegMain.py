@@ -1,21 +1,12 @@
 import sys
 
-import numpy as np
-import pandas as pd
-from matplotlib import pyplot as plt
-import tensorflow as tf
-import re
-import glob
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
-import ast
-from PIL import Image, ImageDraw
-from configurations.DataSet import cbis_ddsm_data_set as data_set
+import tensorflow as tf
 
+from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import hyperparameters, IMAGE_DIMS, create_required_directories
 from networks import UNet
-from utils.ImageLoader import load_greyscale_images
-
+from utils.ImageLoader import load_seg_images
 from utils.ScriptHelper import read_cmd_line_args
 
 print('Python version: {}'.format(sys.version))
@@ -28,12 +19,10 @@ print(hyperparameters.report_hyperparameters())
 print('[INFO] Creating required directories...')
 create_required_directories()
 
-# initialize the data and labels
-data = []
-labels = []
-
 print('[INFO] Loading images...')
-data, labels = load_greyscale_images(data, labels, data_set, [IMAGE_DIMS[0], IMAGE_DIMS[1], 1])
+c_data, c_labels = load_seg_images(data_set, path_suffix='cropped', image_dimensions=[IMAGE_DIMS[0], IMAGE_DIMS[1], 1])
+roi_data, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=[IMAGE_DIMS[0], IMAGE_DIMS[1], 1])
+data, labels = load_seg_images(data_set, [IMAGE_DIMS[0], IMAGE_DIMS[1], 1])
 
 plt.subplots()
 def image_show(image, nrows=1, ncols=1, cmap='gray'):

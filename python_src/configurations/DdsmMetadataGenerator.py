@@ -23,7 +23,6 @@ def gen_binary_classification_ddsm_metadata(rootDir):
     append_to_ddsm_csv(csv_path, 'image,label')
     for dirName, subdirList, fileList in os.walk(rootDir):
         for fname in fileList:
-            if 'png' in fname:
                 if 'normal' in dirName:
                     append_to_ddsm_csv(csv_path, fname + ',N')
                 elif 'benign' in dirName and check_for_overlay(fname, dirName) is True:
