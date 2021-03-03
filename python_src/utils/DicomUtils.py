@@ -1,5 +1,6 @@
 import errno
 import os
+from random import randint
 
 import cv2
 import numpy as np
@@ -40,16 +41,16 @@ def convert_to_png(filename):
     shape = ds.pixel_array.shape
 
     images = ds.pixel_array
+    rand = randint(1, len(images - 1))
 
-    for i in range(len(images)):
-        # Convert to float to avoid overflow or underflow losses.
-        image_2d = images[i].astype(float)
+    # Convert to float to avoid overflow or underflow losses.
+    image_2d = images[rand].astype(float)
 
-        # Rescaling grey scale between 0-255
-        image_2d_scaled = (np.maximum(image_2d, 0) / image_2d.max()) * 255.0
+    # Rescaling grey scale between 0-255
+    image_2d_scaled = (np.maximum(image_2d, 0) / image_2d.max()) * 255.0
 
-        # Convert to uint
-        image_2d_scaled = np.uint8(image_2d_scaled)
+    # Convert to uint
+    image_2d_scaled = np.uint8(image_2d_scaled)
 
-        # Write the PNG file
-        cv2.imwrite(f'{filename.strip(".dcm")}-{i}.png', image_2d_scaled)
+    # Write the PNG file
+    cv2.imwrite(f'{filename.strip(".dcm")}.png', image_2d_scaled)

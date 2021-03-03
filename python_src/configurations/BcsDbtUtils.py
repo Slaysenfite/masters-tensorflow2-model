@@ -1,20 +1,22 @@
 import os
+import time
+from datetime import timedelta
 
 from utils.DicomUtils import decompress_and_convert_dicom
 
-RELATIVE_DATA_SET_PATH = '/media/slaysenfite/Seagate Expansion Drive/manifest-1605042674814/Breast-Cancer-Screening-DBT'
+RELATIVE_DATA_SET_PATH = '/media/slaysenfite/Seagate Expansion Drive/CBS/Breast-Cancer-Screening-DBT'
 home = os.path.expanduser("~")
 
 # path_to_data_folder = home + RELATIVE_DATA_SET_PATH
 
 
 def clease_dataset():
-    count = 0
-    for dirName, subdirList, fileList in os.walk('/media/slaysenfite/Seagate Expansion Drive/manifest-1605042674814/Breast-Cancer-Screening-DBT'):
+    for dirName, subdirList, fileList in os.walk(RELATIVE_DATA_SET_PATH):
         for fname in fileList:
             if '1-1.dcm' in fname:
-                count = count + 1 # decompress_and_convert_dicom(dirName + '/' + fname)
-    print(count)
+                start_time = time.time()
+                decompress_and_convert_dicom(dirName + '/' + fname)
+                print(timedelta(seconds=(time.time() - start_time)))
 
 
 
