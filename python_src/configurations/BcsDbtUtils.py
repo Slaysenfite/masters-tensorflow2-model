@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from utils.DicomUtils import decompress_and_convert_dicom
 
-RELATIVE_DATA_SET_PATH = '/media/slaysenfite/Seagate Expansion Drive/CBS/Breast-Cancer-Screening-DBT'
+RELATIVE_DATA_SET_PATH = '/home/slaysenfite/Desktop/fg'
 home = os.path.expanduser("~")
 
 # path_to_data_folder = home + RELATIVE_DATA_SET_PATH
