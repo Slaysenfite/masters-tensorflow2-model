@@ -61,3 +61,45 @@ def convert_to_png(filename):
 
     # Write the PNG file
     cv2.imwrite(f'{filename.strip(".dcm")}.png', image_2d_scaled)
+
+
+def full_image(ds):
+    shape = ds.pixel_array.shape
+    if (shape[1] * shape[0] > 1000 * 1000):
+        return True
+    else:
+        return False
+
+
+def rename_and_convert_dicom(dirName, fname):
+    dicomFile = dirName + '/' + fname
+
+    ogFilename = os.fsdecode(dicomFile)
+
+    # Decompress the file
+    print('Processing: ' + ogFilename)
+    ds = pydicom.dcmread(ogFilename)
+
+    if full_image(ds) == True:
+        saveFile = dirName + '/' + '1-1.png'
+    else:
+        saveFile = dirName + '/' + '1-2.png'
+
+    shape = ds.pixel_array.shape
+
+    # Convert first image to float to avoid overflow or underflow losses.
+    image_2d = ds.pixel_array.astype(float)
+
+    # Rescaling grey scale between 0-255
+    image_2d_scaled = (np.maximum(image_2d, 0) / image_2d.max()) * 255.0
+
+    # Convert to uint
+    image_2d_scaled = np.uint8(image_2d_scaled)
+
+    # Resize image
+    image_2d_scaled = cv2.resize(image_2d_scaled, (round(0.5 * shape[1]), round(0.5 * shape[0])))
+
+    # Write the PNG file
+    cv2.imwrite(saveFile, image_2d_scaled)
+
+    os.remove(ogFilename)
