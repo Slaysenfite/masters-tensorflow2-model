@@ -10,7 +10,7 @@ home = os.path.expanduser("~")
 # path_to_data_folder = home + RELATIVE_DATA_SET_PATH
 
 
-def clease_dataset():
+def cleanse_dataset():
     for dirName, subdirList, fileList in os.walk(RELATIVE_DATA_SET_PATH):
         for fname in fileList:
             if '1-1.dcm' in fname or '1-2.dcm' in fname:
@@ -26,4 +26,4 @@ def append_to_csv(path, string):
     print('appended line: ' + string)
 
 
-clease_dataset()
+# cleanse_dataset()

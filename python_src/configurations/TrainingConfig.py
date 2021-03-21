@@ -9,7 +9,7 @@ def create_required_directories():
     os.makedirs(output_dir + 'model/', 0o777, True)
 
 
-IMAGE_DIMS = (8, 8, 3)
+IMAGE_DIMS = (32, 32, 3)
 
 output_dir = 'output/'
 
@@ -27,6 +27,7 @@ class Hyperparameters:
         self.learning_optimization = 'sgd'
         self.meta_heuristic = 'none'
         self.meta_heuristic_order = 'na'
+        self.experiment_id='na'
 
 
     def report_hyperparameters(self):
@@ -44,11 +45,12 @@ class Hyperparameters:
 
 def create_standard_hyperparameter_singleton():
     return Hyperparameters(
-        50,
+        1,
         5e-3,
         32,
         0.25
     )
+
 
 def create_mnist_hyperparameter_singleton():
     return Hyperparameters(
@@ -57,6 +59,7 @@ def create_mnist_hyperparameter_singleton():
         32,
         0.25
     )
+
 
 def create_callbacks():
     return [

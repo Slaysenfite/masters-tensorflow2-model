@@ -46,7 +46,7 @@ aug = ImageDataGenerator(
     zoom_range=0.05,
     fill_mode="nearest")
 
-train_x, train_y = supplement_training_data(aug, train_x, train_y)
+# train_x, train_y = supplement_training_data(aug, train_x, train_y)
 
 print("[INFO] Training data shape: " + str(train_x.shape))
 print("[INFO] Training label shape: " + str(train_y.shape))
@@ -78,7 +78,7 @@ predictions = model.predict(test_x, batch_size=hyperparameters.batch_size)
 
 print('[INFO] generating metrics...')
 
-file_title = create_file_title('UNet', hyperparameters)
+file_title = create_file_title('ResNet', hyperparameters)
 
 generate_script_report(H, model, test_x, test_y, predictions, time_taken, data_set, hyperparameters, file_title)
 

@@ -5,10 +5,12 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 from IPython.display import clear_output
 from tensorflow_examples.models.pix2pix.pix2pix import AUTOTUNE
+from configurations.DataSet import cbis_seg_data_set as data_set
 
 from configurations.TrainingConfig import create_required_directories
 from configurations.TrainingConfig import hyperparameters, IMAGE_DIMS
 from networks.UNet import UNet as unet
+from utils.ImageLoader import load_seg_images
 from utils.ScriptHelper import read_cmd_line_args
 
 print('Python version: {}'.format(sys.version))
@@ -22,9 +24,30 @@ print('[INFO] Creating required directories...')
 create_required_directories()
 
 print('[INFO] Loading images...')
+roi_data, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=[IMAGE_DIMS[0], IMAGE_DIMS[1], 3])
+data, labels = load_seg_images(data_set, image_dimensions=[IMAGE_DIMS[0], IMAGE_DIMS[1], 3])
+
+plt.subplots()
+def image_show(image, nrows=1, ncols=1, cmap='gray'):
+    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(14, 14))
+    ax.imshow(image, cmap='gray')
+    ax.axis('off')
+    return fig, ax
+
+def display(display_list):
+  plt.figure(figsize=(15, 15))
+
+  title = ['Input Image', 'True Mask', 'Predicted Mask']
+
+  for i in range(len(display_list)):
+    plt.subplot(1, len(display_list), i+1)
+    plt.title(title[i])
+    plt.imshow(tf.keras.preprocessing.image.array_to_img(display_list[i]))
+    plt.axis('off')
+  plt.show()
+
 
 dataset, info = tfds.load('oxford_iiit_pet:3.*.*', with_info=True)
-
 
 def normalize(input_image, input_mask):
   input_image = tf.cast(input_image, tf.float32) / 255.0
@@ -66,20 +89,6 @@ test = dataset['test'].map(load_image_test)
 train_dataset = train.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
 train_dataset = train_dataset.prefetch(buffer_size=AUTOTUNE)
 test_dataset = test.batch(BATCH_SIZE)
-
-
-def display(display_list):
-  plt.figure(figsize=(15, 15))
-
-  title = ['Input Image', 'True Mask', 'Predicted Mask']
-
-  for i in range(len(display_list)):
-    plt.subplot(1, len(display_list), i+1)
-    plt.title(title[i])
-    plt.imshow(tf.keras.preprocessing.image.array_to_img(display_list[i]))
-    plt.axis('off')
-  plt.show()
-
 
 for image, mask in train.take(1):
   sample_image, sample_mask = image, mask

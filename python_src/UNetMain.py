@@ -13,10 +13,10 @@ from configurations.DataSet import cbis_ddsm_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories
 from configurations.TrainingConfig import hyperparameters, create_callbacks
 from metrics.MetricsReporter import MetricReporter
-from networks.UNet import UNet
+from networks.UNet import build_unet
 from training_loops.CustomTrainingLoop import training_loop
-from utils.ImageLoader import load_greyscale_images, supplement_training_data
-from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title, launch_tensorboard
+from utils.ImageLoader import load_greyscale_images
+from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
@@ -47,14 +47,14 @@ aug = ImageDataGenerator(
     zoom_range=0.05,
     fill_mode='nearest')
 
-train_x, train_y = supplement_training_data(aug, train_x, train_y)
+# train_x, train_y = supplement_training_data(aug, train_x, train_y)
 
 print('[INFO] Training data shape: ' + str(train_x.shape))
 print('[INFO] Training label shape: ' + str(train_y.shape))
 
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
-model = UNet.build([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(data_set.class_names))
+model = build_unet([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(data_set.class_names))
 
 opt = Adam(learning_rate=hyperparameters.init_lr)
 model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy', Precision(), Recall()])
@@ -72,8 +72,6 @@ TC = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
                                     embeddings_freq=1)
 TC.set_model(model=model)
 
-# train the network
-launch_tensorboard(log_dir)
 
 start_time = time.time()
 H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
