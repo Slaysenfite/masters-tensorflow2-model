@@ -9,7 +9,7 @@ from configurations.DataSet import cbis_seg_data_set as data_set
 
 from configurations.TrainingConfig import create_required_directories
 from configurations.TrainingConfig import hyperparameters, IMAGE_DIMS
-from networks.UNet import UNet as unet
+from networks.UNet import build_unet
 from utils.ImageLoader import load_seg_images
 from utils.ScriptHelper import read_cmd_line_args
 
@@ -94,7 +94,7 @@ for image, mask in train.take(1):
   sample_image, sample_mask = image, mask
 # display([sample_image, sample_mask])
 
-model = unet.build([128, 128, 3], 3)
+model = build_unet([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(data_set.class_names))
 
 model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),

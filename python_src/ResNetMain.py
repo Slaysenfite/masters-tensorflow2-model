@@ -3,12 +3,13 @@ import time
 from datetime import timedelta
 
 import tensorflow as tf
+from matplotlib import pyplot
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras.metrics import Precision, Recall
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
-from configurations.DataSet import cbis_ddsm_data_set as data_set
+from configurations.DataSet import bcs_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks
 from metrics.MetricsReporter import MetricReporter
 from networks.ResNet import ResnetBuilder
@@ -19,7 +20,8 @@ from utils.ScriptHelper import generate_script_report, read_cmd_line_args, creat
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
 print('[BEGIN] Start script...\n')
-hyperparameters, opt = read_cmd_line_args(hyperparameters)
+hyperparameters, opt, data_set = read_cmd_line_args(hyperparameters, data_set)
+print(' Dataset: {}\n'.format(data_set.name))
 print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
 
@@ -50,6 +52,15 @@ aug = ImageDataGenerator(
 
 print("[INFO] Training data shape: " + str(train_x.shape))
 print("[INFO] Training label shape: " + str(train_y.shape))
+
+# plot first few images
+for i in range(9):
+    # define subplot
+    pyplot.subplot(330 + 1 + i)
+    # plot raw pixel data
+    pyplot.imshow(train_x[i], cmap=pyplot.get_cmap('gray'))
+# show the figure
+pyplot.show()
 
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 

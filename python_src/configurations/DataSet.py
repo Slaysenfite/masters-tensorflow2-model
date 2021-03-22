@@ -4,6 +4,7 @@ from os.path import expanduser
 import numpy as np
 import pandas as pd
 from imutils import paths
+from pandas import read_csv
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras.utils.np_utils import to_categorical
@@ -16,6 +17,7 @@ ROOT_DIRECTORY = home + '/data'
 PATH_TO_DDSM = '/ddsm_lr_sample'
 PATH_TO_MIAS = '/mias'
 PATH_TO_CBIS_DDSM = '/CBIS-DDSM_CLASSIC_PNG'
+PATH_TO_BCS = '/BCS-DBT-PNG'
 
 
 # Dataset labels
@@ -33,6 +35,7 @@ class DataSetNames(Enum):
     MIAS = 'Mammographic Image Analysis Homepage'
     InBreast = 'IN'
     MNIST = 'Modified National Institute of Standards and Technology'
+    BCS_DBT = 'BCS-DBT'
 
 class DataSet:
     def __init__(self, name, root_path, train_metadata_path, test_metadata_path, class_label_index, label_map,
@@ -69,10 +72,21 @@ class DataSet:
         return loss, train_y, test_y
 
     def get_image_paths(self):
-        return list(paths.list_images(self.root_path))
+        root_image_list = list(paths.list_images(self.root_path))
+        df_metadata = read_csv(self.train_metadata_path)
+        meta_image_list = df_metadata['image']
+        if len(root_image_list) != len(meta_image_list):
+            print(
+                '[WARN] Number of images in data set directory does not match number '
+                'of images specified in metadata\n'
+                '   Defaulting to paths found in metadata file')
+            return meta_image_list
+        else:
+            return root_image_list
 
-    def get_ground_truth_lables(label_index):
-        return
+    def get_ground_truth_labels(self):
+        df_metadata = read_csv(self.train_metadata_path)
+        return df_metadata['label']
 
 
 class MultiPartDataset(DataSet):
@@ -238,6 +252,18 @@ def create_mnist_dataset_singleton():
     )
 
 
+def create_bcs_two_class_dataset_singleton():
+    return DataSet(
+        DataSetNames.BCS_DBT.name,
+        ROOT_DIRECTORY + PATH_TO_BCS,
+        ROOT_DIRECTORY + PATH_TO_BCS + '/bcs-dbt-metadata.csv',
+        None,
+        1,
+        two_class_label_map,
+        two_class_names,
+        False
+    )
+
 ddsm_data_set = create_ddsm_three_class_dataset_singleton()
 binary_ddsm_data_set = create_ddsm_two_class_dataset_singleton()
 mias_data_set = create_mias_dataset_singleton()
@@ -245,3 +271,4 @@ cbis_ddsm_data_set = create_cbis_ddsm_dataset_singleton()
 cbis_ddsm_five_data_set = create_cbis_ddsm_five_class_dataset_singleton()
 mnist_data_set = create_mnist_dataset_singleton()
 cbis_seg_data_set = create_cbis_ddsm_segmentation_dataset_singleton()
+bcs_data_set = create_bcs_two_class_dataset_singleton()

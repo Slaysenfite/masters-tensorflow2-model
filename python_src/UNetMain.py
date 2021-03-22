@@ -3,25 +3,27 @@ import time
 from datetime import timedelta
 
 import tensorflow as tf
+from matplotlib import pyplot
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras.metrics import Precision, Recall
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
-from configurations.DataSet import cbis_ddsm_data_set as data_set
+from configurations.DataSet import bcs_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories
 from configurations.TrainingConfig import hyperparameters, create_callbacks
 from metrics.MetricsReporter import MetricReporter
 from networks.UNet import build_unet
 from training_loops.CustomTrainingLoop import training_loop
-from utils.ImageLoader import load_greyscale_images
+from utils.ImageLoader import supplement_training_data, load_greyscale_images
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
 print('[BEGIN] Start script...\n')
-hyperparameters, opt = read_cmd_line_args(hyperparameters)
+hyperparameters, opt, data_set = read_cmd_line_args(hyperparameters, data_set)
+print(' Dataset: {}\n'.format(data_set.name))
 print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
 
@@ -47,10 +49,19 @@ aug = ImageDataGenerator(
     zoom_range=0.05,
     fill_mode='nearest')
 
-# train_x, train_y = supplement_training_data(aug, train_x, train_y)
+train_x, train_y = supplement_training_data(aug, train_x, train_y)
 
 print('[INFO] Training data shape: ' + str(train_x.shape))
 print('[INFO] Training label shape: ' + str(train_y.shape))
+
+# plot first few images
+for i in range(9):
+    # define subplot
+    pyplot.subplot(330 + 1 + i)
+    # plot raw pixel data
+    pyplot.imshow(train_x[i], cmap=pyplot.get_cmap('gray'))
+# show the figure
+pyplot.show()
 
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
@@ -78,6 +89,10 @@ H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
                   meta_heuristic=hyperparameters.meta_heuristic,
                   meta_heuristic_order=hyperparameters.meta_heuristic_order)
 time_taken = timedelta(seconds=(time.time() - start_time))
+
+# H =model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
+#               steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
+#               callbacks=callbacks)
 
 # evaluate the network
 print('[INFO] evaluating network...')

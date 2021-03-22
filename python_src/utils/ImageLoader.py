@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 from matplotlib import pyplot
 from numpy import ma, asarray
+from pandas import read_csv
+
 
 def load_rgb_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
     #get image paths and metadata
