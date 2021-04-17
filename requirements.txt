@@ -63,7 +63,7 @@ six==1.15.0
 sklearn==0.0
 tensorboard==2.4.0
 tensorboard-plugin-wit==1.7.0
-tensorflow==2.3.1
+tensorflow==2.4.0
 tensorflow-datasets==4.2.0
 tensorflow-estimator==2.3.0
 tensorflow-examples @ git+https://github.com/tensorflow/examples.git@908f7e3279832728412cbe6aba971238a6b716e5
