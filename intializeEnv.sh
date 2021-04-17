@@ -6,22 +6,32 @@ cd $HOME
 
 # Pull git repos
 
-git clone https://github.com/Slaysenfite/ddsm_lr.git
 git clone https://github.com/Slaysenfite/masters-tensorflow2-model.git
+
+# Create data directory
+
+mkdir data
+cd data
+
+git clone https://github.com/Slaysenfite/CBIS-DDSM-PNG.git
+git clone https://github.com/Slaysenfite/BCS-DBT-PNG
+
+cd $HOME
 
 # Make virtual environment and install requirements
 
 mkvirtualenv wesselsenv -p python3
 workon wesselsenv
 
-cd masters-tensorflow2-model/
+cd $HOME/masters-tensorflow2-model/
 pip install -r requirements.txt
 
-# Create metadata file for the DDSM
+# Create metadata file for the Datasets
 
 git checkout instance/uber
 
-python python_src/configurations/DdsmMetadataGenerator.py
+python python_src/configurations/CbisDdsmMetadataGenerator.py
+python python_src/configurations/BcsDbtUtils.py
 
 
 
