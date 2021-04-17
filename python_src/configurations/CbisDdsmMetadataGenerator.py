@@ -6,7 +6,7 @@ home = expanduser("~")
 
 image_file_tuple = ('image file path', '1-1', 'full_image')
 cropped_image_tuple = ('cropped image file path', '1-1', 'cropped_image')
-roi_mask_tuple = ('ROI mask file path', '1-2', ' roi_image')
+roi_mask_tuple = ('ROI mask file path', '1-2', 'roi_image')
 
 RELATIVE_DATA_SET_PATH = '/data/CBIS-DDSM_CLASSIC_PNG/'
 
@@ -22,8 +22,7 @@ def generate_cbis_ddsm_metadata_file(cbis_ddsm_csv, metadata_csv_path, extractio
     path_to_data_folder = home + RELATIVE_DATA_SET_PATH
     for index, row in df_csv.iterrows():
         image_path = row[extraction_tuple[0]].strip('\t\n\r')
-        if extraction_tuple[1] in image_path:
-            append_row(image_path, metadata_csv_path, path_to_data_folder, row)
+        append_row(image_path, metadata_csv_path, path_to_data_folder, row)
 
 
 def append_row(image_path, metadata_csv_path, path_to_data_folder, row):

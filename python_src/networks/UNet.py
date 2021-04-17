@@ -1,110 +1,117 @@
-"""
-Based on:
 
-https://github.com/zizhaozhang/unet-tensorflow-keras/blob/master/model.py
-
-"""
-
-from tensorflow.python.keras import backend as K, Input
-from tensorflow.python.keras.layers import Conv2D, Activation, MaxPooling2D, Flatten, \
-    Dense, ZeroPadding2D, concatenate, Cropping2D, UpSampling2D, AveragePooling2D
+import tensorflow as tf
 from tensorflow.python.keras.models import Model
 
 
-class UNet:
+def build_unet(input_shape, num_classes):
+    base_model = tf.keras.applications.MobileNetV2(input_shape=input_shape, include_top=False, weights=None,)
 
-    @staticmethod
-    def get_crop_shape(target, refer):
-        # width, the 3rd dimension
-        cw = (target.get_shape()[2] - refer.get_shape()[2])
-        assert (cw >= 0)
-        if cw % 2 != 0:
-            cw1, cw2 = int(cw / 2), int(cw / 2) + 1
-        else:
-            cw1, cw2 = int(cw / 2), int(cw / 2)
-        # height, the 2nd dimension
-        ch = (target.get_shape()[1] - refer.get_shape()[1])
-        assert (ch >= 0)
-        if ch % 2 != 0:
-            ch1, ch2 = int(ch / 2), int(ch / 2) + 1
-        else:
-            ch1, ch2 = int(ch / 2), int(ch / 2)
+    # Use the activations of these layers
+    layer_names = [
+        'block_1_expand_relu',   # 64x64
+        'block_3_expand_relu',   # 32x32
+        'block_6_expand_relu',   # 16x16
+        'block_13_expand_relu',  # 8x8
+        'block_16_project',      # 4x4
+    ]
+    base_model_outputs = [base_model.get_layer(name).output for name in layer_names]
 
-        return (ch1, ch2), (cw1, cw2)
+    # Create the feature extraction model
+    down_stack = tf.keras.Model(inputs=base_model.input, outputs=base_model_outputs)
 
-    @staticmethod
-    def build(img_shape, classes):
-        # initialize the model along with the input shape to be
-        # "channels last" and the channels dimension itself
-        input_shape = img_shape
-        chan_dim = -1
+    down_stack.trainable = False
 
-        # if we are using "channels first", update the input shape
-        # and channels dimension
-        if K.image_data_format() == "channels_first":
-            input_shape = (img_shape[2], img_shape[0], img_shape[1])
-            chan_dim = 1
+    up_stack = [
+        upsample(512, 3),  # 4x4 -> 8x8
+        upsample(256, 3),  # 8x8 -> 16x16
+        upsample(128, 3),  # 16x16 -> 32x32
+        upsample(64, 3),  # 32x32 -> 64x64
+    ]
 
-        concat_axis = 3
-        inputs = Input(shape=input_shape)
+    inputs = tf.keras.layers.Input(input_shape)
 
-        conv1 = Conv2D(32, (3, 3), activation='relu', padding='same', name='conv1_1')(inputs)
-        conv1 = Conv2D(32, (3, 3), activation='relu', padding='same')(conv1)
-        pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
-        conv2 = Conv2D(64, (3, 3), activation='relu', padding='same')(pool1)
-        conv2 = Conv2D(64, (3, 3), activation='relu', padding='same')(conv2)
-        pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+    # Downsampling through the model
+    skips = down_stack(inputs)
+    x = skips[-1]
+    skips = reversed(skips[:-1])
 
-        conv3 = Conv2D(128, (3, 3), activation='relu', padding='same')(pool2)
-        conv3 = Conv2D(128, (3, 3), activation='relu', padding='same')(conv3)
-        pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+    # Upsampling and establishing the skip connections
+    for up, skip in zip(up_stack, skips):
+        x = up(x)
+        concat = tf.keras.layers.Concatenate()
+        x = concat([x, skip])
 
-        conv4 = Conv2D(256, (3, 3), activation='relu', padding='same')(pool3)
-        conv4 = Conv2D(256, (3, 3), activation='relu', padding='same')(conv4)
-        pool4 = MaxPooling2D(pool_size=(2, 2))(conv4)
+    pooling = tf.keras.layers.AveragePooling2D()(x)
 
-        conv5 = Conv2D(512, (3, 3), activation='relu', padding='same')(pool4)
-        conv5 = Conv2D(512, (3, 3), activation='relu', padding='same')(conv5)
+    flatten = tf.keras.layers.Flatten()(pooling)
+    fc = (tf.keras.layers.Dense(512))(flatten)
+    act = tf.keras.layers.Activation('relu')(fc)
 
-        up_conv5 = UpSampling2D(size=(2, 2))(conv5)
-        ch, cw = UNet.get_crop_shape(conv4, up_conv5)
-        crop_conv4 = Cropping2D(cropping=(ch, cw))(conv4)
-        up6 = concatenate([up_conv5, crop_conv4], axis=concat_axis)
-        conv6 = Conv2D(256, (3, 3), activation='relu', padding='same')(up6)
-        conv6 = Conv2D(256, (3, 3), activation='relu', padding='same')(conv6)
+    dense = tf.keras.layers.Dense(num_classes)(act)
+    final_layer = tf.keras.layers.Activation("softmax")(dense)
 
-        up_conv6 = UpSampling2D(size=(2, 2))(conv6)
-        ch, cw = UNet.get_crop_shape(conv3, up_conv6)
-        crop_conv3 = Cropping2D(cropping=(ch, cw))(conv3)
-        up7 = concatenate([up_conv6, crop_conv3], axis=concat_axis)
-        conv7 = Conv2D(128, (3, 3), activation='relu', padding='same')(up7)
-        conv7 = Conv2D(128, (3, 3), activation='relu', padding='same')(conv7)
+    return Model(inputs=inputs, outputs=final_layer)
 
-        up_conv7 = UpSampling2D(size=(2, 2))(conv7)
-        ch, cw = UNet.get_crop_shape(conv2, up_conv7)
-        crop_conv2 = Cropping2D(cropping=(ch, cw))(conv2)
-        up8 = concatenate([up_conv7, crop_conv2], axis=concat_axis)
-        conv8 = Conv2D(64, (3, 3), activation='relu', padding='same')(up8)
-        conv8 = Conv2D(64, (3, 3), activation='relu', padding='same')(conv8)
 
-        up_conv8 = UpSampling2D(size=(2, 2))(conv8)
-        ch, cw = UNet.get_crop_shape(conv1, up_conv8)
-        crop_conv1 = Cropping2D(cropping=(ch, cw))(conv1)
-        up9 = concatenate([up_conv8, crop_conv1], axis=concat_axis)
-        conv9 = Conv2D(32, (3, 3), activation='relu', padding='same')(up9)
-        conv9 = Conv2D(32, (3, 3), activation='relu', padding='same')(conv9)
+def upsample(filters, size, norm_type='batchnorm', apply_dropout=False):
+    """Upsamples an input.
 
-        ch, cw = UNet.get_crop_shape(inputs, conv9)
-        conv9 = ZeroPadding2D(padding=((ch[0], ch[1]), (cw[0], cw[1])))(conv9)
-        conv10 = Conv2D(classes, (1, 1))(conv9)
+    Conv2DTranspose => Batchnorm => Dropout => Relu
 
-        pooling = AveragePooling2D()(conv10)
+    Args:
+      filters: number of filters
+      size: filter size
+      norm_type: Normalization type; either 'batchnorm' or 'instancenorm'.
+      apply_dropout: If True, adds the dropout layer
 
-        flatten = Flatten()(pooling)
-        fc = (Dense(512))(flatten)
-        act = Activation('relu')(fc)
+    Returns:
+      Upsample Sequential Model
+    """
 
-        dense = Dense(classes)(act)
-        final_layer = Activation("softmax")(dense)
+    initializer = tf.random_normal_initializer(0., 0.02)
 
-        return Model(inputs=inputs, outputs=final_layer)
+    result = tf.keras.Sequential()
+    result.add(
+        tf.keras.layers.Conv2DTranspose(filters, size, strides=2,
+                                        padding='same',
+                                        kernel_initializer=initializer,
+                                        use_bias=False))
+
+    if norm_type.lower() == 'batchnorm':
+        result.add(tf.keras.layers.BatchNormalization())
+    elif norm_type.lower() == 'instancenorm':
+        result.add(InstanceNormalization())
+
+    if apply_dropout:
+        result.add(tf.keras.layers.Dropout(0.5))
+
+    result.add(tf.keras.layers.ReLU())
+
+    return result
+
+
+class InstanceNormalization(tf.keras.layers.Layer):
+    """Instance Normalization Layer (https://arxiv.org/abs/1607.08022)."""
+
+    def __init__(self, epsilon=1e-5):
+        super(InstanceNormalization, self).__init__()
+        self.epsilon = epsilon
+
+    def build(self, input_shape):
+        self.scale = self.add_weight(
+            name='scale',
+            shape=input_shape[-1:],
+            initializer=tf.random_normal_initializer(1., 0.02),
+            trainable=True)
+
+        self.offset = self.add_weight(
+            name='offset',
+            shape=input_shape[-1:],
+            initializer='zeros',
+            trainable=True)
+
+    def call(self, x):
+        mean, variance = tf.nn.moments(x, axes=[1, 2], keepdims=True)
+        inv = tf.math.rsqrt(variance + self.epsilon)
+        normalized = (x - mean) * inv
+        return self.scale * normalized + self.offset

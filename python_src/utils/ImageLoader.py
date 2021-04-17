@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib import pyplot
 from numpy import ma, asarray
 
+
 def load_rgb_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
     #get image paths and metadata
     image_paths = dataset.get_image_paths()
@@ -49,6 +50,51 @@ def load_greyscale_images(data, labels, dataset, image_dimensions=(128, 128, 1))
         image = cv2.resize(image, (image_dimensions[1], image_dimensions[0]))
         image = cv2.cv2.cvtColor(image, cv2.COLOR_RGB2GRAY, dstCn=0)
         image = image[:, :, np.newaxis]
+        data.append(image)
+
+        # extract the class label from the image path and update the
+        # labels list
+        raw_label = metadata[i][dataset.class_label_index]
+        label = dataset.label_map[raw_label]
+
+        labels.append(label)
+        i += 1
+
+    # scale the raw pixel intensities to the range [0, 1]
+    data = np.array(data, dtype="float") / 255.0
+    labels = np.array(labels)
+
+    print("[INFO] Data shape: " + str(data.shape))
+    print("[INFO] Label shape: " + str(labels.shape))
+
+    return data, labels
+
+def  load_seg_images(dataset, path_suffix='full', image_dimensions=(128, 128, 1)):
+    # initialize the data and labels
+    data = []
+    labels = []
+
+    # get image paths
+    if (path_suffix=='cropped'):
+        image_paths = dataset.get_cropped_image_paths()
+        metadata = dataset.get_cropped_image_metadata()
+    elif (path_suffix=='roi'):
+        image_paths = dataset.get_roi_image_paths()
+        metadata = dataset.get_roi_image_metadata()
+    else:
+        image_paths = dataset.get_image_paths()
+        metadata = dataset.get_image_metadata()
+
+
+    i = 0
+    # loop over the input images
+    for image_path in image_paths:
+        print_progress_bar(i + 1, len(image_paths), prefix=' Progress:', suffix='Complete')
+
+        image = cv2.imread(image_path)
+        image = cv2.cv2.cvtColor(image, cv2.COLOR_RGB2GRAY, dstCn=0)
+        image = image[:, :, np.newaxis]
+        image = cv2.resize(image, (image_dimensions[1], image_dimensions[0]))
         data.append(image)
 
         # extract the class label from the image path and update the

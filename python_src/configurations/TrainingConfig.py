@@ -27,6 +27,7 @@ class Hyperparameters:
         self.learning_optimization = 'sgd'
         self.meta_heuristic = 'none'
         self.meta_heuristic_order = 'na'
+        self.experiment_id='na'
 
 
     def report_hyperparameters(self):
@@ -50,6 +51,7 @@ def create_standard_hyperparameter_singleton():
         0.25
     )
 
+
 def create_mnist_hyperparameter_singleton():
     return Hyperparameters(
         10,
@@ -57,6 +59,7 @@ def create_mnist_hyperparameter_singleton():
         32,
         0.25
     )
+
 
 def create_callbacks():
     return [
