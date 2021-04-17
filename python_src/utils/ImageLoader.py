@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 from matplotlib import pyplot
 from numpy import ma, asarray
-from pandas import read_csv
 
 
 def load_rgb_images(data, labels, dataset, image_dimensions=(128, 128, 3)):
@@ -93,9 +92,9 @@ def  load_seg_images(dataset, path_suffix='full', image_dimensions=(128, 128, 1)
         print_progress_bar(i + 1, len(image_paths), prefix=' Progress:', suffix='Complete')
 
         image = cv2.imread(image_path)
-        image = cv2.resize(image, (image_dimensions[1], image_dimensions[0]))
         image = cv2.cv2.cvtColor(image, cv2.COLOR_RGB2GRAY, dstCn=0)
         image = image[:, :, np.newaxis]
+        image = cv2.resize(image, (image_dimensions[1], image_dimensions[0]))
         data.append(image)
 
         # extract the class label from the image path and update the

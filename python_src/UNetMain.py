@@ -54,35 +54,21 @@ train_x, train_y = supplement_training_data(aug, train_x, train_y)
 print('[INFO] Training data shape: ' + str(train_x.shape))
 print('[INFO] Training label shape: ' + str(train_y.shape))
 
-# plot first few images
-for i in range(9):
-    # define subplot
-    pyplot.subplot(330 + 1 + i)
-    # plot raw pixel data
-    pyplot.imshow(train_x[i], cmap=pyplot.get_cmap('gray'))
-# show the figure
-pyplot.show()
+# # plot first few images
+# for i in range(9):
+#     # define subplot
+#     pyplot.subplot(330 + 1 + i)
+#     # plot raw pixel data
+#     pyplot.imshow(train_x[i], cmap=pyplot.get_cmap('gray'))
+# # show the figure
+# pyplot.show()
 
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
 model = build_unet([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(data_set.class_names))
 
 opt = Adam(learning_rate=hyperparameters.init_lr)
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy', Precision(), Recall()])
-
-
-# Setup callbacks
-log_dir = 'output/logs'
-callbacks = create_callbacks()
-TC = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
-                                    histogram_freq=1,
-                                    write_graph=True,
-                                    write_images=True,
-                                    update_freq='epoch',
-                                    profile_batch=2,
-                                    embeddings_freq=1)
-TC.set_model(model=model)
-
+model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy', Precision(), Recall()])
 
 start_time = time.time()
 H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,

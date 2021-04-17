@@ -53,14 +53,14 @@ aug = ImageDataGenerator(
 print("[INFO] Training data shape: " + str(train_x.shape))
 print("[INFO] Training label shape: " + str(train_y.shape))
 
-# plot first few images
-for i in range(9):
-    # define subplot
-    pyplot.subplot(330 + 1 + i)
-    # plot raw pixel data
-    pyplot.imshow(train_x[i], cmap=pyplot.get_cmap('gray'))
-# show the figure
-pyplot.show()
+# # plot first few images
+# for i in range(9):
+#     # define subplot
+#     pyplot.subplot(330 + 1 + i)
+#     # plot raw pixel data
+#     pyplot.imshow(train_x[i], cmap=pyplot.get_cmap('gray'))
+# # show the figure
+# pyplot.show()
 
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 

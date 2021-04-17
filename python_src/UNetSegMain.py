@@ -2,21 +2,22 @@ import sys
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
-import tensorflow_datasets as tfds
 from IPython.display import clear_output
-from tensorflow_examples.models.pix2pix.pix2pix import AUTOTUNE
-from configurations.DataSet import cbis_seg_data_set as data_set
+from sklearn.model_selection import train_test_split
+from tensorflow.python.keras import Input, Model, backend
+from tensorflow.python.keras.layers import Conv2D, BatchNormalization, Activation, MaxPool2D, UpSampling2D, Concatenate, \
+    SeparableConv2D, MaxPooling2D, add, Conv2DTranspose
 
+from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import create_required_directories
 from configurations.TrainingConfig import hyperparameters, IMAGE_DIMS
-from networks.UNet import build_unet
 from utils.ImageLoader import load_seg_images
 from utils.ScriptHelper import read_cmd_line_args
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
 print('[BEGIN] Start script...\n')
-hyperparameters, opt = read_cmd_line_args(hyperparameters)
+hyperparameters, opt, data_set = read_cmd_line_args(hyperparameters, data_set)
 print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
 
@@ -24,15 +25,15 @@ print('[INFO] Creating required directories...')
 create_required_directories()
 
 print('[INFO] Loading images...')
-roi_data, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=[IMAGE_DIMS[0], IMAGE_DIMS[1], 3])
-data, labels = load_seg_images(data_set, image_dimensions=[IMAGE_DIMS[0], IMAGE_DIMS[1], 3])
+roi_data, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=([IMAGE_DIMS[0], IMAGE_DIMS[1], 1]))
+data, labels = load_seg_images(data_set, image_dimensions=([IMAGE_DIMS[0], IMAGE_DIMS[1], 1]))
 
-plt.subplots()
 def image_show(image, nrows=1, ncols=1, cmap='gray'):
     fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(14, 14))
     ax.imshow(image, cmap='gray')
     ax.axis('off')
     return fig, ax
+
 
 def display(display_list):
   plt.figure(figsize=(15, 15))
@@ -46,8 +47,6 @@ def display(display_list):
     plt.axis('off')
   plt.show()
 
-
-dataset, info = tfds.load('oxford_iiit_pet:3.*.*', with_info=True)
 
 def normalize(input_image, input_mask):
   input_image = tf.cast(input_image, tf.float32) / 255.0
@@ -78,30 +77,91 @@ def load_image_test(datapoint):
   return input_image, input_mask
 
 
-TRAIN_LENGTH = info.splits['train'].num_examples
-BATCH_SIZE = 64
-BUFFER_SIZE = 1000
+# partition the data into training and testing splits using 70% of
+# the data for training and the remaining 30% for testing
+(train_x, test_x, train_y, test_y) = train_test_split(data, roi_data, test_size=0.3, train_size=0.7, random_state=42)
+
+# def side_by_side():
+#     for i in range(10):
+#         f, axarr = plt.subplots(1, 1)
+#         axarr[0, 0].imshow(train_x[i])
+#         axarr[0, 1].imshow(train_y[i])
+#         plt.show()
+#
+
+TRAIN_LENGTH = len(train_x)
+BATCH_SIZE = hyperparameters.batch_size
 STEPS_PER_EPOCH = TRAIN_LENGTH // BATCH_SIZE
 
-train = dataset['train'].map(load_image_train, num_parallel_calls=AUTOTUNE)
-test = dataset['test'].map(load_image_test)
 
-train_dataset = train.cache().shuffle(BUFFER_SIZE).batch(BATCH_SIZE).repeat()
-train_dataset = train_dataset.prefetch(buffer_size=AUTOTUNE)
-test_dataset = test.batch(BATCH_SIZE)
+def get_model(img_size, num_classes):
+    inputs = Input(shape=img_size)
 
-for image, mask in train.take(1):
-  sample_image, sample_mask = image, mask
-# display([sample_image, sample_mask])
+    ### [First half of the network: downsampling inputs] ###
 
-model = build_unet([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(data_set.class_names))
+    # Entry block
+    x = Conv2D(32, 3, strides=2, padding="same")(inputs)
+    x = BatchNormalization()(x)
+    x = Activation("relu")(x)
+
+    previous_block_activation = x  # Set aside residual
+
+    # Blocks 1, 2, 3 are identical apart from the feature depth.
+    for filters in [64, 128, 256]:
+        x = Activation("relu")(x)
+        x = SeparableConv2D(filters, 3, padding="same")(x)
+        x = BatchNormalization()(x)
+
+        x = Activation("relu")(x)
+        x = SeparableConv2D(filters, 3, padding="same")(x)
+        x = BatchNormalization()(x)
+
+        x = MaxPooling2D(3, strides=2, padding="same")(x)
+
+        # Project residual
+        residual = Conv2D(filters, 1, strides=2, padding="same")(
+            previous_block_activation
+        )
+        x = add([x, residual])  # Add back residual
+        previous_block_activation = x  # Set aside next residual
+
+    ### [Second half of the network: upsampling inputs] ###
+
+    for filters in [256, 128, 64, 32]:
+        x = Activation("relu")(x)
+        x = Conv2DTranspose(filters, 3, padding="same")(x)
+        x = BatchNormalization()(x)
+
+        x = Activation("relu")(x)
+        x = Conv2DTranspose(filters, 3, padding="same")(x)
+        x = BatchNormalization()(x)
+
+        x = UpSampling2D(2)(x)
+
+        # Project residual
+        residual = UpSampling2D(2)(previous_block_activation)
+        residual = Conv2D(filters, 1, padding="same")(residual)
+        x = add([x, residual])  # Add back residual
+        previous_block_activation = x  # Set aside next residual
+
+    # Add a per-pixel classification layer
+    outputs = Conv2D(num_classes, 3, activation="softmax", padding="same")(x)
+
+    # Define the model
+    model = Model(inputs, outputs)
+    return model
+
+
+# Free up RAM in case the model definition cells were run multiple times
+backend.clear_session()
+
+# Build model
+model = get_model([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(data_set.class_names))
+model.summary()
 
 model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              loss='categorical_crossentropy',
               metrics=['accuracy'])
-
-tf.keras.utils.plot_model(model, show_shapes=True)
-
 
 def create_mask(pred_mask):
   pred_mask = tf.argmax(pred_mask, axis=-1)
@@ -109,40 +169,30 @@ def create_mask(pred_mask):
   return pred_mask[0]
 
 
-def show_predictions(dataset=None, num=1):
-  if dataset:
-    for image, mask in dataset.take(num):
-      pred_mask = model.predict(image)
-      display([image[0], mask[0], create_mask(pred_mask)])
-  else:
-    display([sample_image, sample_mask,
-             create_mask(model.predict(sample_image[tf.newaxis, ...]))])
-
-
-# show_predictions()
+def show_predictions(train_x=train_x, train_y=train_y, index=1):
+    image = train_x[index]
+    mask = train_y[index]
+    pred_mask = model.predict(image)
+    display([image, mask, create_mask(pred_mask)])
 
 
 class DisplayCallback(tf.keras.callbacks.Callback):
   def on_epoch_end(self, epoch, logs=None):
     clear_output(wait=True)
     show_predictions()
-    print ('\nSample Prediction after epoch {}\n'.format(epoch+1))
+    print('\nSample Prediction after epoch {}\n'.format(epoch + 1))
 
 
-EPOCHS = 20
-VAL_SUBSPLITS = 5
-VALIDATION_STEPS = info.splits['test'].num_examples//BATCH_SIZE//VAL_SUBSPLITS
-
-model_history = model.fit(train_dataset, epochs=EPOCHS,
+model_history = model.fit(x=train_x, y=train_y,
+                          epochs=hyperparameters.epochs,
                           steps_per_epoch=STEPS_PER_EPOCH,
-                          validation_steps=VALIDATION_STEPS,
-                          validation_data=test_dataset,
+                          validation_data=(test_x, test_y),
                           callbacks=[DisplayCallback()])
 
 loss = model_history.history['loss']
 val_loss = model_history.history['val_loss']
 
-epochs = range(EPOCHS)
+epochs = hyperparameters.epochs
 
 plt.figure()
 plt.plot(epochs, loss, 'r', label='Training loss')
@@ -154,4 +204,4 @@ plt.ylim([0, 1])
 plt.legend()
 plt.show()
 
-show_predictions(test_dataset, 3)
+show_predictions(test_x, test_y, 3)
