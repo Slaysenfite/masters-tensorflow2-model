@@ -1,10 +1,6 @@
 import os
-import time
-from datetime import timedelta
 
 from pandas import read_csv
-
-from utils.DicomUtils import decompress_and_convert_dicom
 
 RELATIVE_DATA_SET_PATH = '/data/BCS-DBT-PNG'
 STUPID_ASS_IMAGE_NAME = "1-1-decompresse.png"
@@ -33,15 +29,6 @@ def generate_bcs_dbt_metadata_file():
         append_to_csv(path_to_data_folder + '/bcs-dbt-metadata.csv', new_path + ',' + label)
 
 
-def cleanse_dataset():
-    for dirName, subdirList, fileList in os.walk(RELATIVE_DATA_SET_PATH):
-        for fname in fileList:
-            if '1-1.dcm' in fname or '1-2.dcm' in fname:
-                start_time = time.time()
-                decompress_and_convert_dicom(dirName, fname)
-                print(timedelta(seconds=(time.time() - start_time)))
-
-
 def append_to_csv(path, string):
     f = open(path, 'a+')
     f.write(string + '\n')
@@ -49,4 +36,3 @@ def append_to_csv(path, string):
 
 
 generate_bcs_dbt_metadata_file()
-# cleanse_dataset()
