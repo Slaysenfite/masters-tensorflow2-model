@@ -11,6 +11,7 @@ path_to_data_folder = home + RELATIVE_DATA_SET_PATH
 
 
 def generate_bcs_dbt_metadata_file():
+    os.remove(path_to_data_folder + '/bcs-dbt-metadata.csv')
     append_to_csv(path_to_data_folder + '/bcs-dbt-metadata.csv', 'image,label')
     df_paths = read_csv(path_to_data_folder + '/BCS-DBT file-paths-train.csv')
     df_labels = read_csv(path_to_data_folder + '/BCS-DBT labels-train.csv')
@@ -33,6 +34,5 @@ def append_to_csv(path, string):
     f = open(path, 'a+')
     f.write(string + '\n')
     print('appended line: ' + string)
-
 
 generate_bcs_dbt_metadata_file()
