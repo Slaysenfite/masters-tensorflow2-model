@@ -8,7 +8,7 @@ image_file_tuple = ('image file path', '1-1', 'full_image')
 cropped_image_tuple = ('cropped image file path', '1-1', 'cropped_image')
 roi_mask_tuple = ('ROI mask file path', '1-2', 'roi_image')
 
-RELATIVE_DATA_SET_PATH = '/data/CBIS-DDSM_CLASSIC_PNG/'
+RELATIVE_DATA_SET_PATH = '/data/CBIS-DDSM-PNG/'
 
 
 def append_to_ddsm_csv(path, string):
