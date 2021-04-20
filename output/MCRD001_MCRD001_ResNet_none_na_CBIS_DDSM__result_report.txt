@@ -1,0 +1,56 @@
+*** Script Hyperparameters ***
+ Epochs: 50
+ Initial learning rate: 0.005
+ Batch size: 32
+ Dropout: 0.25
+ Learning optimization: Stochatic Gradient Descent
+ Meta-heuristic used: none
+ Meta-heuristic order: na
+*** PERFORMANCE METRICS ***
+Time taken: 4:32:31.031167*** SCI-KIT METRICS ***
+
+*** Classification Report *** 
+               precision    recall  f1-score   support
+
+    Positive       0.75      0.33      0.46       258
+    Negative       0.62      0.91      0.74       315
+
+    accuracy                           0.65       573
+   macro avg       0.69      0.62      0.60       573
+weighted avg       0.68      0.65      0.61       573
+ 
+*** General Metrics *** 
+ Accuracy Score: 64.92% 
+ Precision Score: 68.61% 
+ Recall Score: 62.06% 
+
+*** Final Network Metrics *** 
+ Final Training Loss: 0.3259 
+ Final Validation Loss: 0.7097 
+ Final Training Accuracy: 0.99% 
+ Final Validation Accuracy: 0.65% 
+
+*** Best Network Metrics *** 
+ Best Epoch: 30 
+ Best Training Loss: 0.3480 
+ Best Validation Loss: 0.4455 
+ Best Training Accuracy: 0.96% 
+ Best Validation Accuracy: 0.66% 
+
+*** INTERNAL METRICS ***
+['loss', 'accuracy', 'precision', 'recall']
+[6.706157684326172, 0.6492146849632263, 0.6492146849632263, 0.6492146849632263]*** Predictions *** 
+ Predictions: [[7.5542048e-05 9.9992442e-01]
+ [9.3300041e-04 9.9906701e-01]
+ [9.5765030e-01 4.2349666e-02]
+ ...
+ [4.1604121e-03 9.9583960e-01]
+ [5.0756483e-07 9.9999952e-01]
+ [4.3540615e-05 9.9995649e-01]] 
+ Ground Truth Labels: [[0. 1.]
+ [0. 1.]
+ [1. 0.]
+ ...
+ [0. 1.]
+ [0. 1.]
+ [0. 1.]] 
