@@ -86,14 +86,16 @@ def training_loop(model,
 
     # Enumerating the Dataset
     for epoch in range(0, hyperparameters.epochs):
+        print('\rEpoch [%d/%d] \n' % (epoch + 1, hyperparameters.epochs), end='')
+
         # Prepare the metrics.
         train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric = prepare_metrics()
 
         run_meta_heuristic(meta_heuristic, 'first', meta_heuristic_order, model, train_x, train_y)
 
         for batch, (X, y) in enumerate(train_data):
-            print('\rEpoch [%d/%d] Batch: %d%s \n' % (epoch + 1, hyperparameters.epochs, batch, '.' * (batch % 10)),
-                  end='')
+            # print('\rEpoch [%d/%d] Batch: %d%s \n' % (epoch + 1, hyperparameters.epochs, batch, '.' * (batch % 10)),
+            #       end='')
 
             train_acc_score, train_loss_score, train_precision_score, train_recall_score = train_on_batch(model,
                                                                                                           optimizer,

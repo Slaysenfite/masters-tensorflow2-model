@@ -7,6 +7,6 @@ class PerformanceMetrics(object):
     def report_metrics(self):
         report = '*** PERFORMANCE METRICS ***\n'
 
-        report += '\rTime taken: ' + str(self.time_taken)
+        report += '\rTime taken: ' + str(self.time_taken) + '\n'
 
         return report
