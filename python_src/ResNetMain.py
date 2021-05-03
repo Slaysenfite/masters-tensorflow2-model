@@ -65,8 +65,9 @@ print("[INFO] Training label shape: " + str(train_y.shape))
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
 model = ResnetBuilder.build_resnet_50(IMAGE_DIMS, len(data_set.class_names))
+model.summary()
 
-model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy', Precision(), Recall()])
+model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy', Precision(), Recall()])
 
 # Setup callbacks
 callbacks = create_callbacks()
@@ -85,7 +86,7 @@ acc = model.evaluate(test_x, test_y)
 print(str(model.metrics_names))
 print(str(acc))
 
-predictions = model.predict(test_x, batch_size=hyperparameters.batch_size)
+predictions = model.predict(test_x)
 
 print('[INFO] generating metrics...')
 

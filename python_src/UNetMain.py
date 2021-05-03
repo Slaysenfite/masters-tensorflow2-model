@@ -14,7 +14,7 @@ from configurations.DataSet import bcs_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories
 from configurations.TrainingConfig import hyperparameters, create_callbacks
 from metrics.MetricsReporter import MetricReporter
-from networks.UNet import build_unet
+from networks.UNet import  unet
 from training_loops.CustomTrainingLoop import training_loop
 from utils.ImageLoader import supplement_training_data, load_greyscale_images
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
@@ -65,7 +65,8 @@ print('[INFO] Training label shape: ' + str(train_y.shape))
 
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
-model = build_unet([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(data_set.class_names))
+model = unet([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(data_set.class_names))
+model.summary()
 
 opt = Adam(learning_rate=hyperparameters.init_lr)
 model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy', Precision(), Recall()])
@@ -87,7 +88,7 @@ acc = model.evaluate(test_x, test_y)
 print(str(model.metrics_names))
 print(str(acc))
 
-predictions = model.predict(test_x, batch_size=32)
+predictions = model.predict(test_x)
 
 print('[INFO] generating metrics...')
 

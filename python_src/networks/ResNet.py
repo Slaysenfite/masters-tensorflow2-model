@@ -2,7 +2,7 @@ import six
 from tensorflow.python.keras import Input
 from tensorflow.python.keras.backend import int_shape
 from tensorflow.python.keras.layers import BatchNormalization, Activation, Conv2D, add, MaxPooling2D, AveragePooling2D, \
-    Flatten, Dense
+    Flatten, Dense, Dropout
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.regularizers import l2
 
@@ -190,12 +190,11 @@ class ResnetBuilder(object):
         block_shape = int_shape(block)
         pool2 = AveragePooling2D(pool_size=(block_shape[ROW_AXIS], block_shape[COL_AXIS]),
                                  strides=(1, 1))(block)
-        flatten1 = Flatten()(pool2)
-        dense = Dense(units=num_outputs, kernel_initializer="he_normal",
-                      activation="softmax")(flatten1)
-
-        model = Model(inputs=input, outputs=dense)
-        return model
+        x = Flatten()(pool2)
+        x = Dense(512, activation='relu', kernel_initializer='he_uniform')(x)
+        x = Dropout(0.25)(x)
+        x = Dense(num_outputs, activation='softmax', name='predictions')(x)
+        return Model(inputs=input, outputs=x)
 
     @staticmethod
     def build_resnet_18(input_shape, num_outputs):
