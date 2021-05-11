@@ -1,18 +1,22 @@
 import sys
+import time
+from datetime import timedelta
 
-import matplotlib.pyplot as plt
 import tensorflow as tf
-from IPython.display import clear_output
+from IPython.core.display import clear_output
+from numpy import expand_dims
+from numpy.ma import array
+from scipy.spatial.distance import dice
 from sklearn.model_selection import train_test_split
-from tensorflow.python.keras import Input, Model, backend
-from tensorflow.python.keras.layers import Conv2D, BatchNormalization, Activation, MaxPool2D, UpSampling2D, Concatenate, \
-    SeparableConv2D, MaxPooling2D, add, Conv2DTranspose
+from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.optimizer_v2.adam import Adam
 
 from configurations.DataSet import cbis_seg_data_set as data_set
-from configurations.TrainingConfig import create_required_directories
-from configurations.TrainingConfig import hyperparameters, IMAGE_DIMS
+from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir
+from networks.UNetSeg import unet_seg
+from training_loops.CustomTrainingLoop import training_loop
 from utils.ImageLoader import load_seg_images
-from utils.ScriptHelper import read_cmd_line_args
+from utils.ScriptHelper import create_file_title, read_cmd_line_args
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
@@ -21,21 +25,49 @@ hyperparameters, opt, data_set = read_cmd_line_args(hyperparameters, data_set)
 print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
 
-print('[INFO] Creating required directories...')
-create_required_directories()
-
 print('[INFO] Loading images...')
-roi_data, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=([IMAGE_DIMS[0], IMAGE_DIMS[1], 1]))
-data, labels = load_seg_images(data_set, image_dimensions=([IMAGE_DIMS[0], IMAGE_DIMS[1], 1]))
+roi_data, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=IMAGE_DIMS)
+data, labels = load_seg_images(data_set, image_dimensions=IMAGE_DIMS)
+(train_x, test_x, train_y, test_y) = train_test_split(data, roi_data, test_size=0.3, train_size=0.7, random_state=42)
 
-def image_show(image, nrows=1, ncols=1, cmap='gray'):
-    fig, ax = plt.subplots(nrows=nrows, ncols=ncols, figsize=(14, 14))
-    ax.imshow(image, cmap='gray')
-    ax.axis('off')
-    return fig, ax
+def normalize(input_image, input_mask):
+    input_image = tf.cast(input_image, tf.float32) / 255.0
+    input_mask -= 1
+    return input_image, input_mask
+
+clear_output()
+
+opt = Adam()
+
+model = unet_seg(IMAGE_DIMS)
+model.compile(optimizer=opt,
+              loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+
+model.summary()
+
+def create_mask(pred_mask):
+    pred_mask = tf.argmax(pred_mask, axis=-1)
+    pred_mask = pred_mask[..., tf.newaxis]
+    return pred_mask[0]
 
 
-def display(display_list):
+def show_predictions(test_x, index=2, title='pred.png'):
+    import matplotlib.pyplot as plt
+    image = test_x[index]
+    image = expand_dims(image, axis=0)
+    pred_mask = model.predict(image)
+    display(plt, [test_x[index], test_y[index], pred_mask[0]], title)
+
+
+start_time = time.time()
+H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
+                  meta_heuristic=hyperparameters.meta_heuristic,
+                  meta_heuristic_order=hyperparameters.meta_heuristic_order)
+time_taken = timedelta(seconds=(time.time() - start_time))
+
+
+def display(plt, display_list, file_title):
   plt.figure(figsize=(15, 15))
 
   title = ['Input Image', 'True Mask', 'Predicted Mask']
@@ -45,163 +77,46 @@ def display(display_list):
     plt.title(title[i])
     plt.imshow(tf.keras.preprocessing.image.array_to_img(display_list[i]))
     plt.axis('off')
-  plt.show()
+  plt.savefig(file_title)
+  plt.clf()
+  # plt.show()
+
+show_predictions(test_x, 3)
+
+# evaluate the network
+print('[INFO] evaluating network...')
+
+predictions = model.predict(test_x, batch_size=32)
+
+print('[INFO] generating metrics...')
+
+file_title = create_file_title('UNetSeg', hyperparameters)
+
+def iou_coef(y_true, y_pred, smooth=1):
+    m = tf.keras.metrics.MeanIoU(num_classes=3)
+    m.update_state(y_true, y_pred)
+    return m.result().numpy()
+
+def dice_coef(y_true, y_pred):
+    smooth = 1.
+    y_true_f = array(K.flatten(y_true))
+    y_pred_f = array(K.flatten(y_pred))
+    return dice(y_true_f, y_pred_f)
 
 
-def normalize(input_image, input_mask):
-  input_image = tf.cast(input_image, tf.float32) / 255.0
-  input_mask -= 1
-  return input_image, input_mask
+acc = model.evaluate(test_x, test_y)
+output = str(model.metrics_names) + '\n'
+output += str(acc) + '\n'
+output += 'IOU: {}\n'.format(iou_coef(test_y, predictions))
+output += 'Dice: {}\n'.format(dice_coef(test_y, predictions))
+output += 'Time taken: {}\n'.format(time_taken)
 
 
-@tf.function
-def load_image_train(datapoint):
-  input_image = tf.image.resize(datapoint['image'], (128, 128))
-  input_mask = tf.image.resize(datapoint['segmentation_mask'], (128, 128))
+show_predictions(test_x, 2, output_dir + file_title + '_pred2.png')
+show_predictions(test_x, 12, output_dir + file_title + '_pred12.png')
+show_predictions(test_x, 22, output_dir + file_title + '_pred22.png')
 
-  if tf.random.uniform(()) > 0.5:
-    input_image = tf.image.flip_left_right(input_image)
-    input_mask = tf.image.flip_left_right(input_mask)
+with open(output_dir + file_title + '_metrics.txt', 'w+') as text_file:
+    text_file.write(output)
 
-  input_image, input_mask = normalize(input_image, input_mask)
-
-  return input_image, input_mask
-
-
-def load_image_test(datapoint):
-  input_image = tf.image.resize(datapoint['image'], (128, 128))
-  input_mask = tf.image.resize(datapoint['segmentation_mask'], (128, 128))
-
-  input_image, input_mask = normalize(input_image, input_mask)
-
-  return input_image, input_mask
-
-
-# partition the data into training and testing splits using 70% of
-# the data for training and the remaining 30% for testing
-(train_x, test_x, train_y, test_y) = train_test_split(data, roi_data, test_size=0.3, train_size=0.7, random_state=42)
-
-# def side_by_side():
-#     for i in range(10):
-#         f, axarr = plt.subplots(1, 1)
-#         axarr[0, 0].imshow(train_x[i])
-#         axarr[0, 1].imshow(train_y[i])
-#         plt.show()
-#
-
-TRAIN_LENGTH = len(train_x)
-BATCH_SIZE = hyperparameters.batch_size
-STEPS_PER_EPOCH = TRAIN_LENGTH // BATCH_SIZE
-
-
-def get_model(img_size, num_classes):
-    inputs = Input(shape=img_size)
-
-    ### [First half of the network: downsampling inputs] ###
-
-    # Entry block
-    x = Conv2D(32, 3, strides=2, padding="same")(inputs)
-    x = BatchNormalization()(x)
-    x = Activation("relu")(x)
-
-    previous_block_activation = x  # Set aside residual
-
-    # Blocks 1, 2, 3 are identical apart from the feature depth.
-    for filters in [64, 128, 256]:
-        x = Activation("relu")(x)
-        x = SeparableConv2D(filters, 3, padding="same")(x)
-        x = BatchNormalization()(x)
-
-        x = Activation("relu")(x)
-        x = SeparableConv2D(filters, 3, padding="same")(x)
-        x = BatchNormalization()(x)
-
-        x = MaxPooling2D(3, strides=2, padding="same")(x)
-
-        # Project residual
-        residual = Conv2D(filters, 1, strides=2, padding="same")(
-            previous_block_activation
-        )
-        x = add([x, residual])  # Add back residual
-        previous_block_activation = x  # Set aside next residual
-
-    ### [Second half of the network: upsampling inputs] ###
-
-    for filters in [256, 128, 64, 32]:
-        x = Activation("relu")(x)
-        x = Conv2DTranspose(filters, 3, padding="same")(x)
-        x = BatchNormalization()(x)
-
-        x = Activation("relu")(x)
-        x = Conv2DTranspose(filters, 3, padding="same")(x)
-        x = BatchNormalization()(x)
-
-        x = UpSampling2D(2)(x)
-
-        # Project residual
-        residual = UpSampling2D(2)(previous_block_activation)
-        residual = Conv2D(filters, 1, padding="same")(residual)
-        x = add([x, residual])  # Add back residual
-        previous_block_activation = x  # Set aside next residual
-
-    # Add a per-pixel classification layer
-    outputs = Conv2D(num_classes, 3, activation="softmax", padding="same")(x)
-
-    # Define the model
-    model = Model(inputs, outputs)
-    return model
-
-
-# Free up RAM in case the model definition cells were run multiple times
-backend.clear_session()
-
-# Build model
-model = get_model([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(data_set.class_names))
-model.summary()
-
-model.compile(optimizer='adam',
-              loss='categorical_crossentropy',
-              metrics=['accuracy'])
-
-def create_mask(pred_mask):
-  pred_mask = tf.argmax(pred_mask, axis=-1)
-  pred_mask = pred_mask[..., tf.newaxis]
-  return pred_mask[0]
-
-
-def show_predictions(train_x=train_x, train_y=train_y, index=1):
-    image = train_x[index]
-    mask = train_y[index]
-    pred_mask = model.predict(image)
-    display([image, mask, create_mask(pred_mask)])
-
-
-class DisplayCallback(tf.keras.callbacks.Callback):
-  def on_epoch_end(self, epoch, logs=None):
-    clear_output(wait=True)
-    show_predictions()
-    print('\nSample Prediction after epoch {}\n'.format(epoch + 1))
-
-
-model_history = model.fit(x=train_x, y=train_y,
-                          epochs=hyperparameters.epochs,
-                          steps_per_epoch=STEPS_PER_EPOCH,
-                          validation_data=(test_x, test_y),
-                          callbacks=[DisplayCallback()])
-
-loss = model_history.history['loss']
-val_loss = model_history.history['val_loss']
-
-epochs = hyperparameters.epochs
-
-plt.figure()
-plt.plot(epochs, loss, 'r', label='Training loss')
-plt.plot(epochs, val_loss, 'bo', label='Validation loss')
-plt.title('Training and Validation Loss')
-plt.xlabel('Epoch')
-plt.ylabel('Loss Value')
-plt.ylim([0, 1])
-plt.legend()
-plt.show()
-
-show_predictions(test_x, test_y, 3)
+print('[END] Finishing script...\n')
