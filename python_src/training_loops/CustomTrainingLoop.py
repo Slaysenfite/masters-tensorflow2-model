@@ -93,6 +93,8 @@ def training_loop(model,
 
         run_meta_heuristic(meta_heuristic, 'first', meta_heuristic_order, model, train_x, train_y)
 
+        print('\rEpoch [%d/%d]  \n' % (epoch + 1, hyperparameters.epochs))
+
         for batch, (X, y) in enumerate(train_data):
             # print('\rEpoch [%d/%d] Batch: %d%s \n' % (epoch + 1, hyperparameters.epochs, batch, '.' * (batch % 10)),
             #       end='')

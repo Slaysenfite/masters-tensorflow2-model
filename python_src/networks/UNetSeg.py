@@ -1,12 +1,10 @@
-
 import tensorflow as tf
-from tensorflow.python.keras.layers import Conv2D, BatchNormalization, MaxPooling2D, UpSampling2D, concatenate, Dropout, \
-    Flatten, Dense
-from tensorflow.python.keras.models import Model
+
+from tensorflow.python.keras.layers import Conv2D, BatchNormalization, MaxPooling2D, UpSampling2D, concatenate, Dropout
 
 
-def build_unet(input_shape, num_classes):
-    inputs = tf.keras.Input(shape=input_shape)
+def unet_seg(input_size=(128, 128, 1)):
+    inputs = tf.keras.Input(shape=input_size)
     conv1 = Conv2D(64, 3, activation='relu', dilation_rate=2, padding='same', kernel_initializer='he_normal')(inputs)
     conv1 = BatchNormalization()(conv1)
     conv1 = Conv2D(64, 3, activation='relu', dilation_rate=2, padding='same', kernel_initializer='he_normal')(conv1)
@@ -59,8 +57,8 @@ def build_unet(input_shape, num_classes):
     conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge9)
     conv9 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
 
-    x = Flatten()(conv9)
-    x = Dense(512, activation='relu', kernel_initializer='he_uniform')(x)
-    x = Dropout(0.3)(x)
-    x = Dense(num_classes, activation='softmax', name='predictions')(x)
-    return Model(inputs=inputs, outputs=x)
+    conv10 = Conv2D(input_size[2], 1, activation='sigmoid')(conv9)
+
+    model = tf.keras.Model(inputs=inputs, outputs=conv10)
+
+    return model
