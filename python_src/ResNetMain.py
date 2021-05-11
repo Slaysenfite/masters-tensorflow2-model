@@ -39,15 +39,15 @@ data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
 # the data for training and the remaining 30% for testing
 (train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.2, train_size=0.8, random_state=42)
 
-'[INFO] Augmenting data set'
-
-aug = ImageDataGenerator(
-    horizontal_flip=True,
-    vertical_flip=True,
-    rotation_range=10,
-    zoom_range=0.05,
-    fill_mode="nearest")
-
+# '[INFO] Augmenting data set'
+#
+# aug = ImageDataGenerator(
+#     horizontal_flip=True,
+#     vertical_flip=True,
+#     rotation_range=10,
+#     zoom_range=0.05,
+#     fill_mode="nearest")
+#
 # train_x, train_y = supplement_training_data(aug, train_x, train_y)
 
 print("[INFO] Training data shape: " + str(train_x.shape))
