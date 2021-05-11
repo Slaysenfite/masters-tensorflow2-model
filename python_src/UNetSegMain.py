@@ -2,7 +2,6 @@ import sys
 import time
 from datetime import timedelta
 
-import matplotlib.pyplot as plt
 import tensorflow as tf
 from IPython.core.display import clear_output
 from numpy import expand_dims
@@ -13,7 +12,7 @@ from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 
 from configurations.DataSet import cbis_seg_data_set as data_set
-from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters
+from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir
 from networks.UNetSeg import unet_seg
 from training_loops.CustomTrainingLoop import training_loop
 from utils.ImageLoader import load_seg_images
@@ -53,11 +52,12 @@ def create_mask(pred_mask):
     return pred_mask[0]
 
 
-def show_predictions(test_x, num=1):
-    image = test_x[24]
+def show_predictions(test_x, index=2, title='pred.png'):
+    import matplotlib.pyplot as plt
+    image = test_x[index]
     image = expand_dims(image, axis=0)
     pred_mask = model.predict(image)
-    display([test_x[24], test_y[24], pred_mask[0] ])
+    display(plt, [test_x[index], test_y[index], pred_mask[0]], title)
 
 
 start_time = time.time()
@@ -66,7 +66,8 @@ H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
                   meta_heuristic_order=hyperparameters.meta_heuristic_order)
 time_taken = timedelta(seconds=(time.time() - start_time))
 
-def display(display_list):
+
+def display(plt, display_list, file_title):
   plt.figure(figsize=(15, 15))
 
   title = ['Input Image', 'True Mask', 'Predicted Mask']
@@ -76,16 +77,14 @@ def display(display_list):
     plt.title(title[i])
     plt.imshow(tf.keras.preprocessing.image.array_to_img(display_list[i]))
     plt.axis('off')
-  plt.show()
+  plt.savefig(file_title)
+  plt.clf()
+  # plt.show()
 
 show_predictions(test_x, 3)
 
 # evaluate the network
 print('[INFO] evaluating network...')
-
-acc = model.evaluate(test_x, test_y)
-print(str(model.metrics_names))
-print(str(acc))
 
 predictions = model.predict(test_x, batch_size=32)
 
@@ -105,8 +104,19 @@ def dice_coef(y_true, y_pred):
     return dice(y_true_f, y_pred_f)
 
 
-print('IOU: {}'.format(iou_coef(test_y, predictions)))
-print('Dice: {}'.format(dice_coef(test_y, predictions)))
+acc = model.evaluate(test_x, test_y)
+output = str(model.metrics_names) + '\n'
+output += str(acc) + '\n'
+output += 'IOU: {}\n'.format(iou_coef(test_y, predictions))
+output += 'Dice: {}\n'.format(dice_coef(test_y, predictions))
+output += 'Time taken: {}\n'.format(time_taken)
 
+
+show_predictions(test_x, 2, output_dir + file_title + '_pred2.png')
+show_predictions(test_x, 12, output_dir + file_title + '_pred12.png')
+show_predictions(test_x, 22, output_dir + file_title + '_pred22.png')
+
+with open(output_dir + file_title + '_metrics.txt', 'w+') as text_file:
+    text_file.write(output)
 
 print('[END] Finishing script...\n')
