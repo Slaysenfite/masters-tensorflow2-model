@@ -3,20 +3,18 @@ import time
 from datetime import timedelta
 
 import tensorflow as tf
-from matplotlib import pyplot
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras.metrics import Precision, Recall
 from tensorflow.python.keras.optimizer_v2.adam import Adam
-from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import bcs_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories
-from configurations.TrainingConfig import hyperparameters, create_callbacks
+from configurations.TrainingConfig import hyperparameters
 from metrics.MetricsReporter import MetricReporter
-from networks.UNet import  unet
+from networks.UNet import build_unet
 from training_loops.CustomTrainingLoop import training_loop
-from utils.ImageLoader import supplement_training_data, load_greyscale_images
+from utils.ImageLoader import load_greyscale_images
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
 
 print('Python version: {}'.format(sys.version))
@@ -65,7 +63,7 @@ print('[INFO] Training label shape: ' + str(train_y.shape))
 
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
-model = unet([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(data_set.class_names))
+model = build_unet([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(data_set.class_names))
 model.summary()
 
 opt = Adam(learning_rate=hyperparameters.init_lr)

@@ -23,10 +23,6 @@ python python_src/ResNetMain.py --optimizer=sgd --id=MCRB001 --dataset=bsc
 python python_src/ResNetMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MCRB002 --dataset=bsc
 python python_src/ResNetMain.py --meta_heuristic=ga --meta_heuristic_order=first  --id=MCRB003 --dataset=bsc
 
-python python_src/UNetSegMain.py --optimizer=sgd --id=MSUD001 --dataset=cbis
-python python_src/UNetSegMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MSUD002 --dataset=cbis
-python python_src/UNetSegMain.py --meta_heuristic=ga --meta_heuristic_order=first  --id=MSUD003 --dataset=cbis
-
-#NOT YET WORKING
-#nohup python python_src/UNetSegMain.py --optimizer=sgd --id=MCUB001 --dataset=bsc > MSUB001.txt &
-#nohup python python_src/UNetSegMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MCUB002 --dataset=bsc > MSUB002.txt &
+python python_src/UNetSegMain.py --optimizer=sgd --id=MSUD001
+python python_src/UNetSegMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MSUD002
+python python_src/UNetSegMain.py --meta_heuristic=ga --meta_heuristic_order=first  --id=MSUD003
