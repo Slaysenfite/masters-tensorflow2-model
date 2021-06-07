@@ -9,7 +9,7 @@ def create_required_directories():
     os.makedirs(output_dir + 'model/', 0o777, True)
 
 
-IMAGE_DIMS = (352, 352, 3)
+IMAGE_DIMS = (256, 256, 3)
 
 output_dir = 'output/'
 

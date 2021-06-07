@@ -6,26 +6,35 @@ from tensorflow.python.keras.models import Model
 
 
 def build_unet(input_shape, num_classes):
+
     inputs = tf.keras.Input(shape=input_shape)
+
     conv1 = Conv2D(64, 3, activation='relu', dilation_rate=2, padding='same', kernel_initializer='he_normal')(inputs)
     conv1 = BatchNormalization()(conv1)
     conv1 = Conv2D(64, 3, activation='relu', dilation_rate=2, padding='same', kernel_initializer='he_normal')(conv1)
     conv1 = BatchNormalization()(conv1)
+
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+
     conv2 = Conv2D(128, 3, activation='relu', dilation_rate=2, padding='same', kernel_initializer='he_normal')(pool1)
     conv2 = BatchNormalization()(conv2)
     conv2 = Conv2D(128, 3, activation='relu', dilation_rate=2, padding='same', kernel_initializer='he_normal')(conv2)
     conv2 = BatchNormalization()(conv2)
+
     pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+
     conv3 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool2)
     conv3 = BatchNormalization()(conv3)
     conv3 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv3)
     conv3 = BatchNormalization()(conv3)
+
     pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+
     conv4 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool3)
     conv4 = BatchNormalization()(conv4)
     conv4 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv4)
     conv4 = BatchNormalization()(conv4)
+
     drop4 = Dropout(0.5)(conv4, training=True)
     pool4 = MaxPooling2D(pool_size=(2, 2))(drop4)
 
@@ -33,6 +42,7 @@ def build_unet(input_shape, num_classes):
     conv5 = BatchNormalization()(conv5)
     conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
     conv5 = BatchNormalization()(conv5)
+
     drop5 = Dropout(0.5)(conv5, training=True)
 
     up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(
