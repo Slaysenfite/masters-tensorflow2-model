@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import tensorflow as tf
 from IPython.core.display import clear_output
+from matplotlib import pyplot
 from numpy import expand_dims
 from numpy.ma import array
 from scipy.spatial.distance import dice
@@ -29,6 +30,23 @@ print('[INFO] Loading images...')
 roi_data, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=IMAGE_DIMS)
 data, labels = load_seg_images(data_set, image_dimensions=IMAGE_DIMS)
 (train_x, test_x, train_y, test_y) = train_test_split(data, roi_data, test_size=0.3, train_size=0.7, random_state=42)
+
+# def show_examples(title, train_x, train_y, items=3):
+#     fig, ((ax1, ax2), (ax3, ax4), (ax5, ax6)) = pyplot.subplots(3, 2)
+#     pyplot.suptitle(title, fontsize=16)
+#     ax1.imshow(train_x[0], cmap=pyplot.get_cmap('gray'))
+#     ax2.imshow(train_y[0], cmap=pyplot.get_cmap('gray'))
+#     ax3.imshow(train_x[11], cmap=pyplot.get_cmap('gray'))
+#     ax4.imshow(train_y[11], cmap=pyplot.get_cmap('gray'))
+#     ax5.imshow(train_x[12], cmap=pyplot.get_cmap('gray'))
+#     ax6.imshow(train_y[12], cmap=pyplot.get_cmap('gray'))
+#
+#     for ax in fig.get_axes():
+#         ax.label_outer()
+#
+#     pyplot.show()
+#
+# show_examples('CBIS-DDSM Segmentation Example Images', train_x, train_y, items=3)
 
 def normalize(input_image, input_mask):
     input_image = tf.cast(input_image, tf.float32) / 255.0

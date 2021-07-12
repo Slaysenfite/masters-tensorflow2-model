@@ -8,15 +8,14 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras.metrics import Precision, Recall
 from tensorflow.python.keras.optimizer_v2.adam import Adam
-from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
-from configurations.DataSet import bcs_data_set as data_set
+from configurations.DataSet import cbis_ddsm_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories
-from configurations.TrainingConfig import hyperparameters, create_callbacks
+from configurations.TrainingConfig import hyperparameters
 from metrics.MetricsReporter import MetricReporter
 from networks.UNet import build_unet
 from training_loops.CustomTrainingLoop import training_loop
-from utils.ImageLoader import supplement_training_data, load_greyscale_images
+from utils.ImageLoader import load_greyscale_images, show_examples
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
 
 print('Python version: {}'.format(sys.version))
@@ -40,7 +39,7 @@ data, labels = load_greyscale_images(data, labels, data_set, [IMAGE_DIMS[0], IMA
 # partition the data into training and testing splits using 70% of
 # the data for training and the remaining 30% for testing
 (train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.2, train_size=0.8, random_state=42)
-
+show_examples('CBIS-DDSM Example Images', train_x, test_x, train_y, test_y, items=9)
 # print('[INFO] Augmenting data set')
 # aug = ImageDataGenerator(
 #     horizontal_flip=True,
