@@ -27,7 +27,8 @@ class Particle:
 
 
 class PsoEnv():
-    def __init__(self, iterations=5, swarm_size=8, model=None, X=None, y=None, layers_to_optimize=(Conv2D, Dense)):
+    def __init__(self, fitness_function=calc_solution_fitness, iterations=5, swarm_size=8, model=None, X=None, y=None, layers_to_optimize=(Conv2D, Dense)):
+        self.fitness_function = fitness_function
         self.iterations = iterations
         self.swarm_size = swarm_size
         self.model = model
@@ -60,10 +61,10 @@ class PsoEnv():
 
     def initialize_swarm(self, swarm_size, weights, model, loss_metric, X, y):
         particles = [None] * swarm_size
-        particles[0] = Particle(weights, calc_solution_fitness(weights, model, loss_metric, X, y))
+        particles[0] = Particle(weights, self.fitness_function(weights, model, loss_metric, X, y))
         for p in range(1, swarm_size):
             new_weights = [w * uniform(0, 1) for w in weights]
-            initial_fitness = calc_solution_fitness(new_weights, model, loss_metric, X, y)
+            initial_fitness = self.fitness_function(new_weights, model, loss_metric, X, y)
             particles[p] = Particle(np.array(new_weights), initial_fitness)
         return particles
 
@@ -76,7 +77,7 @@ class PsoEnv():
         for particle in particles:
             particle.velocity = self.update_velocity(particle, INERTIA, [C1, C2])
             particle.position = self.calc_new_position(particle)
-            particle.current_fitness = calc_solution_fitness(particle.position, model, loss_metric, X, y)
+            particle.current_fitness = self.fitness_function(particle.position, model, loss_metric, X, y)
             if particle.current_fitness < particle.best_fitness:
                 particle.pbest = particle.position
                 particle.best_fitness = particle.current_fitness

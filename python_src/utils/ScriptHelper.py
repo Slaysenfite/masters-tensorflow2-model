@@ -32,6 +32,7 @@ def read_cmd_line_args(hyperparameters, dataset):
     parser.add_argument('--optimizer', type=str)
     parser.add_argument('--id', type=str)
     parser.add_argument('--dataset', type=str)
+    parser.add_argument('--augmentation', type=bool)
     args = parser.parse_args()
 
     if args.id is not None:
@@ -57,6 +58,9 @@ def read_cmd_line_args(hyperparameters, dataset):
             dataset = cbis_ddsm_data_set
         if 'bcs' in args.dataset:
             dataset = bcs_data_set
+
+    if args.augmentation is not None:
+        hyperparameters.augmentation = args.augmentation
 
     return hyperparameters, opt, dataset
 

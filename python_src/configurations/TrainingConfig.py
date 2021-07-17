@@ -28,6 +28,7 @@ class Hyperparameters:
         self.meta_heuristic = 'none'
         self.meta_heuristic_order = 'na'
         self.experiment_id='na'
+        self.augmentation= False
 
 
     def report_hyperparameters(self):
@@ -39,6 +40,7 @@ class Hyperparameters:
         report += ' Learning optimization: {}\n'.format(self.learning_optimization)
         report += ' Meta-heuristic used: {}\n'.format(self.meta_heuristic)
         report += ' Meta-heuristic order: {}\n'.format(self.meta_heuristic_order)
+        report += ' Data augmentation: {}\n'.format(self.augmentation)
 
         return report
 

@@ -3,6 +3,8 @@ from tensorflow.python.keras.layers import Conv2D, Dense
 from tensorflow.python.keras.metrics import TrueNegatives, TruePositives, FalsePositives, \
     FalseNegatives
 
+from metrics.MetricsUtil import iou_coef, dice_coef
+
 
 def calc_solution_fitness(weights, model, loss_metric, X, y):
     set_trainable_weights(model, weights)
@@ -24,6 +26,13 @@ def calc_solution_fitness(weights, model, loss_metric, X, y):
 
     fpr = fp_score / (tn_score + fn_score + tp_score + fp_score)
     return (fpr) + (2 * loss) + (1 - specificity) + (1 - precision)
+
+
+def calc_seg_fitness(weights, model, loss_metric, X, y):
+    set_trainable_weights(model, weights)
+    ŷ = model(X, training=True)
+    return 2 - (iou_coef(y, ŷ)+dice_coef(y, ŷ))
+
 
 def get_trainable_weights(model, keras_layers=(Dense, Conv2D), as_numpy_array=True):
     weights = []

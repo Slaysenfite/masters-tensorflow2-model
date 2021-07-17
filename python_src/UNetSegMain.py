@@ -4,17 +4,18 @@ from datetime import timedelta
 
 import tensorflow as tf
 from IPython.core.display import clear_output
+from matplotlib import pyplot
 from numpy import expand_dims
-from numpy.ma import array
 from scipy.spatial.distance import dice
 from sklearn.model_selection import train_test_split
-from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 
 from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir
+from metrics.MetricsUtil import iou_coef, dice_coef
 from networks.UNetSeg import unet_seg
 from training_loops.CustomTrainingLoop import training_loop
+from training_loops.OptimizerHelper import calc_seg_fitness
 from utils.ImageLoader import load_seg_images
 from utils.ScriptHelper import create_file_title, read_cmd_line_args
 
@@ -29,6 +30,23 @@ print('[INFO] Loading images...')
 roi_data, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=IMAGE_DIMS)
 data, labels = load_seg_images(data_set, image_dimensions=IMAGE_DIMS)
 (train_x, test_x, train_y, test_y) = train_test_split(data, roi_data, test_size=0.3, train_size=0.7, random_state=42)
+
+# def show_examples(title, train_x, train_y, items=3):
+#     fig, ((ax1, ax2), (ax3, ax4), (ax5, ax6)) = pyplot.subplots(3, 2)
+#     pyplot.suptitle(title, fontsize=16)
+#     ax1.imshow(train_x[0], cmap=pyplot.get_cmap('gray'))
+#     ax2.imshow(train_y[0], cmap=pyplot.get_cmap('gray'))
+#     ax3.imshow(train_x[11], cmap=pyplot.get_cmap('gray'))
+#     ax4.imshow(train_y[11], cmap=pyplot.get_cmap('gray'))
+#     ax5.imshow(train_x[12], cmap=pyplot.get_cmap('gray'))
+#     ax6.imshow(train_y[12], cmap=pyplot.get_cmap('gray'))
+#
+#     for ax in fig.get_axes():
+#         ax.label_outer()
+#
+#     pyplot.show()
+#
+# show_examples('CBIS-DDSM Segmentation Example Images', train_x, train_y, items=3)
 
 def normalize(input_image, input_mask):
     input_image = tf.cast(input_image, tf.float32) / 255.0
@@ -63,7 +81,8 @@ def show_predictions(test_x, index=2, title='pred.png'):
 start_time = time.time()
 H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
                   meta_heuristic=hyperparameters.meta_heuristic,
-                  meta_heuristic_order=hyperparameters.meta_heuristic_order)
+                  meta_heuristic_order=hyperparameters.meta_heuristic_order,
+                  fitness_function=calc_seg_fitness)
 time_taken = timedelta(seconds=(time.time() - start_time))
 
 
@@ -91,18 +110,6 @@ predictions = model.predict(test_x, batch_size=32)
 print('[INFO] generating metrics...')
 
 file_title = create_file_title('UNetSeg', hyperparameters)
-
-def iou_coef(y_true, y_pred, smooth=1):
-    m = tf.keras.metrics.MeanIoU(num_classes=3)
-    m.update_state(y_true, y_pred)
-    return m.result().numpy()
-
-def dice_coef(y_true, y_pred):
-    smooth = 1.
-    y_true_f = array(K.flatten(y_true))
-    y_pred_f = array(K.flatten(y_pred))
-    return dice(y_true_f, y_pred_f)
-
 
 acc = model.evaluate(test_x, test_y)
 output = str(model.metrics_names) + '\n'
