@@ -7,13 +7,13 @@ from tensorflow.python.keras.losses import CategoricalCrossentropy
 
 from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights, calc_solution_fitness
 
-CROSSOVER_THRESHOLD = 85
+HALL_OF_FAME_SIZE = 3
 
-TOURNAMENT_SIZE = 24
+CROSSOVER_THRESHOLD = 60
 
-CROSSOVER_PROBABILITY = 30
+TOURNAMENT_SIZE = 6
 
-CULLING_SIZE = 10
+CROSSOVER_PROBABILITY = 50
 
 seed(1)
 
@@ -42,10 +42,12 @@ class GaEnv():
         weights = get_trainable_weights(self.model, self.layers_to_optimize)
 
         individuals = self.initialize_population(self.population_size, weights, self.model, loss_metric, self.X, self.y)
+        individuals = self.update_fitness(individuals, self.model, loss_metric, self.X, self.y)
 
         while iteration < self.iterations:
             individuals = self.reproduce_next_gen(individuals)
 
+            individuals = self.update_fitness(individuals, self.model, loss_metric, self.X, self.y)
             print(' GA training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
                 individuals[0].fitness))
             iteration += 1
@@ -58,12 +60,9 @@ class GaEnv():
         fitness = calc_solution_fitness(weights, model, loss_metric, X, y)
         individuals[0] = Solution(weights, fitness)
         for p in range(1, population_size):
-            new_weights = [w * uniform(-2, 1) for w in weights]
-            initial_fitness = calc_solution_fitness(new_weights, model, loss_metric, X, y)
-            individuals[p] = Solution(np.array(new_weights), initial_fitness)
+            new_weights = [w * uniform(0, 1) for w in weights]
+            individuals[p] = Solution(np.array(new_weights), 1000)
         return individuals
-
-        return loss
 
     def find_best_individual(self, individuals):
         best_individual = individuals[0]
@@ -75,26 +74,26 @@ class GaEnv():
     def update_fitness(self, individuals, model, loss_metric, X, y):
         for individual in individuals:
             individual.fitness = calc_solution_fitness(individual.weights_arr, model, loss_metric, X, y)
+        individuals.sort(key=lambda indv: indv.fitness, reverse=False)
+        return individuals
 
     def update_weight_arr(self, individuals):
         for individual in individuals:
             individual.weight_arr = individual.w
 
     def reproduce_next_gen(self, individuals):
-        individuals.sort(key=lambda indv: indv.fitness, reverse=False)
         shape = individuals[0].shape
         next_gen = list()
-        for i in range(len(individuals) - CULLING_SIZE):
-            next_gen.append(individuals[i])
-        while len(next_gen) != len(individuals):
+        for i in range(HALL_OF_FAME_SIZE):
+            next_gen.append(individuals.pop(0))
+        while len(next_gen) != self.population_size:
             indv1, indv2 = self.select_indvs_for_reproduction(individuals)
             rand = randint(1, 100)
             if rand > CROSSOVER_THRESHOLD:
                 offspring = self.two_point_crossover(indv1, indv2, shape)
-                next_gen.append(offspring)
+                next_gen.append(self.mutate(offspring.weights_flat, shape))
             else:
-                next_gen.append(self.mutate(indv1.weights_flat, shape))
-        next_gen.sort(key=lambda indv: indv.fitness, reverse=False)
+                next_gen.append(indv1)
         return next_gen
 
     def select_indvs_for_reproduction(self, individuals, tournament_size=TOURNAMENT_SIZE):

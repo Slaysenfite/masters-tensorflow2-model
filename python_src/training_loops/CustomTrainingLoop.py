@@ -1,5 +1,3 @@
-import shutil
-
 from tensorflow import GradientTape
 from tensorflow.python.keras.metrics import Precision, Recall
 
@@ -30,7 +28,7 @@ def apply_swarm_optimization(X, model, y):
 
 
 def apply_genetic_algorithm(X, model, y):
-    ga = GaEnv(population_size=25, iterations=20, model=model, X=X, y=y)
+    ga = GaEnv(population_size=30, iterations=20, model=model, X=X, y=y)
     model = ga.get_ga_model()
     return model
 
