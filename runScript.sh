@@ -13,15 +13,30 @@ workon wesselsenv
 python python_src/UNetMain.py --optimizer=sgd --id=MCUD001 --dataset=cbis
 python python_src/UNetMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MCUD002 --dataset=cbis
 python python_src/UNetMain.py --meta_heuristic=ga --meta_heuristic_order=first  --id=MCUD003 --dataset=cbis
-python python_src/UNetMain.py --optimizer=sgd --id=MCUB001 --dataset=bsc
-python python_src/UNetMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MCUB002 --dataset=bsc
-python python_src/UNetMain.py --meta_heuristic=ga --meta_heuristic_order=first  --id=MCUB003 --dataset=bsc
+python python_src/UNetMain.py --optimizer=sgd --id=MCUD001A --augmentation=True --dataset=cbis
+python python_src/UNetMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MCUD002A --augmentation=True --dataset=cbis
+python python_src/UNetMain.py --meta_heuristic=ga --meta_heuristic_order=first  --id=MCUD003A --augmentation=True --dataset=cbis
+
+#python python_src/UNetMain.py --optimizer=sgd --id=MCUB001 --dataset=bsc
+#python python_src/UNetMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MCUB002 --dataset=bsc
+#python python_src/UNetMain.py --meta_heuristic=ga --meta_heuristic_order=first  --id=MCUB003 --dataset=bsc
+#python python_src/UNetMain.py --optimizer=sgd --id=MCUB001A --augmentation=True --dataset=bsc
+#python python_src/UNetMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MCUB002A --augmentation=True --dataset=bsc
+#python python_src/UNetMain.py --meta_heuristic=ga --meta_heuristic_order=first  --id=MCUB003A --augmentation=True --dataset=bsc
+
 python python_src/ResNetMain.py --optimizer=sgd --id=MCRD001 --dataset=cbis
 python python_src/ResNetMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MCRD002 --dataset=cbis
 python python_src/ResNetMain.py --meta_heuristic=ga --meta_heuristic_order=first  --id=MCRD003 --dataset=cbis
-python python_src/ResNetMain.py --optimizer=sgd --id=MCRB001 --dataset=bsc
-python python_src/ResNetMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MCRB002 --dataset=bsc
-python python_src/ResNetMain.py --meta_heuristic=ga --meta_heuristic_order=first  --id=MCRB003 --dataset=bsc
+python python_src/ResNetMain.py --optimizer=sgd --id=MCRD001A --augmentation=True --dataset=cbis
+python python_src/ResNetMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MCRD002A --augmentation=True --dataset=cbis
+python python_src/ResNetMain.py --meta_heuristic=ga --meta_heuristic_order=first  --id=MCRD003A --augmentation=True --dataset=cbis
+
+#python python_src/ResNetMain.py --optimizer=sgd --id=MCRB001 --dataset=bsc
+#python python_src/ResNetMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MCRB002 --dataset=bsc
+#python python_src/ResNetMain.py --meta_heuristic=ga --meta_heuristic_order=first  --id=MCRB003 --dataset=bsc
+#python python_src/ResNetMain.py --optimizer=sgd --id=MCRB001A --augmentation=True --dataset=bsc
+#python python_src/ResNetMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MCRB002A --augmentation=True --dataset=bsc
+#python python_src/ResNetMain.py --meta_heuristic=ga --meta_heuristic_order=first  --id=MCRB003A --augmentation=True --dataset=bsc
 
 python python_src/UNetSegMain.py --optimizer=sgd --id=MSUD001
 python python_src/UNetSegMain.py --meta_heuristic=pso --meta_heuristic_order=first  --id=MSUD002
