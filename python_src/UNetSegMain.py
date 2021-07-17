@@ -6,16 +6,16 @@ import tensorflow as tf
 from IPython.core.display import clear_output
 from matplotlib import pyplot
 from numpy import expand_dims
-from numpy.ma import array
 from scipy.spatial.distance import dice
 from sklearn.model_selection import train_test_split
-from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 
 from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir
+from metrics.MetricsUtil import iou_coef, dice_coef
 from networks.UNetSeg import unet_seg
 from training_loops.CustomTrainingLoop import training_loop
+from training_loops.OptimizerHelper import calc_seg_fitness
 from utils.ImageLoader import load_seg_images
 from utils.ScriptHelper import create_file_title, read_cmd_line_args
 
@@ -81,7 +81,8 @@ def show_predictions(test_x, index=2, title='pred.png'):
 start_time = time.time()
 H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
                   meta_heuristic=hyperparameters.meta_heuristic,
-                  meta_heuristic_order=hyperparameters.meta_heuristic_order)
+                  meta_heuristic_order=hyperparameters.meta_heuristic_order,
+                  fitness_function=calc_seg_fitness)
 time_taken = timedelta(seconds=(time.time() - start_time))
 
 
@@ -109,18 +110,6 @@ predictions = model.predict(test_x, batch_size=32)
 print('[INFO] generating metrics...')
 
 file_title = create_file_title('UNetSeg', hyperparameters)
-
-def iou_coef(y_true, y_pred, smooth=1):
-    m = tf.keras.metrics.MeanIoU(num_classes=3)
-    m.update_state(y_true, y_pred)
-    return m.result().numpy()
-
-def dice_coef(y_true, y_pred):
-    smooth = 1.
-    y_true_f = array(K.flatten(y_true))
-    y_pred_f = array(K.flatten(y_pred))
-    return dice(y_true_f, y_pred_f)
-
 
 acc = model.evaluate(test_x, test_y)
 output = str(model.metrics_names) + '\n'

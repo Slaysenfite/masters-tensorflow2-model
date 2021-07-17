@@ -27,7 +27,7 @@ class Solution:
 
 
 class GaEnv():
-    def __init__(self, iterations=10, population_size=30, model=None, X=None, y=None,
+    def __init__(self, fitness_function=calc_solution_fitness, iterations=10, population_size=30, model=None, X=None, y=None,
                  layers_to_optimize=(Conv2D, Dense)):
         self.iterations = iterations
         self.population_size = population_size
@@ -35,6 +35,7 @@ class GaEnv():
         self.X = X
         self.y = y
         self.layers_to_optimize = layers_to_optimize
+        self.fitness_function = fitness_function
 
     def get_ga_model(self):
         iteration = 0
@@ -57,7 +58,7 @@ class GaEnv():
 
     def initialize_population(self, population_size, weights, model, loss_metric, X, y):
         individuals = [None] * population_size
-        fitness = calc_solution_fitness(weights, model, loss_metric, X, y)
+        fitness = self.fitness_function(weights, model, loss_metric, X, y)
         individuals[0] = Solution(weights, fitness)
         for p in range(1, population_size):
             new_weights = [w * uniform(0, 1) for w in weights]
@@ -73,7 +74,7 @@ class GaEnv():
 
     def update_fitness(self, individuals, model, loss_metric, X, y):
         for individual in individuals:
-            individual.fitness = calc_solution_fitness(individual.weights_arr, model, loss_metric, X, y)
+            individual.fitness = self.fitness_function(individual.weights_arr, model, loss_metric, X, y)
         individuals.sort(key=lambda indv: indv.fitness, reverse=False)
         return individuals
 
@@ -123,7 +124,7 @@ class GaEnv():
         new_weight = np.array(offspring).reshape(shape)
 
         return Solution(new_weight,
-                        calc_solution_fitness(new_weight, self.model, CategoricalCrossentropy(), self.X, self.y))
+                        self.fitness_function(new_weight, self.model, CategoricalCrossentropy(), self.X, self.y))
 
     def perform_element_level_crossover(self, one_element, two_element):
         rand_num = uniform(0, 100)
@@ -146,7 +147,7 @@ class GaEnv():
 
         new_weight = np.array(offspring).reshape(shape)
         return Solution(new_weight,
-                        calc_solution_fitness(new_weight, self.model, CategoricalCrossentropy(), self.X, self.y))
+                        self.fitness_function(new_weight, self.model, CategoricalCrossentropy(), self.X, self.y))
 
     def gen_rand_num_list(self, size, a, b):
         l = list()
