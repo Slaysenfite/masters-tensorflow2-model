@@ -9,7 +9,7 @@ def create_required_directories():
     os.makedirs(output_dir + 'model/', 0o777, True)
 
 
-IMAGE_DIMS = (128, 128, 3)
+IMAGE_DIMS = (32, 32, 3)
 
 output_dir = 'output/'
 
@@ -28,6 +28,7 @@ class Hyperparameters:
         self.meta_heuristic = 'none'
         self.meta_heuristic_order = 'na'
         self.experiment_id='na'
+        self.augmentation= False
 
 
     def report_hyperparameters(self):
@@ -39,6 +40,7 @@ class Hyperparameters:
         report += ' Learning optimization: {}\n'.format(self.learning_optimization)
         report += ' Meta-heuristic used: {}\n'.format(self.meta_heuristic)
         report += ' Meta-heuristic order: {}\n'.format(self.meta_heuristic_order)
+        report += ' Data augmentation: {}\n'.format(self.augmentation)
 
         return report
 
