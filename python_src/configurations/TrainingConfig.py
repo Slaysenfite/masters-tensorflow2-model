@@ -28,7 +28,7 @@ class Hyperparameters:
         self.meta_heuristic = 'none'
         self.meta_heuristic_order = 'na'
         self.experiment_id='na'
-        self.augmentation= False
+        self.augmentation = False
 
 
     def report_hyperparameters(self):

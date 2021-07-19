@@ -86,7 +86,7 @@ class GaEnv():
         shape = individuals[0].shape
         next_gen = list()
         for i in range(HALL_OF_FAME_SIZE):
-            next_gen.append(individuals.pop(0))
+            next_gen.append(individuals[i])
         while len(next_gen) != self.population_size:
             indv1, indv2 = self.select_indvs_for_reproduction(individuals)
             rand = randint(1, 100)
@@ -94,7 +94,8 @@ class GaEnv():
                 offspring = self.two_point_crossover(indv1, indv2, shape)
                 next_gen.append(self.mutate(offspring.weights_flat, shape))
             else:
-                next_gen.append(indv1)
+                if next_gen.count(indv1) == 0:
+                    next_gen.append(indv1)
         return next_gen
 
     def select_indvs_for_reproduction(self, individuals, tournament_size=TOURNAMENT_SIZE):
