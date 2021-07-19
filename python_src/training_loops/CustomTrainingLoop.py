@@ -105,7 +105,7 @@ def training_loop(model,
                                                                                                           train_acc_metric,
                                                                                                           train_loss_metric)
 
-        run_meta_heuristic(meta_heuristic, 'last', meta_heuristic_order, model, train_x, train_y)
+        run_meta_heuristic(meta_heuristic, 'last', meta_heuristic_order, model, train_x, train_y, fitness_function)
 
         # Run a validation loop at the end of each epoch.
         for (X, y) in test_data:
