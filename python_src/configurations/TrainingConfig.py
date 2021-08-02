@@ -9,7 +9,7 @@ def create_required_directories():
     os.makedirs(output_dir + 'model/', 0o777, True)
 
 
-IMAGE_DIMS = (256, 256, 3)
+IMAGE_DIMS = (128, 128, 3)
 
 output_dir = 'output/'
 
@@ -18,10 +18,12 @@ MODEL_OUTPUT = output_dir + 'model/'
 
 
 class Hyperparameters:
-    def __init__(self, epochs, init_lr, batch_size,
+    def __init__(self, epochs, init_lr, sgd_lr, adam_lr, batch_size,
                  dropout):
         self.epochs = epochs
         self.init_lr = init_lr
+        self.sgd_lr = sgd_lr
+        self.adam_lr = adam_lr
         self.batch_size = batch_size
         self.dropout = dropout
         self.learning_optimization = 'sgd'
@@ -48,7 +50,9 @@ class Hyperparameters:
 def create_standard_hyperparameter_singleton():
     return Hyperparameters(
         50,
-        5e-3,
+        0.001,
+        0.001,
+        0.003,
         32,
         0.25
     )
@@ -57,6 +61,8 @@ def create_standard_hyperparameter_singleton():
 def create_mnist_hyperparameter_singleton():
     return Hyperparameters(
         10,
+        5e-3,
+        5e-3,
         5e-3,
         32,
         0.25

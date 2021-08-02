@@ -48,10 +48,10 @@ def read_cmd_line_args(hyperparameters, dataset):
 
     if args.optimizer is not None and args.optimizer == 'adam':
         hyperparameters.learning_optimization = 'Adam'
-        opt = Adam(learning_rate=hyperparameters.init_lr, decay=True)
+        opt = Adam(learning_rate=hyperparameters.adam_lr, decay=True)
     else:
-        hyperparameters.learning_optimization = 'Stochatic Gradient Descent'
-        opt = SGD(lr=hyperparameters.init_lr, momentum=0.9)
+        hyperparameters.learning_optimization = 'Stochastic Gradient Descent'
+        opt = SGD(lr=hyperparameters.sgd_lr)
 
     if args.dataset is not None:
         if 'cbis' in args.dataset:
