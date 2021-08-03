@@ -4,9 +4,7 @@ from datetime import timedelta
 
 import tensorflow as tf
 from IPython.core.display import clear_output
-from matplotlib import pyplot
 from numpy import expand_dims
-from scipy.spatial.distance import dice
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 
@@ -82,7 +80,7 @@ start_time = time.time()
 H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
                   meta_heuristic=hyperparameters.meta_heuristic,
                   meta_heuristic_order=hyperparameters.meta_heuristic_order,
-                  fitness_function=calc_seg_fitness)
+                  fitness_function=calc_seg_fitness, task='segmentation')
 time_taken = timedelta(seconds=(time.time() - start_time))
 
 

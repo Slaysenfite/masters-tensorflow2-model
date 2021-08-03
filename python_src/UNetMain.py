@@ -3,12 +3,10 @@ import time
 from datetime import timedelta
 
 import tensorflow as tf
-from matplotlib import pyplot
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
-from tensorflow.python.keras.metrics import Precision, Recall
-from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.python.keras.utils import data_utils
 
 from configurations.DataSet import cbis_ddsm_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories
@@ -16,8 +14,9 @@ from configurations.TrainingConfig import hyperparameters
 from metrics.MetricsReporter import MetricReporter
 from networks.UNet import build_unet
 from training_loops.CustomTrainingLoop import training_loop
-from utils.ImageLoader import load_greyscale_images, show_examples, supplement_training_data
-from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
+from utils.ImageLoader import load_greyscale_images, supplement_training_data
+from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title, \
+    determine_weights_input_size
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
@@ -56,31 +55,37 @@ if hyperparameters.augmentation:
 print('[INFO] Training data shape: ' + str(train_x.shape))
 print('[INFO] Training label shape: ' + str(train_y.shape))
 
-# # plot first few images
-# for i in range(9):
-#     # define subplot
-#     pyplot.subplot(330 + 1 + i)
-#     # plot raw pixel data
-#     pyplot.imshow(train_x[i], cmap=pyplot.get_cmap('gray'))
-# # show the figure
-# pyplot.show()
-
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
 model = build_unet([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(data_set.class_names))
+model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
 
-opt = Adam(learning_rate=hyperparameters.init_lr)
-model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy', Precision(), Recall()])
+BASE_WEIGHT_PATH = ('https://storage.googleapis.com/tensorflow/'
+                    'keras-applications/mobilenet_v2/')
+
+input_size = determine_weights_input_size(IMAGE_DIMS[0])
+
+if hyperparameters.preloaded_weights:
+    print('[INFO] Loading imagenet weights')
+    model_name = 'mobilenet_v2_weights_tf_dim_ordering_tf_kernels_{alpha}_{input_size}.h5'.format(
+        input_size=input_size, alpha=1.0)
+    weight_path = BASE_WEIGHT_PATH + model_name
+    weights_path = data_utils.get_file(
+        model_name, weight_path, cache_subdir='models')
+    model.load_weights(weights_path, by_name=True, skip_mismatch=True)
+
 
 start_time = time.time()
-H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
-                  meta_heuristic=hyperparameters.meta_heuristic,
-                  meta_heuristic_order=hyperparameters.meta_heuristic_order)
-time_taken = timedelta(seconds=(time.time() - start_time))
 
-# H =model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
-#               steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
-#               callbacks=callbacks)
+if hyperparameters.tf_fit:
+    H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+                  steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs)
+else:
+    H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
+                      meta_heuristic=hyperparameters.meta_heuristic,
+                      meta_heuristic_order=hyperparameters.meta_heuristic_order)
+
+time_taken = timedelta(seconds=(time.time() - start_time))
 
 # evaluate the network
 print('[INFO] evaluating network...')

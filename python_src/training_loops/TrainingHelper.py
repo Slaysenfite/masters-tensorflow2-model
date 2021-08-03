@@ -1,7 +1,7 @@
 from tensorflow.python.data import Dataset
 from tensorflow.python.keras.callbacks import History
 from tensorflow.python.keras.losses import CategoricalCrossentropy
-from tensorflow.python.keras.metrics import CategoricalAccuracy
+from tensorflow.python.keras.metrics import CategoricalAccuracy, BinaryAccuracy, BinaryCrossentropy
 
 
 def append_epoch_metrics(accuracy, loss, train_acc_score, train_loss_score, val_acc_score, val_accuracy, val_loss,
@@ -52,11 +52,17 @@ def generate_tf_history(model, hyperparameters, accuracy, loss, val_accuracy, va
     return H
 
 
-def prepare_metrics():
-    train_acc_metric = CategoricalAccuracy()
-    val_acc_metric = CategoricalAccuracy()
-    train_loss_metric = CategoricalCrossentropy(from_logits=True)
-    val_loss_metric = CategoricalCrossentropy(from_logits=True)
+def prepare_metrics(task):
+    if task == 'binary_classification':
+        train_acc_metric = BinaryAccuracy()
+        val_acc_metric = BinaryAccuracy()
+        train_loss_metric = BinaryCrossentropy(from_logits=True)
+        val_loss_metric = BinaryCrossentropy(from_logits=True)
+    else:
+        train_acc_metric = CategoricalAccuracy()
+        val_acc_metric = CategoricalAccuracy()
+        train_loss_metric = CategoricalCrossentropy(from_logits=True)
+        val_loss_metric = CategoricalCrossentropy(from_logits=True)
     return train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric
 
 

@@ -33,6 +33,8 @@ def read_cmd_line_args(hyperparameters, dataset):
     parser.add_argument('--id', type=str)
     parser.add_argument('--dataset', type=str)
     parser.add_argument('--augmentation', type=str)
+    parser.add_argument('--preloaded_weights', type=str)
+    parser.add_argument('--tf_fit', type=str)
     args = parser.parse_args()
 
     if args.id is not None:
@@ -62,6 +64,12 @@ def read_cmd_line_args(hyperparameters, dataset):
     if args.augmentation == 'True' or args.augmentation == 'true':
         hyperparameters.augmentation = True
 
+    if args.tf_fit == 'True' or args.tf_fit == 'true':
+        hyperparameters.tf_fit = True
+
+    if args.preloaded_weights == 'True' or args.preloaded_weights == 'true':
+        hyperparameters.preloaded_weights = True
+
     return hyperparameters, opt, dataset
 
 
@@ -69,3 +77,14 @@ def create_file_title(model_name, hyperparameters):
     meta_heuristic = hyperparameters.meta_heuristic if hyperparameters.meta_heuristic != None else 'none'
     order = hyperparameters.meta_heuristic_order if hyperparameters.meta_heuristic_order != None else 'na'
     return hyperparameters.experiment_id + '_' + model_name + '_' + meta_heuristic + '_' + order
+
+
+def determine_weights_input_size(dim):
+    if dim == 96 or dim == 128 or dim == 160 or dim == 128 or dim == 192 or dim == 224:
+        return dim
+    elif dim < 96:
+        return 96
+    elif dim > 224:
+        return 224
+    else:
+        return 128
