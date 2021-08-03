@@ -45,6 +45,8 @@ class Hyperparameters:
         report += ' Meta-heuristic used: {}\n'.format(self.meta_heuristic)
         report += ' Meta-heuristic order: {}\n'.format(self.meta_heuristic_order)
         report += ' Data augmentation: {}\n'.format(self.augmentation)
+        report += ' Preloaded weights: {}\n'.format(self.preloaded_weights)
+        report += ' TF Fit Training: {}\n'.format(self.tf_fit)
 
         return report
 

@@ -9,12 +9,13 @@ from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras.utils import data_utils
 
 from configurations.DataSet import bcs_data_set as data_set
-from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks
+from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks, MODEL_OUTPUT
 from metrics.MetricsReporter import MetricReporter
 from networks.ResNet import ResnetBuilder
 from training_loops.CustomTrainingLoop import training_loop
 from utils.ImageLoader import load_rgb_images, supplement_training_data
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
+
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
@@ -114,7 +115,7 @@ print('[INFO] generating metrics...')
 
 file_title = create_file_title('ResNet', hyperparameters)
 
-model.save(filepath=file_title + '.h5', save_format='h5')
+model.save(filepath=MODEL_OUTPUT + file_title + '.h5', save_format='h5')
 
 generate_script_report(H, model, test_x, test_y, predictions, time_taken, data_set, hyperparameters, file_title)
 

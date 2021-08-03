@@ -9,7 +9,7 @@ from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras.utils import data_utils
 
 from configurations.DataSet import cbis_ddsm_data_set as data_set
-from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories
+from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, MODEL_OUTPUT
 from configurations.TrainingConfig import hyperparameters
 from metrics.MetricsReporter import MetricReporter
 from networks.UNet import build_unet
@@ -99,6 +99,8 @@ predictions = model.predict(test_x)
 print('[INFO] generating metrics...')
 
 file_title = create_file_title('UNet', hyperparameters)
+
+model.save(filepath=MODEL_OUTPUT + file_title + '.h5', save_format='h5')
 
 generate_script_report(H, model, test_x, test_y, predictions, time_taken, data_set, hyperparameters, file_title)
 
