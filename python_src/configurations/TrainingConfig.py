@@ -29,8 +29,10 @@ class Hyperparameters:
         self.learning_optimization = 'sgd'
         self.meta_heuristic = 'none'
         self.meta_heuristic_order = 'na'
-        self.experiment_id='na'
+        self.experiment_id = 'na'
         self.augmentation = False
+        self.preloaded_weights = False
+        self.tf_fit = False
 
 
     def report_hyperparameters(self):

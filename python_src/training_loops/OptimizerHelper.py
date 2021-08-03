@@ -1,7 +1,7 @@
 import numpy as np
 from tensorflow.python.keras.layers import Conv2D, Dense
 from tensorflow.python.keras.metrics import TrueNegatives, TruePositives, FalsePositives, \
-    FalseNegatives
+    FalseNegatives, BinaryCrossentropy, CategoricalCrossentropy
 
 from metrics.MetricsUtil import iou_coef, dice_coef
 
@@ -32,6 +32,13 @@ def calc_seg_fitness(weights, model, loss_metric, X, y):
     set_trainable_weights(model, weights)
     ŷ = model(X, training=True)
     return 2 - (iou_coef(y, ŷ)+dice_coef(y, ŷ))
+
+
+def determine_loss_function_based_on_fitness_function(fitness_function):
+    if fitness_function == calc_solution_fitness:
+        return BinaryCrossentropy()
+    else:
+        return CategoricalCrossentropy()
 
 
 def get_trainable_weights(model, keras_layers=(Dense, Conv2D), as_numpy_array=True):

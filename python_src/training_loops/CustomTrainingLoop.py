@@ -23,13 +23,13 @@ def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric):
 
 
 def apply_swarm_optimization(X, model, y, fitness_function):
-    pso = PsoEnv(swarm_size=15, iterations=10, model=model, X=X, y=y, fitness_function=fitness_function)
+    pso = PsoEnv(swarm_size=20, iterations=10, model=model, X=X, y=y, fitness_function=fitness_function)
     model = pso.get_pso_model()
     return model
 
 
 def apply_genetic_algorithm(X, model, y, fitness_function):
-    ga = GaEnv(population_size=30, iterations=20, model=model, X=X, y=y, fitness_function=fitness_function)
+    ga = GaEnv(population_size=20, iterations=10, model=model, X=X, y=y, fitness_function=fitness_function)
     model = ga.get_ga_model()
     return model
 
@@ -37,10 +37,11 @@ def apply_genetic_algorithm(X, model, y, fitness_function):
 def apply_gradient_descent(X, model, optimizer, y):
     with GradientTape() as tape:
         ŷ = model(X, training=True)
-        loss_value = model.compiled_loss(y, ŷ, regularization_losses=model.losses)
+        loss_value = model.compiled_loss(y, ŷ)
     gd_weights = model.trainable_variables
     grads = tape.gradient(loss_value, gd_weights)
     optimizer.apply_gradients(zip(grads, gd_weights))
+    model.compiled_metrics.update_state(y, ŷ)
     model._trainable_variables = gd_weights
 
 # The validate_on_batch function
@@ -67,7 +68,8 @@ def training_loop(model,
                   test_y,
                   meta_heuristic=None,
                   meta_heuristic_order=None,
-                  fitness_function=calc_solution_fitness
+                  fitness_function=calc_solution_fitness,
+                  task='binary_classification'
                   ):
 
     # Validate input params
@@ -89,7 +91,7 @@ def training_loop(model,
         print('\rEpoch [%d/%d] \n' % (epoch + 1, hyperparameters.epochs), end='')
 
         # Prepare the metrics.
-        train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric = prepare_metrics()
+        train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric = prepare_metrics(task)
 
         run_meta_heuristic(meta_heuristic, 'first', meta_heuristic_order, model, train_x, train_y, fitness_function)
 

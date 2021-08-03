@@ -3,15 +3,15 @@ from random import uniform, seed, randint
 import numpy as np
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
-from tensorflow.python.keras.losses import CategoricalCrossentropy
 
-from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights, calc_solution_fitness
+from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights, calc_solution_fitness, \
+    determine_loss_function_based_on_fitness_function
 
 HALL_OF_FAME_SIZE = 3
 
 CROSSOVER_THRESHOLD = 60
 
-TOURNAMENT_SIZE = 6
+TOURNAMENT_SIZE = 4
 
 CROSSOVER_PROBABILITY = 50
 
@@ -36,19 +36,19 @@ class GaEnv():
         self.y = y
         self.layers_to_optimize = layers_to_optimize
         self.fitness_function = fitness_function
+        self.loss_metric = determine_loss_function_based_on_fitness_function(self.fitness_function)
 
     def get_ga_model(self):
         iteration = 0
-        loss_metric = CategoricalCrossentropy()
         weights = get_trainable_weights(self.model, self.layers_to_optimize)
 
-        individuals = self.initialize_population(self.population_size, weights, self.model, loss_metric, self.X, self.y)
-        individuals = self.update_fitness(individuals, self.model, loss_metric, self.X, self.y)
+        individuals = self.initialize_population(self.population_size, weights, self.model, self.loss_metric, self.X, self.y)
+        individuals = self.update_fitness(individuals, self.model, self.loss_metric, self.X, self.y)
 
         while iteration < self.iterations:
             individuals = self.reproduce_next_gen(individuals)
 
-            individuals = self.update_fitness(individuals, self.model, loss_metric, self.X, self.y)
+            individuals = self.update_fitness(individuals, self.model, self.loss_metric, self.X, self.y)
             print(' GA training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
                 individuals[0].fitness))
             iteration += 1
@@ -56,9 +56,9 @@ class GaEnv():
 
         return set_trainable_weights(self.model, best_weights, self.layers_to_optimize)
 
-    def initialize_population(self, population_size, weights, model, loss_metric, X, y):
+    def initialize_population(self, population_size, weights, model, X, y):
         individuals = [None] * population_size
-        fitness = self.fitness_function(weights, model, loss_metric, X, y)
+        fitness = self.fitness_function(weights, model, self.loss_metric, X, y)
         individuals[0] = Solution(weights, fitness)
         for p in range(1, population_size):
             new_weights = [w * uniform(0, 1) for w in weights]
@@ -72,9 +72,9 @@ class GaEnv():
                 best_individual = individuals[i]
         return best_individual
 
-    def update_fitness(self, individuals, model, loss_metric, X, y):
+    def update_fitness(self, individuals, model, X, y):
         for individual in individuals:
-            individual.fitness = self.fitness_function(individual.weights_arr, model, loss_metric, X, y)
+            individual.fitness = self.fitness_function(individual.weights_arr, model, self.loss_metric, X, y)
         individuals.sort(key=lambda indv: indv.fitness, reverse=False)
         return individuals
 
@@ -125,7 +125,7 @@ class GaEnv():
         new_weight = np.array(offspring).reshape(shape)
 
         return Solution(new_weight,
-                        self.fitness_function(new_weight, self.model, CategoricalCrossentropy(), self.X, self.y))
+                        self.fitness_function(new_weight, self.model, self.loss_metric, self.X, self.y))
 
     def perform_element_level_crossover(self, one_element, two_element):
         rand_num = uniform(0, 100)
@@ -148,7 +148,7 @@ class GaEnv():
 
         new_weight = np.array(offspring).reshape(shape)
         return Solution(new_weight,
-                        self.fitness_function(new_weight, self.model, CategoricalCrossentropy(), self.X, self.y))
+                        self.fitness_function(new_weight, self.model, self.loss_metric, self.X, self.y))
 
     def gen_rand_num_list(self, size, a, b):
         l = list()
