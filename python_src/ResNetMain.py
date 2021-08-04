@@ -5,17 +5,17 @@ from datetime import timedelta
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
+from tensorflow.python.keras.applications.resnet_v2 import ResNet50V2
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.python.keras.utils import data_utils
 
 from configurations.DataSet import bcs_data_set as data_set
-from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks, MODEL_OUTPUT
+from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks, \
+    MODEL_OUTPUT
 from metrics.MetricsReporter import MetricReporter
-from networks.ResNet import ResnetBuilder
+from networks.NetworkHelper import create_classification_layers
 from training_loops.CustomTrainingLoop import training_loop
 from utils.ImageLoader import load_rgb_images, supplement_training_data
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
-
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
@@ -54,37 +54,26 @@ if hyperparameters.augmentation:
 print('[INFO] Training data shape: ' + str(train_x.shape))
 print('[INFO] Training label shape: ' + str(train_y.shape))
 
-# # plot first few images
-# for i in range(9):
-#     # define subplot
-#     pyplot.subplot(330 + 1 + i)
-#     # plot raw pixel data
-#     pyplot.imshow(train_x[i], cmap=pyplot.get_cmap('gray'))
-# # show the figure
-# pyplot.show()
-
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
-
-model = ResnetBuilder.build_resnet_50(IMAGE_DIMS, len(data_set.class_names))
-model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
-
-BASE_WEIGHTS_PATH = (
-    'https://storage.googleapis.com/tensorflow/keras-applications/resnet/')
-WEIGHTS_HASHES = {
-    'resnet50': ('2cb95161c43110f7111970584f804107',
-                 '4d473c1dd8becc155b73f8504c6f6626')}
-
 
 if hyperparameters.preloaded_weights:
     print('[INFO] Loading imagenet weights')
-    file_name = 'resnet50' + '_weights_tf_dim_ordering_tf_kernels.h5'
-    file_hash = WEIGHTS_HASHES['resnet50'][0]
-    weights_path = data_utils.get_file(
-        file_name,
-        BASE_WEIGHTS_PATH + file_name,
-        cache_subdir='models',
-        file_hash=file_hash)
-    model.load_weights(weights_path, by_name=True, skip_mismatch=True)
+    model = ResNet50V2(
+        include_top=False,
+        weights='imagenet',
+        input_shape=IMAGE_DIMS,
+        classes=len(data_set.class_names))
+    model = create_classification_layers(base_model=model, classes=len(data_set.class_names))
+else:
+    model = ResNet50V2(
+        include_top=False,
+        weights=None,
+        input_shape=IMAGE_DIMS,
+        classes=len(data_set.class_names))
+    model = create_classification_layers(base_model=model, classes=len(data_set.class_names))
+
+# Compile model
+model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 # Setup callbacks
 callbacks = create_callbacks()

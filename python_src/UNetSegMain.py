@@ -6,11 +6,13 @@ import tensorflow as tf
 from IPython.core.display import clear_output
 from numpy import expand_dims
 from sklearn.model_selection import train_test_split
+from tensorflow.python.keras.layers import Conv2D
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 
 from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir
 from metrics.MetricsUtil import iou_coef, dice_coef
+from networks.UNet import build_pretrained_unet
 from networks.UNetSeg import unet_seg
 from training_loops.CustomTrainingLoop import training_loop
 from training_loops.OptimizerHelper import calc_seg_fitness
@@ -25,26 +27,10 @@ print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
 
 print('[INFO] Loading images...')
-roi_data, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=IMAGE_DIMS)
+roi_data, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1))
 data, labels = load_seg_images(data_set, image_dimensions=IMAGE_DIMS)
-(train_x, test_x, train_y, test_y) = train_test_split(data, roi_data, test_size=0.3, train_size=0.7, random_state=42)
 
-# def show_examples(title, train_x, train_y, items=3):
-#     fig, ((ax1, ax2), (ax3, ax4), (ax5, ax6)) = pyplot.subplots(3, 2)
-#     pyplot.suptitle(title, fontsize=16)
-#     ax1.imshow(train_x[0], cmap=pyplot.get_cmap('gray'))
-#     ax2.imshow(train_y[0], cmap=pyplot.get_cmap('gray'))
-#     ax3.imshow(train_x[11], cmap=pyplot.get_cmap('gray'))
-#     ax4.imshow(train_y[11], cmap=pyplot.get_cmap('gray'))
-#     ax5.imshow(train_x[12], cmap=pyplot.get_cmap('gray'))
-#     ax6.imshow(train_y[12], cmap=pyplot.get_cmap('gray'))
-#
-#     for ax in fig.get_axes():
-#         ax.label_outer()
-#
-#     pyplot.show()
-#
-# show_examples('CBIS-DDSM Segmentation Example Images', train_x, train_y, items=3)
+(train_x, test_x, train_y, test_y) = train_test_split(data, roi_data, test_size=0.3, train_size=0.7, random_state=42)
 
 def normalize(input_image, input_mask):
     input_image = tf.cast(input_image, tf.float32) / 255.0
@@ -55,7 +41,10 @@ clear_output()
 
 opt = Adam()
 
-model = unet_seg(IMAGE_DIMS)
+if hyperparameters.preloaded_weights:
+    model = build_pretrained_unet(IMAGE_DIMS, len(data_set.class_names))
+else:
+    model = unet_seg(IMAGE_DIMS)
 model.compile(optimizer=opt,
               loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
@@ -77,10 +66,15 @@ def show_predictions(test_x, index=2, title='pred.png'):
 
 
 start_time = time.time()
-H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
-                  meta_heuristic=hyperparameters.meta_heuristic,
-                  meta_heuristic_order=hyperparameters.meta_heuristic_order,
-                  fitness_function=calc_seg_fitness, task='segmentation')
+
+if hyperparameters.tf_fit:
+     H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+                  steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs)
+else:
+    H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
+                      meta_heuristic=hyperparameters.meta_heuristic,
+                      meta_heuristic_order=hyperparameters.meta_heuristic_order,
+                      fitness_function=calc_seg_fitness, task='segmentation')
 time_taken = timedelta(seconds=(time.time() - start_time))
 
 

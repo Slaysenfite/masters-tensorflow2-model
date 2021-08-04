@@ -12,11 +12,11 @@ from configurations.DataSet import cbis_ddsm_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, MODEL_OUTPUT
 from configurations.TrainingConfig import hyperparameters
 from metrics.MetricsReporter import MetricReporter
-from networks.UNet import build_unet
+from networks.NetworkHelper import create_classification_layers
+from networks.UNet import build_unet, build_pretrained_unet
 from training_loops.CustomTrainingLoop import training_loop
-from utils.ImageLoader import load_greyscale_images, supplement_training_data
-from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title, \
-    determine_weights_input_size
+from utils.ImageLoader import load_greyscale_images, supplement_training_data, load_rgb_images
+from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
@@ -34,12 +34,11 @@ data = []
 labels = []
 
 print('[INFO] Loading images...')
-data, labels = load_greyscale_images(data, labels, data_set, [IMAGE_DIMS[0], IMAGE_DIMS[1], 1])
+data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
 
 # partition the data into training and testing splits using 70% of
 # the data for training and the remaining 30% for testing
 (train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.2, train_size=0.8, random_state=42)
-# show_examples('CBIS-DDSM Example Images', train_x, test_x, train_y, test_y, items=9)
 
 if hyperparameters.augmentation:
     print('[INFO] Augmenting data set')
@@ -57,23 +56,12 @@ print('[INFO] Training label shape: ' + str(train_y.shape))
 
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
-model = build_unet([IMAGE_DIMS[0], IMAGE_DIMS[1], 1], len(data_set.class_names))
-model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
-
-BASE_WEIGHT_PATH = ('https://storage.googleapis.com/tensorflow/'
-                    'keras-applications/mobilenet_v2/')
-
-input_size = determine_weights_input_size(IMAGE_DIMS[0])
-
 if hyperparameters.preloaded_weights:
-    print('[INFO] Loading imagenet weights')
-    model_name = 'mobilenet_v2_weights_tf_dim_ordering_tf_kernels_{alpha}_{input_size}.h5'.format(
-        input_size=input_size, alpha=1.0)
-    weight_path = BASE_WEIGHT_PATH + model_name
-    weights_path = data_utils.get_file(
-        model_name, weight_path, cache_subdir='models')
-    model.load_weights(weights_path, by_name=True, skip_mismatch=True)
-
+    model = build_pretrained_unet(IMAGE_DIMS, len(data_set.class_names))
+    model = create_classification_layers(base_model=model, classes=len(data_set.class_names))
+else:
+    model = build_unet(IMAGE_DIMS, len(data_set.class_names))
+model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 start_time = time.time()
 

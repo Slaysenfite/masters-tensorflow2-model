@@ -5,8 +5,8 @@ from tensorflow.python.keras.layers import Dropout, Dense, GlobalAveragePooling2
 from tensorflow.python.keras.models import Model
 
 
-def create_classification_layers(base_model, classes, dropout_prob=0.3):
-    x = GlobalAveragePooling2D(name='avg_pool')(base_model.layers[-1].output)
+def create_classification_layers(base_model, classes, dropout_prob=0.3, layers_removed=-1):
+    x = GlobalAveragePooling2D(name='avg_pool')(base_model.layers[layers_removed].output)
     x = Flatten()(x)
     x = Dense(512, activation='relu', kernel_initializer='he_uniform')(x)
     x = Dropout(dropout_prob)(x)

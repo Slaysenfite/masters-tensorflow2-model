@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 
-from configurations.DataSet import cbis_ddsm_data_set, bcs_data_set
+from configurations.DataSet import cbis_ddsm_data_set, bcs_data_set, cbis_seg_data_set
 from configurations.TrainingConfig import output_dir
 from metrics.MetricResults import MetricResult
 from metrics.PerformanceMetrics import PerformanceMetrics
@@ -58,6 +58,8 @@ def read_cmd_line_args(hyperparameters, dataset):
     if args.dataset is not None:
         if 'cbis' in args.dataset:
             dataset = cbis_ddsm_data_set
+        if 'cbis_seg' in args.dataset:
+            dataset = cbis_seg_data_set
         if 'bcs' in args.dataset:
             dataset = bcs_data_set
 
@@ -79,12 +81,3 @@ def create_file_title(model_name, hyperparameters):
     return hyperparameters.experiment_id + '_' + model_name + '_' + meta_heuristic + '_' + order
 
 
-def determine_weights_input_size(dim):
-    if dim == 96 or dim == 128 or dim == 160 or dim == 128 or dim == 192 or dim == 224:
-        return dim
-    elif dim < 96:
-        return 96
-    elif dim > 224:
-        return 224
-    else:
-        return 128

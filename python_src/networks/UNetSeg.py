@@ -57,7 +57,7 @@ def unet_seg(input_size=(128, 128, 1)):
     conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge9)
     conv9 = Conv2D(32, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
 
-    conv10 = Conv2D(input_size[2], 1, activation='sigmoid')(conv9)
+    conv10 = Conv2D(1, 1, activation='sigmoid')(conv9)
 
     model = tf.keras.Model(inputs=inputs, outputs=conv10)
 
