@@ -81,9 +81,9 @@ callbacks = create_callbacks()
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
-        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic,
+        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=20, iterations=10,
         monitor='val_loss', factor=0.2, patience=0, verbose=1, mode='min',
-        min_delta=0.0001, cooldown=0, min_lr=0)
+        min_delta=0.1, cooldown=0)
     callbacks.append(meta_callback)
 
 # train the network
