@@ -1,0 +1,164 @@
+import logging as logging
+
+import numpy as np
+from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.callbacks import Callback
+
+from training_loops.GAOptimizer import GaEnv
+from training_loops.OptimizerHelper import calc_solution_fitness
+from training_loops.PsoOptimizer import PsoEnv
+
+
+class RunMetaHeuristicOnPlateau(Callback):
+    """Run meta heuristic when a metric has stopped improving.
+
+    Models often benefit from reducing the learning rate by a factor
+    of 2-10 once learning stagnates. This callback monitors a
+    quantity and if no improvement is seen for a 'patience' number
+    of epochs, the learning rate is reduced.
+
+    Example:
+
+    ```python
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
+                                  patience=5, min_lr=0.001)
+    model.fit(X_train, Y_train, callbacks=[reduce_lr])
+    ```
+
+    Arguments:
+        monitor: quantity to be monitored.
+        factor: factor by which the learning rate will be reduced.
+          `new_lr = lr * factor`.
+        patience: number of epochs with no improvement after which learning rate
+          will be reduced.
+        verbose: int. 0: quiet, 1: update messages.
+        mode: one of `{'auto', 'min', 'max'}`. In `'min'` mode,
+          the learning rate will be reduced when the
+          quantity monitored has stopped decreasing; in `'max'` mode it will be
+          reduced when the quantity monitored has stopped increasing; in `'auto'`
+          mode, the direction is automatically inferred from the name of the
+          monitored quantity.
+        min_delta: threshold for measuring the new optimum, to only focus on
+          significant changes.
+        cooldown: number of epochs to wait before resuming normal operation after
+          lr has been reduced.
+        min_lr: lower bound on the learning rate.
+    """
+
+    def __init__(self,
+                 X,
+                 y,
+                 monitor='val_loss',
+                 factor=0.1,
+                 patience=5,
+                 verbose=1,
+                 mode='auto',
+                 min_delta=0.0001,
+                 cooldown=0,
+                 meta_heuristic='pso',
+                 fitness_function=calc_solution_fitness,
+                 population_size=30,
+                 iterations=10,
+                 **kwargs):
+        super(RunMetaHeuristicOnPlateau, self).__init__()
+
+        self.monitor = monitor
+        if factor >= 1.0:
+            raise ValueError('ReduceLROnPlateau ' 'does not support a factor >= 1.0.')
+        if 'epsilon' in kwargs:
+            min_delta = kwargs.pop('epsilon')
+            logging.warning('`epsilon` argument is deprecated and '
+                            'will be removed, use `min_delta` instead.')
+        self.X = X
+        self.y = y
+        self.factor = factor
+        self.min_delta = min_delta
+        self.patience = patience
+        self.verbose = verbose
+        self.cooldown = cooldown
+        self.cooldown_counter = 0  # Cooldown counter.
+        self.wait = 0
+        self.best = 0
+        self.mode = mode
+        self.monitor_op = None
+        self.meta_heuristic = meta_heuristic
+        self.fitness_function = fitness_function
+        self.population_size = population_size
+        self.iterations = iterations
+        self._reset()
+
+    def _reset(self):
+        """Resets wait counter and cooldown counter.
+        """
+        if self.mode not in ['auto', 'min', 'max']:
+            logging.warning('Run Metaheuristic On Plateau Reducing mode %s is unknown, '
+                            'fallback to auto mode.', self.mode)
+            self.mode = 'auto'
+        if (self.mode == 'min' or
+                (self.mode == 'auto' and 'acc' not in self.monitor)):
+            self.monitor_op = lambda a, b: np.less(a, b - self.min_delta)
+            self.best = np.Inf
+        else:
+            self.monitor_op = lambda a, b: np.greater(a, b + self.min_delta)
+            self.best = -np.Inf
+        self.cooldown_counter = 0
+        self.wait = 0
+
+    def on_train_begin(self, logs=None):
+        self._reset()
+
+    def on_epoch_end(self, epoch, logs=None):
+        logs = logs or {}
+        logs['lr'] = K.get_value(self.model.optimizer.lr)
+        current = logs.get(self.monitor)
+        if current is None:
+            logging.warning('Run metaheuristic on plateau conditioned on metric `%s` '
+                            'which is not available. Available metrics are: %s',
+                            self.monitor, ','.join(list(logs.keys())))
+
+        else:
+            if self.in_cooldown():
+                self.cooldown_counter -= 1
+                self.wait = 0
+
+            if self.monitor_op(current, self.best):
+                self.best = current
+                self.wait = 0
+            elif not self.in_cooldown():
+                self.wait += 1
+                if self.wait >= self.patience:
+                    if self.meta_heuristic == 'pso':
+                        self.apply_swarm_optimization()
+                    elif self.meta_heuristic == 'ga':
+                        self.apply_genetic_algorithm()
+                    else:
+                        print('[WARNING] Incorrect meta-heuristic specified, must be either "pso" or "ga"')
+                    if self.verbose > 0:
+                        print('\nEpoch %05d: RunMetaHeuristicOnPlateau running meta-heuristic algorithm %s with '
+                              'hyperparameters [population size: %d iterations: %d]'
+                              % (epoch + 1, self.meta_heuristic, self.population_size, self.iterations))
+                    self.cooldown_counter = self.cooldown
+                    self.wait = 0
+
+    def in_cooldown(self):
+        return self.cooldown_counter > 0
+
+    def apply_swarm_optimization(self):
+        pso = PsoEnv(swarm_size=self.population_size,
+                     iterations=self.iterations,
+                     model=self.model,
+                     X=self.X,
+                     y=self.y,
+                     fitness_function=self.fitness_function)
+        model = pso.get_pso_model()
+        return model
+
+    def apply_genetic_algorithm(self):
+        ga = GaEnv(population_size=self.population_size,
+                   iterations=self.iterations,
+                   model=self.model,
+                   X=self.X,
+                   y=self.y,
+                   fitness_function=self.fitness_function)
+        model = ga.get_ga_model()
+        return model

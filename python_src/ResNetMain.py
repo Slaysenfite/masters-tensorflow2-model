@@ -13,6 +13,7 @@ from configurations.TrainingConfig import IMAGE_DIMS, create_required_directorie
     MODEL_OUTPUT
 from metrics.MetricsReporter import MetricReporter
 from networks.NetworkHelper import create_classification_layers
+from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
 from utils.ImageLoader import load_rgb_images, supplement_training_data
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
@@ -78,12 +79,20 @@ model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
 # Setup callbacks
 callbacks = create_callbacks()
 
+if hyperparameters.meta_heuristic != 'none':
+    meta_callback = RunMetaHeuristicOnPlateau(
+        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic,
+        monitor='val_loss', factor=0.2, patience=0, verbose=1, mode='min',
+        min_delta=0.0001, cooldown=0, min_lr=0)
+    callbacks.append(meta_callback)
+
 # train the network
 start_time = time.time()
 
 if hyperparameters.tf_fit:
     H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
-                  steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs)
+                  steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
+                  callbacks=callbacks)
 else:
     H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
                       meta_heuristic=hyperparameters.meta_heuristic,

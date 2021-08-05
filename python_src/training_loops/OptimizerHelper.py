@@ -29,7 +29,7 @@ def calc_solution_fitness(weights, model, loss_metric, X, y):
 
 
 def calc_seg_fitness(weights, model, loss_metric, X, y):
-    set_trainable_weights(model, weights)
+    set_trainable_weights(model, weights, as_numpy_array=True)
     ŷ = model(X, training=True)
     return 2 - (iou_coef(y, ŷ)+dice_coef(y, ŷ))
 
