@@ -1,4 +1,5 @@
 import numpy as np
+from tensorflow import Tensor, Variable
 from tensorflow.python.keras.layers import Conv2D, Dense
 from tensorflow.python.keras.metrics import TrueNegatives, TruePositives, FalsePositives, \
     FalseNegatives, BinaryCrossentropy, CategoricalCrossentropy
@@ -44,26 +45,40 @@ def determine_loss_function_based_on_fitness_function(fitness_function):
 def get_trainable_weights(model, keras_layers=(Dense, Conv2D), as_numpy_array=True):
     weights = []
     for layer in model.layers:
-        if (layer.trainable != True or len(layer.trainable_weights) == 0 or layer.name == 'predictions'):
+        if layer.trainable != True or len(layer.trainable_weights) == 0 or layer.name == 'predictions':
             pass
+
         if isinstance(layer, keras_layers):
-            weights.append(layer.get_weights()) if as_numpy_array else weights.append(layer.trainable_weights)
-    if as_numpy_array:
-        return np.array(weights, dtype=object)
-    else:
-        return weights
+            weights.append(layer.weights)
+            # Need to flatten weights
+    return weights
 
 
 def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D), as_numpy_array=True):
     i = 0
     for layer in model.layers:
-        if (layer.trainable != True or len(layer.weights) == 0 or layer.name == 'predictions'):
+        if layer.trainable != True or len(layer.weights) == 0 or layer.name == 'predictions':
             pass
         if isinstance(layer, keras_layers):
-            if as_numpy_array:
-                layer.set_weights(weights[i].tolist())
-            else:
-                layer._trainable_weights = weights[i]
+            np_weights = np.zeros_like(layer.get_weights())
+            for n in range(len(np_weights)):
+                np_weights[n] = np.zeros_like(layer.get_weights()[n])
+            for c in range(len(layer.weights)):
+                if isinstance(weights[i][c], Tensor):
+                    tf_var = Variable(weights[i][c])
+                    np_weights[c] = tf_var.value().numpy()
+                elif isinstance(weights[i][c], np.ndarray):
+                    np_weights[c] = weights[i][c]
+                else:
+                    np_weights[c] = weights[i][c].value().numpy()
+            layer.set_weights(np_weights)
             i += 1
     return model
 
+
+def flatten_weights_to_ndarr(weights):
+    return [weight for sublist in weights for weight in sublist]
+
+
+def reshape_weights(weights, shape):
+    return np.array(weights, shape)

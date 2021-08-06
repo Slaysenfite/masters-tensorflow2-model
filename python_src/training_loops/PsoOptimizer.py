@@ -1,6 +1,7 @@
 from random import uniform, seed
 
 import numpy as np
+from tensorflow import Variable
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.losses import CategoricalCrossentropy
@@ -63,9 +64,10 @@ class PsoEnv():
         particles = [None] * swarm_size
         particles[0] = Particle(weights, self.fitness_function(weights, model, loss_metric, X, y))
         for p in range(1, swarm_size):
-            new_weights = [w * uniform(0, 1) for w in weights]
+            # This needs to produce a tf.variable
+            new_weights = [[w * uniform(0, 1) for w in weight] for weight in weights]
             initial_fitness = self.fitness_function(new_weights, model, loss_metric, X, y)
-            particles[p] = Particle(np.array(new_weights), initial_fitness)
+            particles[p] = Particle(new_weights, initial_fitness)
         return particles
 
     def set_gbest(self, particles, best_particle):
@@ -100,22 +102,10 @@ class PsoEnv():
 
     def update_velocity(self, particle, inertia_weight, acc_c):
         initial = (inertia_weight) * (particle.velocity)
-        cognitive_component = (acc_c[0]) * (uniform(0, 1)) * (particle.pbest - particle.position)
-        social_component = (acc_c[1]) * (uniform(0, 1)) * (particle.gbest - particle.position)
+        cognitive_component = (acc_c[0]) * (uniform(0, 1)) * (np.array(particle.pbest) - np.array(particle.position))
+        social_component = (acc_c[1]) * (uniform(0, 1)) * (np.array(particle.gbest) - np.array(particle.position))
 
-        new_velocity = initial + cognitive_component + social_component
-
-        # self.clamp_velocity(new_velocity)
-
-        return new_velocity
+        return initial + cognitive_component + social_component
 
     def calc_new_position(self, particle):
-        return particle.position + particle.velocity
-
-    def clamp_velocity(self, new_velocity):
-        for v in new_velocity.flat:
-            for v1 in v.flat:
-                if v1 < -V_MAX:
-                    v1 = -V_MAX
-                if v1 > V_MAX:
-                    v1 = V_MAX
+        return (particle.position + particle.velocity).tolist()
