@@ -63,9 +63,9 @@ class PsoEnv():
         particles = [None] * swarm_size
         particles[0] = Particle(weights, self.fitness_function(weights, model, loss_metric, X, y))
         for p in range(1, swarm_size):
-            new_weights = [w * uniform(0, 1) for w in weights]
+            new_weights = [[w * uniform(0, 1) for w in weight] for weight in weights]
             initial_fitness = self.fitness_function(new_weights, model, loss_metric, X, y)
-            particles[p] = Particle(np.array(new_weights), initial_fitness)
+            particles[p] = Particle(new_weights, initial_fitness)
         return particles
 
     def set_gbest(self, particles, best_particle):
@@ -105,17 +105,7 @@ class PsoEnv():
 
         new_velocity = initial + cognitive_component + social_component
 
-        # self.clamp_velocity(new_velocity)
-
-        return new_velocity
+        return [initial + cognitive_component + social_component]
 
     def calc_new_position(self, particle):
-        return particle.position + particle.velocity
-
-    def clamp_velocity(self, new_velocity):
-        for v in new_velocity.flat:
-            for v1 in v.flat:
-                if v1 < -V_MAX:
-                    v1 = -V_MAX
-                if v1 > V_MAX:
-                    v1 = V_MAX
+        return (np.array(particle.position) + np.array(particle.velocity)).tolist()
