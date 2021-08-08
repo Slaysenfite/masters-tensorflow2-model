@@ -1,7 +1,7 @@
 from random import uniform, seed
 
-import numpy as np
 from tensorflow import Variable
+from tensorflow._api.v2 import math
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.losses import CategoricalCrossentropy
@@ -17,7 +17,7 @@ V_MAX = 2
 
 
 class Particle:
-    def __init__(self, position, fitness, velocity=0.0):
+    def __init__(self, position, fitness, velocity):
         self.position = position
         self.velocity = velocity
         self.gbest = None
@@ -56,19 +56,25 @@ class PsoEnv():
             print(' PSO training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
                 swarm[0].gbest_fitness))
             iteration += 1
-        best_weights = swarm[0].gbest
+        best_weights = self.convert_tenor_weights_to_tf_variable(swarm[0].gbest)
 
         return set_trainable_weights(self.model, best_weights, self.layers_to_optimize)
 
     def initialize_swarm(self, swarm_size, weights, model, loss_metric, X, y):
         particles = [None] * swarm_size
-        particles[0] = Particle(weights, self.fitness_function(weights, model, loss_metric, X, y))
+        starting_velocity = [[w * 0 for w in weight] for weight in weights]
+        particles[0] = Particle(weights, self.fitness_function(weights, model, loss_metric, X, y), starting_velocity)
         for p in range(1, swarm_size):
-            # This needs to produce a tf.variable
             new_weights = [[w * uniform(0, 1) for w in weight] for weight in weights]
             initial_fitness = self.fitness_function(new_weights, model, loss_metric, X, y)
-            particles[p] = Particle(new_weights, initial_fitness)
+            particles[p] = Particle(position=new_weights, fitness=initial_fitness, velocity=starting_velocity)
         return particles
+
+    def convert_tenor_weights_to_tf_variable(self, weights):
+        for r in range(len(weights)):
+            for c in range(len(weights[r])):
+                weights[r][c] = Variable(weights[r][c])
+        return weights
 
     def set_gbest(self, particles, best_particle):
         for particle in particles:
@@ -101,11 +107,56 @@ class PsoEnv():
         return best_particle
 
     def update_velocity(self, particle, inertia_weight, acc_c):
-        initial = (inertia_weight) * (particle.velocity)
-        cognitive_component = (acc_c[0]) * (uniform(0, 1)) * (np.array(particle.pbest) - np.array(particle.position))
-        social_component = (acc_c[1]) * (uniform(0, 1)) * (np.array(particle.gbest) - np.array(particle.position))
+        initial = [[inertia_weight * v for v in velocity] for velocity in particle.velocity]
+        cognitive_component = self.get_cognitive_component(particle, acc_c)
+        social_component = self.get_social_component(particle, acc_c)
 
-        return initial + cognitive_component + social_component
+        return self.add_three_tensors(initial, cognitive_component, social_component)
+
+    def get_cognitive_component(self, particle, acc_c):
+        magic = (acc_c[0]) * (uniform(0, 1))
+        cognitive_component = self.perform_tensor_operations(math.subtract, particle.pbest, particle.position)
+        cognitive_component = [[c * magic for c in component] for component in cognitive_component]
+        return cognitive_component
+
+    def get_social_component(self, particle, acc_c):
+        magic = (acc_c[1]) * (uniform(0, 1))
+        social_component = self.perform_tensor_operations(math.subtract, particle.gbest, particle.position)
+        social_component = [[c * magic for c in component] for component in social_component]
+        return social_component
+
+    def perform_tensor_operations(self, operation_function, tensor_1, tensor_2):
+        new_tensor = []
+        for i in range(len(tensor_1)):
+            vars = []
+            for n in range(len(tensor_1[i])):
+                vars.append(operation_function(tensor_1[i][n], tensor_2[i][n]))
+            new_tensor.append(
+                vars
+            )
+        return new_tensor
+
+    def add_three_tensors(self, tensor_1, tensor_2, tensor_3):
+        new_tensor = []
+        for i in range(len(tensor_1)):
+            vars = []
+            for n in range(len(tensor_1[i])):
+                vars.append(tensor_1[i][n] + tensor_2[i][n] + tensor_3[i][n])
+            new_tensor.append(
+                vars
+            )
+        return new_tensor
+
+    def create_empty_tensor_with_same_shape(self, tensor):
+        new_tensor = []
+        for i in range(len(tensor)):
+            vars = []
+            for x in tensor:
+                vars.append(0 * x)
+            new_tensor.append(
+                vars
+            )
+        return new_tensor
 
     def calc_new_position(self, particle):
-        return (particle.position + particle.velocity).tolist()
+        return self.perform_tensor_operations(math.add, particle.position, particle.velocity)

@@ -42,7 +42,7 @@ def determine_loss_function_based_on_fitness_function(fitness_function):
         return CategoricalCrossentropy()
 
 
-def get_trainable_weights(model, keras_layers=(Dense, Conv2D), as_numpy_array=True):
+def get_trainable_weights(model, keras_layers=(Dense, Conv2D)):
     weights = []
     for layer in model.layers:
         if layer.trainable != True or len(layer.trainable_weights) == 0 or layer.name == 'predictions':
@@ -50,11 +50,10 @@ def get_trainable_weights(model, keras_layers=(Dense, Conv2D), as_numpy_array=Tr
 
         if isinstance(layer, keras_layers):
             weights.append(layer.weights)
-            # Need to flatten weights
     return weights
 
 
-def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D), as_numpy_array=True):
+def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D)):
     i = 0
     for layer in model.layers:
         if layer.trainable != True or len(layer.weights) == 0 or layer.name == 'predictions':
@@ -65,8 +64,7 @@ def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D), as_numpy
                 np_weights[n] = np.zeros_like(layer.get_weights()[n])
             for c in range(len(layer.weights)):
                 if isinstance(weights[i][c], Tensor):
-                    tf_var = Variable(weights[i][c])
-                    np_weights[c] = tf_var.value().numpy()
+                    np_weights[c] = weights[i][c].numpy()
                 elif isinstance(weights[i][c], np.ndarray):
                     np_weights[c] = weights[i][c]
                 else:
