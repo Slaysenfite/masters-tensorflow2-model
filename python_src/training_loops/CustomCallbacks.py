@@ -128,15 +128,17 @@ class RunMetaHeuristicOnPlateau(Callback):
                 self.wait += 1
                 if self.wait >= self.patience:
                     if self.meta_heuristic == 'pso':
-                        self.apply_swarm_optimization()
+                        meta_opt = self.apply_swarm_optimization()
                     elif self.meta_heuristic == 'ga':
-                        self.apply_genetic_algorithm()
+                        meta_opt = self.apply_genetic_algorithm()
                     else:
-                        print('[WARNING] Incorrect meta-heuristic specified, must be either "pso" or "ga"')
+                        raise Exception('[WARNING] Incorrect meta-heuristic specified, must be either "pso" or "ga"')
                     if self.verbose > 0:
                         print('\nEpoch %05d: RunMetaHeuristicOnPlateau running meta-heuristic algorithm %s with '
                               'hyperparameters [population size: %d iterations: %d]'
                               % (epoch + 1, self.meta_heuristic, self.population_size, self.iterations))
+                    model = meta_opt.get_optimized_model()
+                    return model
                     self.cooldown_counter = self.cooldown
                     self.wait = 0
 
@@ -144,21 +146,17 @@ class RunMetaHeuristicOnPlateau(Callback):
         return self.cooldown_counter > 0
 
     def apply_swarm_optimization(self):
-        pso = PsoEnv(swarm_size=self.population_size,
+        return PsoEnv(num_solutions=self.population_size,
+                      iterations=self.iterations,
+                      model=self.model,
+                      X=self.X,
+                      y=self.y,
+                      fitness_function=self.fitness_function)
+
+    def apply_genetic_algorithm(self):
+        return GaEnv(num_solutions=self.population_size,
                      iterations=self.iterations,
                      model=self.model,
                      X=self.X,
                      y=self.y,
                      fitness_function=self.fitness_function)
-        model = pso.get_pso_model()
-        return model
-
-    def apply_genetic_algorithm(self):
-        ga = GaEnv(population_size=self.population_size,
-                   iterations=self.iterations,
-                   model=self.model,
-                   X=self.X,
-                   y=self.y,
-                   fitness_function=self.fitness_function)
-        model = ga.get_ga_model()
-        return model
