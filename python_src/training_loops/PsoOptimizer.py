@@ -1,11 +1,13 @@
 from random import uniform, seed
 
-import numpy as np
+from tensorflow._api.v2 import math
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.losses import CategoricalCrossentropy
 
-from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights, calc_solution_fitness
+from training_loops.MetaheuristicOptimizer import MetaheuristicOptimizer
+from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights, calc_solution_fitness, \
+    convert_tenor_weights_to_tf_variable, perform_tensor_operations, add_three_tensors
 
 seed(1)
 
@@ -16,7 +18,7 @@ V_MAX = 2
 
 
 class Particle:
-    def __init__(self, position, fitness, velocity=0.0):
+    def __init__(self, position, fitness, velocity):
         self.position = position
         self.velocity = velocity
         self.gbest = None
@@ -26,49 +28,45 @@ class Particle:
         self.gbest_fitness = None
 
 
-class PsoEnv():
-    def __init__(self, fitness_function=calc_solution_fitness, iterations=5, swarm_size=8, model=None, X=None, y=None, layers_to_optimize=(Conv2D, Dense)):
-        self.fitness_function = fitness_function
-        self.iterations = iterations
-        self.swarm_size = swarm_size
-        self.model = model
-        self.X = X
-        self.y = y
-        self.layers_to_optimize = layers_to_optimize
+class PsoEnv(MetaheuristicOptimizer):
+    def __init__(self, fitness_function=calc_solution_fitness, iterations=5, num_solutions=8, model=None, X=None,
+                 y=None, layers_to_optimize=(Conv2D, Dense)):
+        super().__init__(fitness_function, iterations, num_solutions, model, X, y, layers_to_optimize)
 
-    def get_pso_model(self):
-        iteration = 0;
-        loss_metric = CategoricalCrossentropy()
+    def get_optimized_model(self):
+        iteration = 0
         self.model.reset_metrics()
         weights = get_trainable_weights(self.model, self.layers_to_optimize)
 
-        swarm = self.initialize_swarm(self.swarm_size, weights, self.model, loss_metric, self.X, self.y)
+        swarm = self.initialize_swarm(self.num_solutions, weights, self.model, self.loss_metric, self.X, self.y)
 
         best_particle = self.find_best_particle(swarm)
         self.set_gbest(swarm, best_particle)
 
         while iteration < self.iterations:
-            self.update_positions(swarm, self.model, loss_metric, self.X, self.y)
+            self.update_positions(swarm, self.model, self.loss_metric, self.X, self.y)
 
             self.update_gbest(swarm)
 
-            print(' PSO training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
+            print(' \nPSO training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
                 swarm[0].gbest_fitness))
             iteration += 1
-        best_weights = swarm[0].gbest
+        best_weights = convert_tenor_weights_to_tf_variable(swarm[0].gbest)
 
         return set_trainable_weights(self.model, best_weights, self.layers_to_optimize)
 
     def initialize_swarm(self, swarm_size, weights, model, loss_metric, X, y):
         particles = [None] * swarm_size
-        particles[0] = Particle(weights, self.fitness_function(weights, model, loss_metric, X, y))
+        starting_velocity = [[w * 0 for w in weight] for weight in weights]
+        particles[0] = Particle(weights, self.fitness_function(weights, model, loss_metric, X, y), starting_velocity)
         for p in range(1, swarm_size):
-            new_weights = [w * uniform(0, 1) for w in weights]
+            new_weights = [[w * uniform(0, 1) for w in weight] for weight in weights]
             initial_fitness = self.fitness_function(new_weights, model, loss_metric, X, y)
-            particles[p] = Particle(np.array(new_weights), initial_fitness)
+            particles[p] = Particle(position=new_weights, fitness=initial_fitness, velocity=starting_velocity)
         return particles
 
-    def set_gbest(self, particles, best_particle):
+    @staticmethod
+    def set_gbest(particles, best_particle):
         for particle in particles:
             particle.gbest = best_particle.position
             particle.gbest_fitness = best_particle.best_fitness
@@ -91,7 +89,8 @@ class PsoEnv():
         if best_particle.best_fitness < initial_best_fitness:
             self.set_gbest(swarm, best_particle)
 
-    def find_best_particle(self, particles):
+    @staticmethod
+    def find_best_particle(particles):
         best_particle = particles[0]
         for i in range(1, len(particles)):
             if particles[i].current_fitness < best_particle.current_fitness:
@@ -99,23 +98,26 @@ class PsoEnv():
         return best_particle
 
     def update_velocity(self, particle, inertia_weight, acc_c):
-        initial = (inertia_weight) * (particle.velocity)
-        cognitive_component = (acc_c[0]) * (uniform(0, 1)) * (particle.pbest - particle.position)
-        social_component = (acc_c[1]) * (uniform(0, 1)) * (particle.gbest - particle.position)
+        initial = [[inertia_weight * v for v in velocity] for velocity in particle.velocity]
+        cognitive_component = self.get_cognitive_component(particle, acc_c)
+        social_component = self.get_social_component(particle, acc_c)
 
-        new_velocity = initial + cognitive_component + social_component
+        return add_three_tensors(initial, cognitive_component, social_component)
 
-        # self.clamp_velocity(new_velocity)
+    @staticmethod
+    def get_cognitive_component(particle, acc_c):
+        magic = (acc_c[0]) * (uniform(0, 1))
+        cognitive_component = perform_tensor_operations(math.subtract, particle.pbest, particle.position)
+        cognitive_component = [[c * magic for c in component] for component in cognitive_component]
+        return cognitive_component
 
-        return new_velocity
+    @staticmethod
+    def get_social_component(particle, acc_c):
+        magic = (acc_c[1]) * (uniform(0, 1))
+        social_component = perform_tensor_operations(math.subtract, particle.gbest, particle.position)
+        social_component = [[c * magic for c in component] for component in social_component]
+        return social_component
 
-    def calc_new_position(self, particle):
-        return particle.position + particle.velocity
-
-    def clamp_velocity(self, new_velocity):
-        for v in new_velocity.flat:
-            for v1 in v.flat:
-                if v1 < -V_MAX:
-                    v1 = -V_MAX
-                if v1 > V_MAX:
-                    v1 = V_MAX
+    @staticmethod
+    def calc_new_position(particle):
+        return perform_tensor_operations(math.add, particle.position, particle.velocity)

@@ -13,10 +13,12 @@ from configurations.DataSet import mnist_data_set as data_set
 from configurations.TrainingConfig import create_callbacks, create_required_directories, FIGURE_OUTPUT, output_dir
 from configurations.TrainingConfig import mnist_hyperparameters as hyperparameters
 from metrics.MetricsReporter import MetricReporter
+from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
-from utils.ScriptHelper import generate_script_report
+from utils.ScriptHelper import generate_script_report, read_cmd_line_args
 
 print('[BEGIN] Start script...\n')
+hyperparameters, opt, data_set = read_cmd_line_args(hyperparameters, data_set)
 print(hyperparameters.report_hyperparameters())
 
 print('[INFO] Creating required directories...')
@@ -100,9 +102,25 @@ def evaluate_model(dataX, dataY, n_folds=5):
         # select rows for train and test
         trainX, trainY, testX, testY = dataX[train_ix], dataY[train_ix], dataX[test_ix], dataY[test_ix]
         # fit model
-        history = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
-                                )
-        # evaluate model
+        # Setup callbacks
+        callbacks = create_callbacks()
+
+        if hyperparameters.meta_heuristic != 'none':
+            meta_callback = RunMetaHeuristicOnPlateau(
+                X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=3, iterations=3,
+                monitor='val_loss', factor=0.2, patience=0, verbose=1, mode='min',
+                min_delta=0.1, cooldown=0)
+            callbacks.append(meta_callback)
+        if hyperparameters.tf_fit:
+            print('Fit brah')
+            history = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+                          steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
+                          callbacks=callbacks)
+        else:
+            history = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
+                                    meta_heuristic=hyperparameters.meta_heuristic,
+                                    meta_heuristic_order=hyperparameters.meta_heuristic_order)
+            # evaluate model
         acc = model.evaluate(testX, testY)
         print(str(model.metrics_names))
         print(str(acc))
