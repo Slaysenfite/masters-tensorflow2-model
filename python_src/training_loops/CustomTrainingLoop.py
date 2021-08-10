@@ -29,7 +29,7 @@ def apply_swarm_optimization(X, model, y, fitness_function):
 
 
 def apply_genetic_algorithm(X, model, y, fitness_function):
-    ga = GaEnv(population_size=20, iterations=10, model=model, X=X, y=y, fitness_function=fitness_function)
+    ga = GaEnv(population_size=5, iterations=5, model=model, X=X, y=y, fitness_function=fitness_function)
     model = ga.get_ga_model()
     return model
 

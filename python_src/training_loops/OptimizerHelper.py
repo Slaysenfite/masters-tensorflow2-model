@@ -74,9 +74,44 @@ def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D)):
     return model
 
 
-def flatten_weights_to_ndarr(weights):
-    return [weight for sublist in weights for weight in sublist]
+def convert_tenor_weights_to_tf_variable(weights):
+    for r in range(len(weights)):
+        for c in range(len(weights[r])):
+            weights[r][c] = Variable(weights[r][c])
+    return weights
 
 
-def reshape_weights(weights, shape):
-    return np.array(weights, shape)
+def perform_tensor_operations(operation_function, tensor_1, tensor_2):
+    new_tensor = []
+    for i in range(len(tensor_1)):
+        vars = []
+        for n in range(len(tensor_1[i])):
+            vars.append(operation_function(tensor_1[i][n], tensor_2[i][n]))
+        new_tensor.append(
+            vars
+        )
+    return new_tensor
+
+
+def add_three_tensors(tensor_1, tensor_2, tensor_3):
+    new_tensor = []
+    for i in range(len(tensor_1)):
+        vars = []
+        for n in range(len(tensor_1[i])):
+            vars.append(tensor_1[i][n] + tensor_2[i][n] + tensor_3[i][n])
+        new_tensor.append(
+            vars
+        )
+    return new_tensor
+
+
+def create_empty_tensor_with_same_shape(tensor):
+    new_tensor = []
+    for i in range(len(tensor)):
+        vars = []
+        for x in tensor:
+            vars.append(0 * x)
+        new_tensor.append(
+            vars
+        )
+    return new_tensor

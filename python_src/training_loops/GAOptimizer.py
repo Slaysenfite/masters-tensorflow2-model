@@ -5,7 +5,7 @@ from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
 
 from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights, calc_solution_fitness, \
-    determine_loss_function_based_on_fitness_function
+    determine_loss_function_based_on_fitness_function, convert_tenor_weights_to_tf_variable
 
 HALL_OF_FAME_SIZE = 3
 
@@ -22,8 +22,8 @@ class Solution:
     def __init__(self, weights_arr, fitness):
         self.weights_arr = weights_arr
         self.fitness = fitness
-        self.weights_flat, self.shapes = flatten(weights_arr, list(), list())
-        self.shape = weights_arr.shape
+        # self.weights_flat, self.shapes = flatten(weights_arr, list(), list())
+        # self.shape = weights_arr.shape
 
 
 class GaEnv():
@@ -42,8 +42,8 @@ class GaEnv():
         iteration = 0
         weights = get_trainable_weights(self.model, self.layers_to_optimize)
 
-        individuals = self.initialize_population(self.population_size, weights, self.model, self.loss_metric, self.X, self.y)
-        individuals = self.update_fitness(individuals, self.model, self.loss_metric, self.X, self.y)
+        individuals = self.initialize_population(self.population_size, weights, self.model, self.X, self.y)
+        individuals = self.update_fitness(individuals, self.model, self.X, self.y)
 
         while iteration < self.iterations:
             individuals = self.reproduce_next_gen(individuals)
@@ -52,7 +52,7 @@ class GaEnv():
             print(' GA training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
                 individuals[0].fitness))
             iteration += 1
-        best_weights = individuals[0].weights_arr
+        best_weights = convert_tenor_weights_to_tf_variable(individuals[0].weights_arr)
 
         return set_trainable_weights(self.model, best_weights, self.layers_to_optimize)
 
@@ -61,8 +61,8 @@ class GaEnv():
         fitness = self.fitness_function(weights, model, self.loss_metric, X, y)
         individuals[0] = Solution(weights, fitness)
         for p in range(1, population_size):
-            new_weights = [w * uniform(0, 1) for w in weights]
-            individuals[p] = Solution(np.array(new_weights), 1000)
+            new_weights = [[w * uniform(0, 1) for w in weight] for weight in weights]
+            individuals[p] = Solution(new_weights, 1000)
         return individuals
 
     def find_best_individual(self, individuals):
@@ -163,3 +163,4 @@ def flatten(arr, weights, shapes):
             weights.append(arr[i][c])
         shapes.append(len(arr[i]))
     return np.array(weights).flatten(), shapes
+    # return [weight for sublist in weights for weight in sublist]
