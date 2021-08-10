@@ -1,6 +1,6 @@
 from random import uniform, seed, randint
 
-import numpy as np
+from tensorflow._api.v2 import math
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
 
@@ -15,12 +15,14 @@ TOURNAMENT_SIZE = 4
 
 CROSSOVER_PROBABILITY = 50
 
+MUTATION_PROBABILTY = 3
+
 seed(1)
 
 
 class Solution:
-    def __init__(self, weights_arr, fitness):
-        self.weights_arr = weights_arr
+    def __init__(self, weights, fitness):
+        self.weights = weights
         self.fitness = fitness
         # self.weights_flat, self.shapes = flatten(weights_arr, list(), list())
         # self.shape = weights_arr.shape
@@ -48,16 +50,17 @@ class GaEnv():
         while iteration < self.iterations:
             individuals = self.reproduce_next_gen(individuals)
 
-            individuals = self.update_fitness(individuals, self.model, self.loss_metric, self.X, self.y)
-            print(' GA training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
+            individuals = self.update_fitness(individuals, self.model, self.X, self.y)
+            print('\n GA training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
                 individuals[0].fitness))
             iteration += 1
-        best_weights = convert_tenor_weights_to_tf_variable(individuals[0].weights_arr)
+        best_weights = convert_tenor_weights_to_tf_variable(individuals[0].weights)
 
         return set_trainable_weights(self.model, best_weights, self.layers_to_optimize)
 
     def initialize_population(self, population_size, weights, model, X, y):
         individuals = [None] * population_size
+        weights = [[w * 1 for w in weight] for weight in weights]
         fitness = self.fitness_function(weights, model, self.loss_metric, X, y)
         individuals[0] = Solution(weights, fitness)
         for p in range(1, population_size):
@@ -74,7 +77,7 @@ class GaEnv():
 
     def update_fitness(self, individuals, model, X, y):
         for individual in individuals:
-            individual.fitness = self.fitness_function(individual.weights_arr, model, self.loss_metric, X, y)
+            individual.fitness = self.fitness_function(individual.weights, model, self.loss_metric, X, y)
         individuals.sort(key=lambda indv: indv.fitness, reverse=False)
         return individuals
 
@@ -83,7 +86,6 @@ class GaEnv():
             individual.weight_arr = individual.w
 
     def reproduce_next_gen(self, individuals):
-        shape = individuals[0].shape
         next_gen = list()
         for i in range(HALL_OF_FAME_SIZE):
             next_gen.append(individuals[i])
@@ -91,8 +93,8 @@ class GaEnv():
             indv1, indv2 = self.select_indvs_for_reproduction(individuals)
             rand = randint(1, 100)
             if rand > CROSSOVER_THRESHOLD:
-                offspring = self.two_point_crossover(indv1, indv2, shape)
-                next_gen.append(self.mutate(offspring.weights_flat, shape))
+                offspring = self.two_point_crossover(indv1, indv2)
+                next_gen.append(self.mutate(offspring))
             else:
                 if next_gen.count(indv1) == 0:
                     next_gen.append(indv1)
@@ -107,60 +109,49 @@ class GaEnv():
         tournament.sort(key=lambda indv: indv.fitness, reverse=False)
         return tournament[0], tournament[1]
 
-    def two_point_crossover(self, individual1, individual2, shape):
-        offspring = list()
+    def two_point_crossover(self, individual1, individual2):
+        one = individual1.weights
+        two = individual2.weights
 
-        one = individual1.weights_flat.tolist()
-        two = individual2.weights_flat.tolist()
+        new_weights = []
+        for i in range(len(one)):
+            vars = []
+            for n in range(len(one[i])):
+                vars.append(self.perform_element_level_crossover(one[i][n], two[i][n]))
+            new_weights.append(
+                vars
+            )
 
-        for r in range(len(one)):
-            offspring.append(np.zeros_like(one[r]))
-            for c in range(len(one[r])):
-                if isinstance(offspring[r][c], np.float32):
-                    offspring[r][c] = self.perform_element_level_crossover(one[r][c], two[r][c])
-                else:
-                    for w in range(len(one[r][c])):
-                        offspring[r][c][w] = self.perform_element_level_crossover(one[r][c][w], two[r][c][w])
+        return Solution(new_weights,
+                        self.fitness_function(new_weights, self.model, self.loss_metric, self.X, self.y))
 
-        new_weight = np.array(offspring).reshape(shape)
-
-        return Solution(new_weight,
-                        self.fitness_function(new_weight, self.model, self.loss_metric, self.X, self.y))
-
-    def perform_element_level_crossover(self, one_element, two_element):
+    @staticmethod
+    def perform_element_level_crossover(one_element, two_element):
         rand_num = uniform(0, 100)
         if rand_num > CROSSOVER_PROBABILITY:
             return two_element
         else:
             return one_element
 
-    def mutate(self, offspring, shape=(2, 2)):
-        for r in range(len(offspring)):
-            for c in range(len(offspring[r])):
-                if isinstance(offspring[r][c], np.float32):
-                    if offspring[r][c] == 0:
-                        offspring[r][c] = uniform(-1, 1)
-                    else:
-                        offspring[r][c] *= uniform(0, 1)
+    def mutate(self, offspring):
+        new_weights = []
+        for i in range(len(offspring.weights)):
+            vars = []
+            for n in range(len(offspring.weights[i])):
+                if randint(1, 100) <= MUTATION_PROBABILTY:
+                    new_vals = math.scalar_mul(uniform(-1, 1), offspring.weights[i][n])
+                    vars.append(new_vals)
                 else:
-                    new_vals = [w * uniform(0, 1) for w in offspring[r][c]]
-                    offspring[r][c] = new_vals
+                    vars.append(offspring.weights[i][n])
+            new_weights.append(
+                vars
+            )
 
-        new_weight = np.array(offspring).reshape(shape)
-        return Solution(new_weight,
-                        self.fitness_function(new_weight, self.model, self.loss_metric, self.X, self.y))
+        return Solution(new_weights,
+                        self.fitness_function(new_weights, self.model, self.loss_metric, self.X, self.y))
 
     def gen_rand_num_list(self, size, a, b):
         l = list()
         for i in range(size):
             l.append(randint(a, b))
         return l
-
-
-def flatten(arr, weights, shapes):
-    for i in range(len(arr)):
-        for c in range(len(arr[i])):
-            weights.append(arr[i][c])
-        shapes.append(len(arr[i]))
-    return np.array(weights).flatten(), shapes
-    # return [weight for sublist in weights for weight in sublist]

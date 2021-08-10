@@ -1,5 +1,6 @@
 import numpy as np
-from tensorflow import Tensor, Variable
+import tensorflow as tf
+import tensorflow.python.framework.ops as tf_ops
 from tensorflow.python.keras.layers import Conv2D, Dense
 from tensorflow.python.keras.metrics import TrueNegatives, TruePositives, FalsePositives, \
     FalseNegatives, BinaryCrossentropy, CategoricalCrossentropy
@@ -63,7 +64,7 @@ def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D)):
             for n in range(len(np_weights)):
                 np_weights[n] = np.zeros_like(layer.get_weights()[n])
             for c in range(len(layer.weights)):
-                if isinstance(weights[i][c], Tensor):
+                if isinstance(weights[i][c], tf.Tensor) or isinstance(weights[i][c], tf_ops.Tensor):
                     np_weights[c] = weights[i][c].numpy()
                 elif isinstance(weights[i][c], np.ndarray):
                     np_weights[c] = weights[i][c]
@@ -77,7 +78,8 @@ def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D)):
 def convert_tenor_weights_to_tf_variable(weights):
     for r in range(len(weights)):
         for c in range(len(weights[r])):
-            weights[r][c] = Variable(weights[r][c])
+            if isinstance(weights[r][c], tf.Tensor) or isinstance(weights[r][c], tf_ops.Tensor):
+                weights[r][c] = tf.Variable(weights[r][c])
     return weights
 
 

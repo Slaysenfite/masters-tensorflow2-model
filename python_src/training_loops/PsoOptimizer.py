@@ -53,7 +53,7 @@ class PsoEnv:
 
             self.update_gbest(swarm)
 
-            print(' PSO training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
+            print(' \nPSO training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
                 swarm[0].gbest_fitness))
             iteration += 1
         best_weights = convert_tenor_weights_to_tf_variable(swarm[0].gbest)
