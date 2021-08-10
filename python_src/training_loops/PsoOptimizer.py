@@ -5,6 +5,7 @@ from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
 from tensorflow.python.keras.losses import CategoricalCrossentropy
 
+from training_loops.MetaheuristicOptimizer import MetaheuristicOptimizer
 from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights, calc_solution_fitness, \
     convert_tenor_weights_to_tf_variable, perform_tensor_operations, add_three_tensors
 
@@ -27,29 +28,23 @@ class Particle:
         self.gbest_fitness = None
 
 
-class PsoEnv:
-    def __init__(self, fitness_function=calc_solution_fitness, iterations=5, swarm_size=8, model=None, X=None, y=None, layers_to_optimize=(Conv2D, Dense)):
-        self.fitness_function = fitness_function
-        self.iterations = iterations
-        self.swarm_size = swarm_size
-        self.model = model
-        self.X = X
-        self.y = y
-        self.layers_to_optimize = layers_to_optimize
+class PsoEnv(MetaheuristicOptimizer):
+    def __init__(self, fitness_function=calc_solution_fitness, iterations=5, num_solutions=8, model=None, X=None,
+                 y=None, layers_to_optimize=(Conv2D, Dense)):
+        super().__init__(fitness_function, iterations, num_solutions, model, X, y, layers_to_optimize)
 
-    def get_pso_model(self):
+    def get_optimized_model(self):
         iteration = 0
-        loss_metric = CategoricalCrossentropy()
         self.model.reset_metrics()
         weights = get_trainable_weights(self.model, self.layers_to_optimize)
 
-        swarm = self.initialize_swarm(self.swarm_size, weights, self.model, loss_metric, self.X, self.y)
+        swarm = self.initialize_swarm(self.num_solutions, weights, self.model, self.loss_metric, self.X, self.y)
 
         best_particle = self.find_best_particle(swarm)
         self.set_gbest(swarm, best_particle)
 
         while iteration < self.iterations:
-            self.update_positions(swarm, self.model, loss_metric, self.X, self.y)
+            self.update_positions(swarm, self.model, self.loss_metric, self.X, self.y)
 
             self.update_gbest(swarm)
 
