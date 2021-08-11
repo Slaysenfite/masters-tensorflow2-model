@@ -6,14 +6,14 @@ import tensorflow as tf
 from IPython.core.display import clear_output
 from numpy import expand_dims
 from sklearn.model_selection import train_test_split
-from tensorflow.python.keras.layers import Conv2D
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 
 from configurations.DataSet import cbis_seg_data_set as data_set
-from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir
+from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, create_callbacks
 from metrics.MetricsUtil import iou_coef, dice_coef
 from networks.UNet import build_pretrained_unet
 from networks.UNetSeg import unet_seg
+from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
 from training_loops.OptimizerHelper import calc_seg_fitness
 from utils.ImageLoader import load_seg_images
@@ -48,6 +48,16 @@ else:
 model.compile(optimizer=opt,
               loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
+
+# Setup callbacks
+callbacks = create_callbacks()
+
+if hyperparameters.meta_heuristic != 'none':
+    meta_callback = RunMetaHeuristicOnPlateau(
+        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=10, iterations=10,
+        monitor='val_loss', factor=0.2, patience=3, verbose=1, mode='min',
+        min_delta=0.05, cooldown=0)
+    callbacks.append(meta_callback)
 
 model.summary()
 

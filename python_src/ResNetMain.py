@@ -12,7 +12,7 @@ from configurations.DataSet import bcs_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks, \
     MODEL_OUTPUT
 from metrics.MetricsReporter import MetricReporter
-from networks.NetworkHelper import create_classification_layers
+from networks.NetworkHelper import create_classification_layers, compile_with_regularization
 from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
 from utils.ImageLoader import load_rgb_images, supplement_training_data
@@ -74,16 +74,16 @@ else:
     model = create_classification_layers(base_model=model, classes=len(data_set.class_names))
 
 # Compile model
-model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
+compile_with_regularization(model=model, loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
 
 # Setup callbacks
 callbacks = create_callbacks()
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
-        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=3, iterations=3,
+        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=10, iterations=10,
         monitor='val_loss', factor=0.2, patience=0, verbose=1, mode='min',
-        min_delta=1, cooldown=0)
+        min_delta=5, cooldown=0)
     callbacks.append(meta_callback)
 
 # train the network

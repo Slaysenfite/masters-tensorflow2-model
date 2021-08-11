@@ -25,8 +25,6 @@ class Solution:
     def __init__(self, weights, fitness):
         self.weights = weights
         self.fitness = fitness
-        # self.weights_flat, self.shapes = flatten(weights_arr, list(), list())
-        # self.shape = weights_arr.shape
 
 
 class GaEnv(MetaheuristicOptimizer):
