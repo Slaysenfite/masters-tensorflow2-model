@@ -33,6 +33,7 @@ class GaEnv(MetaheuristicOptimizer):
         super().__init__(fitness_function, iterations, num_solutions, model, X, y, layers_to_optimize)
 
     def get_optimized_model(self):
+        print('\nRunning GA algorithm')
         iteration = 0
         weights = get_trainable_weights(self.model, self.layers_to_optimize)
 

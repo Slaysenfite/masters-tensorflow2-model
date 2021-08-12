@@ -34,6 +34,7 @@ def read_cmd_line_args(hyperparameters, dataset):
     parser.add_argument('--dataset', type=str)
     parser.add_argument('--augmentation', type=str)
     parser.add_argument('--preloaded_weights', type=str)
+    parser.add_argument('--preloaded_experiment', type=str)
     parser.add_argument('--tf_fit', type=str)
     args = parser.parse_args()
 
@@ -42,6 +43,9 @@ def read_cmd_line_args(hyperparameters, dataset):
 
     if args.meta_heuristic is not None:
         hyperparameters.meta_heuristic = args.meta_heuristic
+
+    if args.preloaded_experiment is not None:
+        hyperparameters.weights_of_experiment_id = args.preloaded_experiment
 
     if args.meta_heuristic_order is not None and args.meta_heuristic_order == 'first':
         hyperparameters.meta_heuristic_order = 'first'

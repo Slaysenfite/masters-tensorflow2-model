@@ -29,7 +29,7 @@ def compile_with_regularization(model,
             for attr in attrs:
                 if hasattr(layer, attr):
                     setattr(layer, attr, regularizer)
-                    print('[INFO] Adding {} {} to {}'.format(regularization_type, attr, layer.name))
+                    # print('[INFO] Adding {} {} to {}'.format(regularization_type, attr, layer.name))
     # compile model
     model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 

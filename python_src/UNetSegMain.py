@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 
 from configurations.DataSet import cbis_seg_data_set as data_set
-from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, create_callbacks
+from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, create_callbacks, MODEL_OUTPUT
 from metrics.MetricsUtil import iou_coef, dice_coef
 from networks.UNet import build_pretrained_unet
 from networks.UNetSeg import unet_seg
@@ -45,18 +45,23 @@ if hyperparameters.preloaded_weights:
     model = build_pretrained_unet(IMAGE_DIMS, len(data_set.class_names))
 else:
     model = unet_seg(IMAGE_DIMS)
+
+if hyperparameters.weights_of_experiment_id is not None:
+    path_to_weights = '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.weights_of_experiment_id)
+    print('[INFO] Loading weights from {}'.format(path_to_weights))
+    model.load_weights(path_to_weights)
+
 model.compile(optimizer=opt,
               loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
-model.summary()
 
 # Setup callbacks
 callbacks = create_callbacks(hyperparameters)
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
-        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=10, iterations=10,
-        monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
+        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=30, iterations=10,
+monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
         min_delta=0.05, cooldown=0)
     callbacks.append(meta_callback)
 

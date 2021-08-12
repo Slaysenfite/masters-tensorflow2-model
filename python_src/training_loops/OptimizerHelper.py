@@ -7,10 +7,12 @@ from tensorflow.python.keras.metrics import TrueNegatives, TruePositives, FalseP
 
 from metrics.MetricsUtil import iou_coef, dice_coef
 
+MAX_LAYER_FOR_OPTIMIZATION = 6
+
 
 def calc_solution_fitness(weights, model, loss_metric, X, y):
     set_trainable_weights(model, weights)
-    ŷ = model(X, training=True)
+    ŷ = model(X, training=False)
 
     tn = TrueNegatives()
     tp = TruePositives()
@@ -43,22 +45,25 @@ def determine_loss_function_based_on_fitness_function(fitness_function):
         return CategoricalCrossentropy()
 
 
-def get_trainable_weights(model, keras_layers=(Dense, Conv2D)):
+def get_trainable_weights(model, keras_layers=(Dense, Conv2D), num_layers=MAX_LAYER_FOR_OPTIMIZATION):
     weights = []
-    for layer in model.layers:
+    layer_count = 0
+    for layer in reversed(model.layers):
         if layer.trainable != True or len(layer.trainable_weights) == 0 or layer.name == 'predictions':
-            pass
-
+            continue
         if isinstance(layer, keras_layers):
             weights.append(layer.weights)
+            layer_count += 1
+        if layer_count == num_layers:
+            return weights
     return weights
 
 
-def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D)):
+def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D), num_layers=MAX_LAYER_FOR_OPTIMIZATION):
     i = 0
-    for layer in model.layers:
+    for layer in reversed(model.layers):
         if layer.trainable != True or len(layer.weights) == 0 or layer.name == 'predictions':
-            pass
+            continue
         if isinstance(layer, keras_layers):
             np_weights = np.zeros_like(layer.get_weights())
             for n in range(len(np_weights)):
@@ -72,6 +77,8 @@ def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D)):
                     np_weights[c] = weights[i][c].value().numpy()
             layer.set_weights(np_weights)
             i += 1
+        if i == num_layers:
+            return weights
     return model
 
 
