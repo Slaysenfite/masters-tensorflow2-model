@@ -6,7 +6,6 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.python.keras.utils import data_utils
 
 from configurations.DataSet import cbis_ddsm_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, MODEL_OUTPUT, create_callbacks
@@ -16,7 +15,7 @@ from networks.NetworkHelper import create_classification_layers
 from networks.UNet import build_unet, build_pretrained_unet
 from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
-from utils.ImageLoader import load_greyscale_images, supplement_training_data, load_rgb_images
+from utils.ImageLoader import supplement_training_data, load_rgb_images
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
 
 print('Python version: {}'.format(sys.version))
@@ -59,19 +58,20 @@ loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
 if hyperparameters.preloaded_weights:
     model = build_pretrained_unet(IMAGE_DIMS, len(data_set.class_names))
-    model = create_classification_layers(base_model=model, classes=len(data_set.class_names))
+    model = create_classification_layers(base_model=model, classes=len(data_set.class_names), dropout_prob=0.3)
 else:
     model = build_unet(IMAGE_DIMS, len(data_set.class_names))
 model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
+# model.summary()
 
 # Setup callbacks
-callbacks = create_callbacks()
+callbacks = create_callbacks(hyperparameters)
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
-        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=3, iterations=3,
-        monitor='val_loss', factor=0.2, patience=0, verbose=1, mode='min',
-        min_delta=1, cooldown=0)
+        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=10, iterations=10,
+        monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
+        min_delta=0.05, cooldown=0)
     callbacks.append(meta_callback)
 
 start_time = time.time()
