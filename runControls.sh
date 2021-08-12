@@ -11,7 +11,7 @@ workon wesselsenv
 #python python_src/ResNetMain.py --optimizer=adam --id=MCRD001A01 --augmentation=True --dataset=cbis --tf_fit=False --preloaded_weights=False
 #python python_src/ResNetMain.py --optimizer=adam --id=MCRD001A02 --augmentation=True --dataset=cbis --tf_fit=False --preloaded_weights=True
 python python_src/ResNetMain.py --optimizer=adam --id=MCRD001A03 --augmentation=True --dataset=cbis --tf_fit=True --preloaded_weights=True
-python python_src/ResNetMain.py --optimizer=adam --id=MCRD001A03 --augmentation=True --dataset=cbis --tf_fit=True --preloaded_weights=True
+python python_src/ResNetMain.py --optimizer=adam --id=MCRD001A --augmentation=False --dataset=cbis --tf_fit=True --preloaded_weights=True #Not yet Run
 #python python_src/ResNetMain.py --optimizer=adam --id=MCRD001A04 --augmentation=True --dataset=cbis --tf_fit=True --preloaded_weights=False
 
 #python python_src/UNetMain.py --optimizer=adam --id=MCUD001A01 --augmentation=True --dataset=cbis --tf_fit=False --preloaded_weights=False

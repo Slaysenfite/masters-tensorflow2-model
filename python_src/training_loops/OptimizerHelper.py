@@ -4,6 +4,7 @@ import tensorflow.python.framework.ops as tf_ops
 from tensorflow.python.keras.layers import Conv2D, Dense
 from tensorflow.python.keras.metrics import TrueNegatives, TruePositives, FalsePositives, \
     FalseNegatives, BinaryCrossentropy, CategoricalCrossentropy
+from tensorflow.python.ops.numpy_ops.np_arrays import convert_to_tensor
 
 from metrics.MetricsUtil import iou_coef, dice_coef
 
@@ -12,7 +13,11 @@ MAX_LAYER_FOR_OPTIMIZATION = 6
 
 def calc_solution_fitness(weights, model, loss_metric, X, y):
     set_trainable_weights(model, weights)
-    ŷ = model(X, training=False)
+    ŷ = model(X, training=True)
+
+    # The following code produces the same ouput as model(X, training=False) but in 3/4 of the time:
+    # predictions = model.predict(X)
+    # ŷ = convert_to_tensor(predictions)
 
     tn = TrueNegatives()
     tp = TruePositives()

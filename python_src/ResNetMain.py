@@ -50,7 +50,7 @@ if hyperparameters.augmentation:
         zoom_range=0.05,
         fill_mode='nearest')
 
-    train_x, train_y = supplement_training_data(aug, train_x, train_y)
+    train_x, train_y = supplement_training_data(aug, train_x, train_y, multiclass=False)
 
 print('[INFO] Training data shape: ' + str(train_x.shape))
 print('[INFO] Training label shape: ' + str(train_y.shape))
@@ -86,7 +86,7 @@ callbacks = create_callbacks(hyperparameters)
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
-        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=30, iterations=10,
+        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=25, iterations=10,
 monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
         min_delta=0.05, cooldown=0)
     callbacks.append(meta_callback)
@@ -95,7 +95,7 @@ monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
 start_time = time.time()
 
 if hyperparameters.tf_fit:
-    H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+    H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
                   steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
                   callbacks=callbacks)
 else:

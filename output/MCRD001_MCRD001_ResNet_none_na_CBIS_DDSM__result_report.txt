@@ -1,0 +1,61 @@
+*** Script Hyperparameters ***
+ Epochs: 50
+ Initial learning rate: 0.001
+ Batch size: 32
+ Dropout: 0.25
+ Learning optimization: Adam
+ Meta-heuristic used: none
+ Meta-heuristic order: na
+ Data augmentation: False
+ Preloaded weights: True
+ Existing Weights Exp Id: None
+ TF Fit Training: True
+*** PERFORMANCE METRICS ***
+Time taken: 0:53:54.096753
+*** SCI-KIT METRICS ***
+
+*** Classification Report *** 
+               precision    recall  f1-score   support
+
+    Positive       0.70      0.67      0.69       258
+    Negative       0.74      0.76      0.75       315
+
+    accuracy                           0.72       573
+   macro avg       0.72      0.72      0.72       573
+weighted avg       0.72      0.72      0.72       573
+ 
+*** General Metrics *** 
+ Accuracy Score: 72.08% 
+ Precision Score: 71.80% 
+ Recall Score: 71.66% 
+
+*** Final Network Metrics *** 
+ Final Training Loss: 0.3069 
+ Final Validation Loss: 0.6082 
+ Final Training Accuracy: 0.86% 
+ Final Validation Accuracy: 0.72% 
+
+*** Best Network Metrics *** 
+ Best Epoch: 10 
+ Best Training Loss: 0.4588 
+ Best Validation Loss: 0.5659 
+ Best Training Accuracy: 0.77% 
+ Best Validation Accuracy: 0.70% 
+
+*** INTERNAL METRICS ***
+['loss', 'accuracy']
+[0.6081785559654236, 0.7207679152488708]*** Predictions *** 
+ Predictions: [[0.16140175 0.83859825]
+ [0.0206176  0.9793824 ]
+ [0.45064524 0.54935473]
+ ...
+ [0.04440001 0.95559996]
+ [0.06170287 0.9382971 ]
+ [0.8719169  0.12808312]] 
+ Ground Truth Labels: [[0. 1.]
+ [0. 1.]
+ [1. 0.]
+ ...
+ [0. 1.]
+ [0. 1.]
+ [0. 1.]] 
