@@ -34,6 +34,7 @@ class Hyperparameters:
         self.experiment_id = 'na'
         self.augmentation = False
         self.preloaded_weights = False
+        self.weights_of_experiment_id = None
         self.tf_fit = False
 
 
@@ -48,6 +49,7 @@ class Hyperparameters:
         report += ' Meta-heuristic order: {}\n'.format(self.meta_heuristic_order)
         report += ' Data augmentation: {}\n'.format(self.augmentation)
         report += ' Preloaded weights: {}\n'.format(self.preloaded_weights)
+        report += ' Existing Weights Exp Id: {}\n'.format(self.weights_of_experiment_id)
         report += ' TF Fit Training: {}\n'.format(self.tf_fit)
 
         return report

@@ -49,7 +49,7 @@ if hyperparameters.augmentation:
         zoom_range=0.05,
         fill_mode="nearest")
 
-    train_x, train_y = supplement_training_data(aug, train_x, train_y)
+    train_x, train_y = supplement_training_data(aug, train_x, train_y, multiclass=False)
 
 print('[INFO] Training data shape: ' + str(train_x.shape))
 print('[INFO] Training label shape: ' + str(train_y.shape))
@@ -61,16 +61,21 @@ if hyperparameters.preloaded_weights:
     model = create_classification_layers(base_model=model, classes=len(data_set.class_names), dropout_prob=0.3)
 else:
     model = build_unet(IMAGE_DIMS, len(data_set.class_names))
+
+if hyperparameters.weights_of_experiment_id is not None:
+    path_to_weights = '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.weights_of_experiment_id)
+    print('[INFO] Loading weights from {}'.format(path_to_weights))
+    model.load_weights(path_to_weights)
+
 model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
-# model.summary()
 
 # Setup callbacks
 callbacks = create_callbacks(hyperparameters)
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
-        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=10, iterations=10,
-        monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
+        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=25, iterations=10,
+monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
         min_delta=0.05, cooldown=0)
     callbacks.append(meta_callback)
 

@@ -50,7 +50,7 @@ if hyperparameters.augmentation:
         zoom_range=0.05,
         fill_mode='nearest')
 
-    train_x, train_y = supplement_training_data(aug, train_x, train_y)
+    train_x, train_y = supplement_training_data(aug, train_x, train_y, multiclass=False)
 
 print('[INFO] Training data shape: ' + str(train_x.shape))
 print('[INFO] Training label shape: ' + str(train_y.shape))
@@ -59,19 +59,20 @@ loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
 if hyperparameters.preloaded_weights:
     print('[INFO] Loading imagenet weights')
-    model = ResNet50V2(
-        include_top=False,
-        weights='imagenet',
-        input_shape=IMAGE_DIMS,
-        classes=len(data_set.class_names))
-    model = create_classification_layers(base_model=model, classes=len(data_set.class_names))
+    weights = 'imagenet'
 else:
-    model = ResNet50V2(
+    weights = None
+model = ResNet50V2(
         include_top=False,
-        weights=None,
+        weights=weights,
         input_shape=IMAGE_DIMS,
         classes=len(data_set.class_names))
-    model = create_classification_layers(base_model=model, classes=len(data_set.class_names))
+model = create_classification_layers(base_model=model, classes=len(data_set.class_names))
+
+if hyperparameters.weights_of_experiment_id is not None:
+    path_to_weights = '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.weights_of_experiment_id)
+    print('[INFO] Loading weights from {}'.format(path_to_weights))
+    model.load_weights(path_to_weights)
 
 # Compile model
 compile_with_regularization(model=model,
@@ -79,15 +80,14 @@ compile_with_regularization(model=model,
                             optimizer=opt,
                             metrics=['accuracy'],
                             regularization_type='l2')
-model.summary()
 
 # Setup callbacks
 callbacks = create_callbacks(hyperparameters)
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
-        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=10, iterations=10,
-        monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
+        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=25, iterations=10,
+monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
         min_delta=0.05, cooldown=0)
     callbacks.append(meta_callback)
 
@@ -95,7 +95,7 @@ if hyperparameters.meta_heuristic != 'none':
 start_time = time.time()
 
 if hyperparameters.tf_fit:
-    H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+    H = model.fit(x=aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
                   steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
                   callbacks=callbacks)
 else:

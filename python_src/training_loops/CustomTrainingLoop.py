@@ -23,13 +23,13 @@ def train_on_batch(model, optimizer, X, y, accuracy_metric, loss_metric):
 
 
 def apply_swarm_optimization(X, model, y, fitness_function):
-    pso = PsoEnv(num_solutions=20, iterations=10, model=model, X=X, y=y, fitness_function=fitness_function)
+    pso = PsoEnv(num_solutions=30, iterations=3, model=model, X=X, y=y, fitness_function=fitness_function)
     model = pso.get_optimized_model()
     return model
 
 
 def apply_genetic_algorithm(X, model, y, fitness_function):
-    ga = GaEnv(num_solutions=20, iterations=10, model=model, X=X, y=y, fitness_function=fitness_function)
+    ga = GaEnv(num_solutions=30, iterations=3, model=model, X=X, y=y, fitness_function=fitness_function)
     model = ga.get_optimized_model()
     return model
 

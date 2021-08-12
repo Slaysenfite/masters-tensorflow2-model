@@ -34,6 +34,7 @@ class PsoEnv(MetaheuristicOptimizer):
         super().__init__(fitness_function, iterations, num_solutions, model, X, y, layers_to_optimize)
 
     def get_optimized_model(self):
+        print('\nRunning PSO algorithm')
         iteration = 0
         self.model.reset_metrics()
         weights = get_trainable_weights(self.model, self.layers_to_optimize)
@@ -48,7 +49,7 @@ class PsoEnv(MetaheuristicOptimizer):
 
             self.update_gbest(swarm)
 
-            print(' \nPSO training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
+            print(' PSO training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
                 swarm[0].gbest_fitness))
             iteration += 1
         best_weights = convert_tenor_weights_to_tf_variable(swarm[0].gbest)
