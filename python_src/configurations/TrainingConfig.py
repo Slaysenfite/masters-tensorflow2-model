@@ -1,20 +1,22 @@
 import os
+from os.path import expanduser
 
-from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 
 
 def create_required_directories():
     os.makedirs(output_dir, 0o777, True)
     os.makedirs(output_dir + 'figures/', 0o777, True)
     os.makedirs(output_dir + 'model/', 0o777, True)
-
+    os.makedirs(MODEL_OUTPUT, 0o777, True)
 
 IMAGE_DIMS = (128, 128, 3)
 
+home = expanduser("~")
 output_dir = 'output/'
 
 FIGURE_OUTPUT = output_dir + 'figures/'
-MODEL_OUTPUT = output_dir + 'model/'
+MODEL_OUTPUT = ROOT_DIRECTORY = home + '/data/models/'
 
 
 class Hyperparameters:
@@ -73,14 +75,19 @@ def create_mnist_hyperparameter_singleton():
     )
 
 
-def create_callbacks():
+def create_callbacks(hyperparameters):
     return [
         EarlyStopping(
-            monitor='val_loss', min_delta=0.0001, patience=15, verbose=1, mode='min',
+            monitor='val_loss', min_delta=0.0001, patience=10, verbose=1, mode='min',
             baseline=1.00, restore_best_weights=False),
         ReduceLROnPlateau(
-            monitor='val_loss', factor=0.2, patience=10, verbose=1, mode='min',
-            min_delta=0.0001, cooldown=0, min_lr=0)
+            monitor='val_loss', factor=0.2, patience=5, verbose=1, mode='min',
+            min_delta=0.001, cooldown=0, min_lr=0.00001),
+        ModelCheckpoint(
+            '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.experiment_id), monitor='val_loss', verbose=0,
+            save_best_only=True, save_weights_only=True, mode='min', save_freq='epoch',
+            options=None
+        )
     ]
 
 

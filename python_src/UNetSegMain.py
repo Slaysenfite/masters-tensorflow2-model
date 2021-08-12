@@ -48,18 +48,17 @@ else:
 model.compile(optimizer=opt,
               loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
+model.summary()
 
 # Setup callbacks
-callbacks = create_callbacks()
+callbacks = create_callbacks(hyperparameters)
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
         X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=10, iterations=10,
-        monitor='val_loss', factor=0.2, patience=3, verbose=1, mode='min',
+        monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
         min_delta=0.05, cooldown=0)
     callbacks.append(meta_callback)
-
-model.summary()
 
 def create_mask(pred_mask):
     pred_mask = tf.argmax(pred_mask, axis=-1)

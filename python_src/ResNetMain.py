@@ -74,16 +74,21 @@ else:
     model = create_classification_layers(base_model=model, classes=len(data_set.class_names))
 
 # Compile model
-compile_with_regularization(model=model, loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
+compile_with_regularization(model=model,
+                            loss='binary_crossentropy',
+                            optimizer=opt,
+                            metrics=['accuracy'],
+                            regularization_type='l2')
+model.summary()
 
 # Setup callbacks
-callbacks = create_callbacks()
+callbacks = create_callbacks(hyperparameters)
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
         X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=10, iterations=10,
-        monitor='val_loss', factor=0.2, patience=0, verbose=1, mode='min',
-        min_delta=5, cooldown=0)
+        monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
+        min_delta=0.05, cooldown=0)
     callbacks.append(meta_callback)
 
 # train the network
