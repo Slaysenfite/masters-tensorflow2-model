@@ -5,7 +5,7 @@ from datetime import timedelta
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
-from tensorflow.python.keras.applications.resnet_v2 import ResNet50V2
+from tensorflow.python.keras.applications.inception_resnet_v2 import InceptionResNetV2
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import bcs_data_set as data_set
@@ -62,7 +62,7 @@ if hyperparameters.preloaded_weights:
     weights = 'imagenet'
 else:
     weights = None
-model = ResNet50V2(
+model = InceptionResNetV2(
         include_top=False,
         weights=weights,
         input_shape=IMAGE_DIMS,
@@ -116,7 +116,7 @@ predictions = model.predict(test_x)
 
 print('[INFO] generating metrics...')
 
-file_title = create_file_title('ResNet', hyperparameters)
+file_title = create_file_title('InceptionResNet', hyperparameters)
 
 model.save(filepath=MODEL_OUTPUT + file_title + '.h5', save_format='h5')
 
