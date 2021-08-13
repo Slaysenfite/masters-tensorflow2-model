@@ -49,8 +49,10 @@ if hyperparameters.augmentation:
         rotation_range=10,
         zoom_range=0.05,
         fill_mode='nearest')
+else:
+    aug = ImageDataGenerator()
 
-    train_x, train_y = supplement_training_data(aug, train_x, train_y, multiclass=False)
+    # train_x, train_y = supplement_training_data(aug, train_x, train_y, multiclass=False)
 
 print('[INFO] Training data shape: ' + str(train_x.shape))
 print('[INFO] Training label shape: ' + str(train_y.shape))
@@ -79,7 +81,8 @@ compile_with_regularization(model=model,
                             loss='binary_crossentropy',
                             optimizer=opt,
                             metrics=['accuracy'],
-                            regularization_type='l2')
+                            regularization_type='l2',
+                            l2=0.0008)
 
 # Setup callbacks
 callbacks = create_callbacks(hyperparameters)
@@ -95,7 +98,7 @@ monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
 start_time = time.time()
 
 if hyperparameters.tf_fit:
-    H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+    H = model.fit(aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
                   steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
                   callbacks=callbacks)
 else:

@@ -127,7 +127,6 @@ def supplement_training_data(aug, train_x, train_y, multiclass=True):
         append_three_class(abnormal_data, abnormal_labels, train_x, train_y)
     else:
         append_two_class(abnormal_data, abnormal_labels, train_x, train_y)
-    append_three_class(abnormal_data, abnormal_labels, train_x, train_y)
     aug_output = aug.flow(asarray(abnormal_data), asarray(abnormal_labels), batch_size=len(abnormal_data),
                           shuffle=False)
     return ma.concatenate([train_x, aug_output.x]), ma.concatenate([train_y, aug_output.y])
