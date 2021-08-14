@@ -145,6 +145,17 @@ def append_two_class(abnormal_data, abnormal_labels, train_x, train_y):
             abnormal_data.append(train_x[i])
             abnormal_labels.append(train_y[i])
 
+def supplement_seg_training_data(aug, train_x, train_y, roi_labels):
+    abnormal_data = []
+    abnormal_labels = []
+
+    for i in range(len(train_x)):
+        if roi_labels[i] == 0:
+            abnormal_data.append(train_x[i])
+            abnormal_labels.append(train_y[i])
+    aug_output = aug.flow(asarray(abnormal_data), asarray(abnormal_labels), batch_size=len(abnormal_data),
+                          shuffle=False)
+    return ma.concatenate([train_x, aug_output.x]), ma.concatenate([train_y, aug_output.y])
 
 def show_examples(title, train_x, test_x, train_y, test_y, items=9):
     print('Train: X=%s, y=%s' % (train_x.shape, train_y.shape))

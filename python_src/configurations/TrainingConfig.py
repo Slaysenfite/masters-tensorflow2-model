@@ -10,6 +10,7 @@ def create_required_directories():
     os.makedirs(output_dir + 'model/', 0o777, True)
     os.makedirs(MODEL_OUTPUT, 0o777, True)
 
+
 IMAGE_DIMS = (128, 128, 3)
 
 home = expanduser("~")
@@ -36,7 +37,6 @@ class Hyperparameters:
         self.preloaded_weights = False
         self.weights_of_experiment_id = None
         self.tf_fit = False
-
 
     def report_hyperparameters(self):
         report = '*** Script Hyperparameters ***\n'
@@ -81,7 +81,7 @@ def create_callbacks(hyperparameters):
     return [
         EarlyStopping(
             monitor='val_loss', min_delta=0.0001, patience=10, verbose=1, mode='min',
-            baseline=1.00, restore_best_weights=False),
+            baseline=1.00, restore_best_weights=True),
         ReduceLROnPlateau(
             monitor='val_loss', factor=0.2, patience=5, verbose=1, mode='min',
             min_delta=0.001, cooldown=0, min_lr=0.00001),

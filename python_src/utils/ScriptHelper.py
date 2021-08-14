@@ -31,6 +31,7 @@ def read_cmd_line_args(hyperparameters, dataset):
     parser.add_argument('--meta_heuristic_order', type=str)
     parser.add_argument('--optimizer', type=str)
     parser.add_argument('--id', type=str)
+    parser.add_argument('--epochs', type=int)
     parser.add_argument('--dataset', type=str)
     parser.add_argument('--augmentation', type=str)
     parser.add_argument('--preloaded_weights', type=str)
@@ -40,6 +41,9 @@ def read_cmd_line_args(hyperparameters, dataset):
 
     if args.id is not None:
         hyperparameters.experiment_id = args.id
+
+    if args.epochs is not None:
+        hyperparameters.epochs = args.epochs
 
     if args.meta_heuristic is not None:
         hyperparameters.meta_heuristic = args.meta_heuristic
@@ -57,7 +61,7 @@ def read_cmd_line_args(hyperparameters, dataset):
         opt = Adam(learning_rate=hyperparameters.adam_lr, decay=True)
     else:
         hyperparameters.learning_optimization = 'Stochastic Gradient Descent'
-        opt = SGD(lr=hyperparameters.sgd_lr)
+        opt = SGD(learning_rate=hyperparameters.sgd_lr)
 
     if args.dataset is not None:
         if 'cbis' in args.dataset:

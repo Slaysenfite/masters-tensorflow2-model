@@ -19,12 +19,6 @@ class RunMetaHeuristicOnPlateau(Callback):
 
     Example:
 
-    ```python
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
-                                  patience=5, min_lr=0.001)
-    model.fit(X_train, Y_train, callbacks=[reduce_lr])
-    ```
-
     Arguments:
         monitor: quantity to be monitored.
         factor: factor by which the learning rate will be reduced.
@@ -64,7 +58,7 @@ class RunMetaHeuristicOnPlateau(Callback):
 
         self.monitor = monitor
         if factor >= 1.0:
-            raise ValueError('ReduceLROnPlateau ' 'does not support a factor >= 1.0.')
+            raise ValueError('RunMetaHeuristicOnPlateau ' 'does not support a factor >= 1.0.')
         if 'epsilon' in kwargs:
             min_delta = kwargs.pop('epsilon')
             logging.warning('`epsilon` argument is deprecated and '

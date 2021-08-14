@@ -79,15 +79,16 @@ compile_with_regularization(model=model,
                             loss='binary_crossentropy',
                             optimizer=opt,
                             metrics=['accuracy'],
-                            regularization_type='l2')
+                            regularization_type='l2',
+                            l2=0.0008)
 
 # Setup callbacks
 callbacks = create_callbacks(hyperparameters)
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
-        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=25, iterations=10,
-monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
+        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=20, iterations=10,
+        monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
         min_delta=0.05, cooldown=0)
     callbacks.append(meta_callback)
 
