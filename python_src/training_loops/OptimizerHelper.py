@@ -13,11 +13,13 @@ MAX_LAYER_FOR_OPTIMIZATION = 6
 
 def calc_solution_fitness(weights, model, loss_metric, X, y):
     set_trainable_weights(model, weights)
-    ŷ = model(X, training=True)
+
+    # This call takes 50s + to run on 128 dims and uses vast amount of memory
+    # ŷ = model(X, training=True)
 
     # The following code produces the same ouput as model(X, training=False) but in 3/4 of the time:
-    # predictions = model.predict(X)
-    # ŷ = convert_to_tensor(predictions)
+    predictions = model.predict(X)
+    ŷ = convert_to_tensor(predictions)
 
     tn = TrueNegatives()
     tp = TruePositives()

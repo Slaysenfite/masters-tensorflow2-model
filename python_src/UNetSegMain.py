@@ -89,7 +89,7 @@ callbacks = [
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
-        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=20, iterations=10,
+        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=30, iterations=10,
         fitness_function=calc_seg_fitness, monitor='val_mean_io_u', patience=4, verbose=1, mode='max',
         min_delta=0.05, cooldown=3)
     callbacks.append(meta_callback)
