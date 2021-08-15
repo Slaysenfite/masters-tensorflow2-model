@@ -8,18 +8,14 @@ workon wesselsenv
 
 # Run Scripts
 
-#python python_src/ResNetMain.py --optimizer=adam --id=MCRD001A01 --augmentation=True --dataset=cbis --tf_fit=False --preloaded_weights=False
-#python python_src/ResNetMain.py --optimizer=adam --id=MCRD001A02 --augmentation=True --dataset=cbis --tf_fit=False --preloaded_weights=True
-python python_src/ResNetMain.py --optimizer=adam --id=MCRD001A03 --augmentation=True --dataset=cbis --tf_fit=True --preloaded_weights=True
-python python_src/ResNetMain.py --optimizer=adam --id=MCRD001A --augmentation=False --dataset=cbis --tf_fit=True --preloaded_weights=True #Not yet Run
-#python python_src/ResNetMain.py --optimizer=adam --id=MCRD001A04 --augmentation=True --dataset=cbis --tf_fit=True --preloaded_weights=False
+python python_src/ResNetMain.py --optimizer=adam --id=MCRD001A --dataset=cbis --preloaded_weights=True --augmentation=True--epochs=100
+python python_src/ResNetMain.py --optimizer=adam --id=MCRD001 --dataset=cbis --preloaded_weights=True--epochs=100
 
-#python python_src/UNetMain.py --optimizer=adam --id=MCUD001A01 --augmentation=True --dataset=cbis --tf_fit=False --preloaded_weights=False
-#python python_src/UNetMain.py --optimizer=adam --id=MCUD001A02 --augmentation=True --dataset=cbis --tf_fit=False --preloaded_weights=True
-python python_src/UNetMain.py --optimizer=adam --id=MCUD001A03 --augmentation=True --dataset=cbis --tf_fit=True --preloaded_weights=True
-python python_src/UNetMain.py --optimizer=adam --id=MCUD00103 --augmentation=False --dataset=cbis --tf_fit=True --preloaded_weights=True
-#python python_src/UNetMain.py --optimizer=adam --id=MCUD001A04 --augmentation=True --dataset=cbis --tf_fit=True --preloaded_weights=False
+python python_src/XceptionNetMain.py --optimizer=adam --id=MCXD001A --dataset=cbis --preloaded_weights=True --augmentation=True--epochs=100
+python python_src/XceptionNetMain.py --optimizer=adam --id=MCXD001 --dataset=cbis --preloaded_weights=True--epochs=100
 
-#python python_src/UNetSegMain.py --id=MSUD00101 --optimizer=sgd
-#python python_src/UNetSegMain.py --id=MSUD00102 --optimizer=sgd --tf_fit=False --preloaded_weights=True
-python python_src/UNetSegMain.py --id=MSUD00103  --optimizer=sgd --tf_fit=True --preloaded_weights=True
+python python_src/UNetMain.py --optimizer=adam --id=MCUD001A --dataset=cbis --preloaded_weights=True --augmentation=True--epochs=100
+python python_src/UNetMain.py --optimizer=adam --id=MCUD001 --dataset=cbis --preloaded_weights=True--epochs=100
+
+python python_src/UNetSegMain.py --id=MSUD001A --dataset=cbis_seg --optimizer=sgd --preloaded_weights=True --augmentation=True --epochs=100
+python python_src/UNetSegMain.py --id=MSUD001 --dataset=cbis_seg --optimizer=sgd --preloaded_weights=True --epochs=100

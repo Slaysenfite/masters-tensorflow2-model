@@ -36,7 +36,7 @@ class Hyperparameters:
         self.augmentation = False
         self.preloaded_weights = False
         self.weights_of_experiment_id = None
-        self.tf_fit = False
+        self.tf_fit = True
         self.l2 = 0.00001
 
     def report_hyperparameters(self):

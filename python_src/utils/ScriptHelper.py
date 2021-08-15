@@ -78,8 +78,8 @@ def read_cmd_line_args(hyperparameters, dataset):
     if args.augmentation == 'True' or args.augmentation == 'true':
         hyperparameters.augmentation = True
 
-    if args.tf_fit == 'True' or args.tf_fit == 'true':
-        hyperparameters.tf_fit = True
+    if args.tf_fit == 'False' or args.tf_fit == 'false':
+        hyperparameters.tf_fit = False
 
     if args.preloaded_weights == 'True' or args.preloaded_weights == 'true':
         hyperparameters.preloaded_weights = True

@@ -87,7 +87,7 @@ if hyperparameters.meta_heuristic != 'none':
 start_time = time.time()
 
 if hyperparameters.tf_fit:
-    H = model.fit(aug.flow(train_x, train_y, batch_size=hyperparameters.batch_size), validation_data=(test_x, test_y),
+    H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
                   steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
                   callbacks=callbacks)
 else:
