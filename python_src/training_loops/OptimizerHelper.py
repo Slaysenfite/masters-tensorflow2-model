@@ -13,11 +13,13 @@ MAX_LAYER_FOR_OPTIMIZATION = 6
 
 def calc_solution_fitness(weights, model, loss_metric, X, y):
     set_trainable_weights(model, weights)
-    ŷ = model(X, training=True)
+
+    # This call takes 50s + to run on 128 dims and uses vast amount of memory
+    # ŷ = model(X, training=True)
 
     # The following code produces the same ouput as model(X, training=False) but in 3/4 of the time:
-    # predictions = model.predict(X)
-    # ŷ = convert_to_tensor(predictions)
+    predictions = model.predict(X)
+    ŷ = convert_to_tensor(predictions)
 
     tn = TrueNegatives()
     tp = TruePositives()
@@ -40,7 +42,7 @@ def calc_solution_fitness(weights, model, loss_metric, X, y):
 def calc_seg_fitness(weights, model, loss_metric, X, y):
     set_trainable_weights(model, weights)
     ŷ = model(X, training=True)
-    return 2 - (iou_coef(y, ŷ)+dice_coef(y, ŷ))
+    return 1 - iou_coef(y, ŷ)
 
 
 def determine_loss_function_based_on_fitness_function(fitness_function):
@@ -54,7 +56,7 @@ def get_trainable_weights(model, keras_layers=(Dense, Conv2D), num_layers=MAX_LA
     weights = []
     layer_count = 0
     for layer in reversed(model.layers):
-        if layer.trainable != True or len(layer.trainable_weights) == 0 or layer.name == 'predictions':
+        if layer.trainable is not True or len(layer.trainable_weights) == 0 or layer.name == 'predictions':
             continue
         if isinstance(layer, keras_layers):
             weights.append(layer.weights)
@@ -67,12 +69,10 @@ def get_trainable_weights(model, keras_layers=(Dense, Conv2D), num_layers=MAX_LA
 def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D), num_layers=MAX_LAYER_FOR_OPTIMIZATION):
     i = 0
     for layer in reversed(model.layers):
-        if layer.trainable != True or len(layer.weights) == 0 or layer.name == 'predictions':
+        if layer.trainable is not True or len(layer.weights) == 0 or layer.name == 'predictions':
             continue
         if isinstance(layer, keras_layers):
-            np_weights = np.zeros_like(layer.get_weights())
-            for n in range(len(np_weights)):
-                np_weights[n] = np.zeros_like(layer.get_weights()[n])
+            np_weights = [[w * 0 for w in weight] for weight in layer.get_weights()]
             for c in range(len(layer.weights)):
                 if isinstance(weights[i][c], tf.Tensor) or isinstance(weights[i][c], tf_ops.Tensor):
                     np_weights[c] = weights[i][c].numpy()

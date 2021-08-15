@@ -5,18 +5,20 @@ from datetime import timedelta
 import tensorflow as tf
 from IPython.core.display import clear_output
 from numpy import expand_dims
-from sklearn.model_selection import train_test_split
+from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+from tensorflow.python.keras.metrics import MeanIoU
 from tensorflow.python.keras.optimizer_v2.adam import Adam
+from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import cbis_seg_data_set as data_set
-from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, create_callbacks, MODEL_OUTPUT
+from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, MODEL_OUTPUT
 from metrics.MetricsUtil import iou_coef, dice_coef
 from networks.UNet import build_pretrained_unet
 from networks.UNetSeg import unet_seg
 from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
 from training_loops.OptimizerHelper import calc_seg_fitness
-from utils.ImageLoader import load_seg_images
+from utils.ImageLoader import load_seg_images, supplement_seg_training_data
 from utils.ScriptHelper import create_file_title, read_cmd_line_args
 
 print('Python version: {}'.format(sys.version))
@@ -27,10 +29,25 @@ print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
 
 print('[INFO] Loading images...')
-roi_data, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1))
-data, labels = load_seg_images(data_set, image_dimensions=IMAGE_DIMS)
+train_y, roi_train_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1), subset='Training')
+test_y, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1), subset='Test')
 
-(train_x, test_x, train_y, test_y) = train_test_split(data, roi_data, test_size=0.3, train_size=0.7, random_state=42)
+train_x, train_labels = load_seg_images(data_set, image_dimensions=IMAGE_DIMS, subset='Training')
+test_x, test_labels = load_seg_images(data_set, image_dimensions=IMAGE_DIMS, subset='Test')
+
+if hyperparameters.augmentation:
+    print('[INFO] Augmenting data set')
+    aug = ImageDataGenerator(
+        horizontal_flip=True,
+        vertical_flip=True,
+        rotation_range=10,
+        zoom_range=0.05,
+        fill_mode='nearest')
+
+    train_x, train_y = supplement_seg_training_data(aug, train_x, train_y, roi_labels)
+
+print('[INFO] Training data shape: ' + str(train_x.shape))
+print('[INFO] Training label shape: ' + str(train_y.shape))
 
 def normalize(input_image, input_mask):
     input_image = tf.cast(input_image, tf.float32) / 255.0
@@ -53,16 +70,28 @@ if hyperparameters.weights_of_experiment_id is not None:
 
 model.compile(optimizer=opt,
               loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
+              metrics=['accuracy', MeanIoU(num_classes=len(data_set.class_names))])
 
 # Setup callbacks
-callbacks = create_callbacks(hyperparameters)
+callbacks = [
+        EarlyStopping(
+            monitor='val_mean_io_u', min_delta=0.001, patience=10, verbose=1, mode='max',
+            baseline=1.00, restore_best_weights=True),
+        ReduceLROnPlateau(
+            monitor='val_mean_io_u',  patience=5, verbose=1, mode='max',
+            min_delta=0.001, cooldown=0, min_lr=0.00001),
+        ModelCheckpoint(
+            '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.experiment_id), monitor='val_mean_io_u', verbose=0,
+            save_best_only=True, save_weights_only=True, mode='min', save_freq='epoch',
+            options=None
+        )
+    ]
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
-        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=25, iterations=10,
-monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
-        min_delta=0.05, cooldown=0)
+        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=30, iterations=10,
+        fitness_function=calc_seg_fitness, monitor='val_mean_io_u', patience=4, verbose=1, mode='max',
+        min_delta=0.05, cooldown=3)
     callbacks.append(meta_callback)
 
 def create_mask(pred_mask):
@@ -83,7 +112,8 @@ start_time = time.time()
 
 if hyperparameters.tf_fit:
      H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
-                  steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs)
+                   steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
+                   callbacks=callbacks)
 else:
     H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
                       meta_heuristic=hyperparameters.meta_heuristic,

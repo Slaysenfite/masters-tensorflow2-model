@@ -108,7 +108,7 @@ def evaluate_model(dataX, dataY, n_folds=5):
         if hyperparameters.meta_heuristic != 'none':
             meta_callback = RunMetaHeuristicOnPlateau(
                 X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=3, iterations=3,
-                monitor='val_loss', factor=0.2, patience=0, verbose=1, mode='min',
+                monitor='val_loss', patience=0, verbose=1, mode='min',
                 min_delta=0.1, cooldown=0)
             callbacks.append(meta_callback)
         if hyperparameters.tf_fit:

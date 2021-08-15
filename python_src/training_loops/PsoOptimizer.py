@@ -36,7 +36,6 @@ class PsoEnv(MetaheuristicOptimizer):
     def get_optimized_model(self):
         print('\nRunning PSO algorithm')
         iteration = 0
-        self.model.reset_metrics()
         weights = get_trainable_weights(self.model, self.layers_to_optimize)
 
         swarm = self.initialize_swarm(self.num_solutions, weights, self.model, self.loss_metric, self.X, self.y)

@@ -10,6 +10,7 @@ def create_required_directories():
     os.makedirs(output_dir + 'model/', 0o777, True)
     os.makedirs(MODEL_OUTPUT, 0o777, True)
 
+
 IMAGE_DIMS = (128, 128, 3)
 
 home = expanduser("~")
@@ -35,8 +36,8 @@ class Hyperparameters:
         self.augmentation = False
         self.preloaded_weights = False
         self.weights_of_experiment_id = None
-        self.tf_fit = False
-
+        self.tf_fit = True
+        self.l2 = 0.00001
 
     def report_hyperparameters(self):
         report = '*** Script Hyperparameters ***\n'
@@ -51,6 +52,7 @@ class Hyperparameters:
         report += ' Preloaded weights: {}\n'.format(self.preloaded_weights)
         report += ' Existing Weights Exp Id: {}\n'.format(self.weights_of_experiment_id)
         report += ' TF Fit Training: {}\n'.format(self.tf_fit)
+        report += ' L2: {}\n'.format(self.l2)
 
         return report
 
@@ -80,10 +82,10 @@ def create_mnist_hyperparameter_singleton():
 def create_callbacks(hyperparameters):
     return [
         EarlyStopping(
-            monitor='val_loss', min_delta=0.0001, patience=10, verbose=1, mode='min',
-            baseline=1.00, restore_best_weights=False),
+            monitor='val_loss', min_delta=0.0001, patience=20, verbose=1, mode='min',
+            baseline=1.00, restore_best_weights=True),
         ReduceLROnPlateau(
-            monitor='val_loss', factor=0.2, patience=5, verbose=1, mode='min',
+            monitor='val_loss', factor=0.2, patience=10, verbose=1, mode='min',
             min_delta=0.001, cooldown=0, min_lr=0.00001),
         ModelCheckpoint(
             '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.experiment_id), monitor='val_loss', verbose=0,
