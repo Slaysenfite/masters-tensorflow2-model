@@ -4,7 +4,6 @@ from datetime import timedelta
 
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import train_test_split
 from tensorflow.python.keras.applications.resnet_v2 import ResNet50V2
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
@@ -29,17 +28,9 @@ print(hyperparameters.report_hyperparameters())
 print('[INFO] Creating required directories...')
 create_required_directories()
 
-# initialize the data and labels
-data = []
-labels = []
-
 print('[INFO] Loading images...')
-data, labels = load_rgb_images(data, labels, data_set, IMAGE_DIMS)
-
-# partition the data into training and testing splits using 70% of
-# the data for training and the remaining 30% for testing
-(train_x, test_x, train_y, test_y) = train_test_split(data, labels, test_size=0.2, train_size=0.8, random_state=42)
-
+test_x, test_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Test')
+train_x, train_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Training')
 
 if hyperparameters.augmentation:
     print('[INFO] Augmenting data set')
@@ -52,8 +43,8 @@ if hyperparameters.augmentation:
 
     train_x, train_y = supplement_training_data(aug, train_x, train_y, multiclass=False)
 
-print('[INFO] Training data shape: ' + str(train_x.shape))
-print('[INFO] Training label shape: ' + str(train_y.shape))
+    print('[INFO] Training data shape: ' + str(train_x.shape))
+    print('[INFO] Training label shape: ' + str(train_y.shape))
 
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
@@ -80,16 +71,15 @@ compile_with_regularization(model=model,
                             optimizer=opt,
                             metrics=['accuracy'],
                             regularization_type='l2',
-                            l2=0.0008)
+                            l2=hyperparameters.l2)
 
 # Setup callbacks
 callbacks = create_callbacks(hyperparameters)
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
-        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=20, iterations=10,
-        monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
-        min_delta=0.05, cooldown=0)
+        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=15, iterations=5,
+        monitor='val_loss',  patience=3, verbose=1, mode='min', min_delta=0.001, cooldown=4)
     callbacks.append(meta_callback)
 
 # train the network

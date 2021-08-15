@@ -2,7 +2,6 @@ import tensorflow as tf
 
 from tensorflow.python.keras.layers import Conv2D, BatchNormalization, MaxPooling2D, UpSampling2D, concatenate, Dropout
 
-
 def unet_seg(input_size=(128, 128, 1)):
     inputs = tf.keras.Input(shape=input_size)
     conv1 = Conv2D(64, 3, activation='relu', dilation_rate=2, padding='same', kernel_initializer='he_normal')(inputs)

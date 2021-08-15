@@ -92,16 +92,22 @@ class DataSet:
 class MultiPartDataset(DataSet):
 
     def get_image_paths(self):
-        df_paths = pd.read_csv(self.train_metadata_path)
-        df_paths.append(pd.read_csv(self.test_metadata_path))
-        return df_paths['image'].to_list()
+        df_paths_train = pd.read_csv(self.train_metadata_path)
+        paths_train = df_paths_train['image'].to_list()
+
+        df_paths_test = pd.read_csv(self.test_metadata_path)
+        paths_test = df_paths_test['image'].to_list()
+
+        return paths_train + paths_test
 
     def get_image_metadata(self):
-        df_train_metadata = pd.read_csv(self.train_metadata_path)[['image', 'label']]
-        df_test_metadata = pd.read_csv(self.test_metadata_path)[['image', 'label']]
-        total_metadata = df_train_metadata
-        total_metadata.append(df_test_metadata)
-        return np.array(total_metadata)
+        df_paths_train = pd.read_csv(self.train_metadata_path)[['image', 'label']]
+        paths_train = df_paths_train.values.tolist()
+
+        df_paths_test = pd.read_csv(self.test_metadata_path)[['image', 'label']]
+        paths_test = df_paths_test.values.tolist()
+
+        return np.array(paths_train + paths_test)
 
     def split_data_set(self, data, labels):
         return train_test_split(data, labels, test_size=0.25, train_size=0.75, random_state=None, shuffle=False)
@@ -124,11 +130,13 @@ class SegmentationDataset(DataSet):
         return df_paths['image'].to_list()
 
     def get_image_metadata(self):
-        df_train_metadata = pd.read_csv(self.train_metadata_path)[['image', 'label']]
-        df_test_metadata = pd.read_csv(self.test_metadata_path)[['image', 'label']]
-        total_metadata = df_train_metadata
-        total_metadata.append(df_test_metadata)
-        return np.array(total_metadata)
+        df_paths_train = pd.read_csv(self.train_metadata_path)[['image', 'label']]
+        paths_train = df_paths_train.values.tolist()
+
+        df_paths_test = pd.read_csv(self.test_metadata_path)[['image', 'label']]
+        paths_test = df_paths_test.values.tolist()
+
+        return np.array(paths_train + paths_test)
 
     def split_data_set(self, data, labels):
         return train_test_split(data, labels, test_size=0.25, train_size=0.75, random_state=None, shuffle=False)
@@ -139,11 +147,13 @@ class SegmentationDataset(DataSet):
         return df_paths['image'].to_list()
 
     def get_cropped_image_metadata(self):
-        df_train_metadata = pd.read_csv(self.train_metadata_path)[['image', 'label']]
-        df_test_metadata = pd.read_csv(self.test_metadata_path)[['image', 'label']]
-        total_metadata = df_train_metadata
-        total_metadata.append(df_test_metadata)
-        return np.array(total_metadata)
+        df_paths_train = pd.read_csv(self.cropped_train_metadata_path)[['image', 'label']]
+        paths_train = df_paths_train.values.tolist()
+
+        df_paths_test = pd.read_csv(self.cropped_test_metadata_path)[['image', 'label']]
+        paths_test = df_paths_test.values.tolist()
+
+        return np.array(paths_train + paths_test)
 
     def get_roi_image_paths(self):
         df_paths = pd.read_csv(self.roi_train_metadata_path)
@@ -151,11 +161,13 @@ class SegmentationDataset(DataSet):
         return df_paths['image'].to_list()
 
     def get_roi_image_metadata(self):
-        df_train_metadata = pd.read_csv(self.roi_train_metadata_path)[['image', 'label']]
-        df_test_metadata = pd.read_csv(self.roi_test_metadata_path)[['image', 'label']]
-        total_metadata = df_train_metadata
-        total_metadata.append(df_test_metadata)
-        return np.array(total_metadata)
+        df_paths_train = pd.read_csv(self.roi_train_metadata_path)[['image', 'label']]
+        paths_train = df_paths_train.values.tolist()
+
+        df_paths_test = pd.read_csv(self.roi_test_metadata_path)[['image', 'label']]
+        paths_test = df_paths_test.values.tolist()
+
+        return np.array(paths_train + paths_test)
 
 
 def create_ddsm_three_class_dataset_singleton():

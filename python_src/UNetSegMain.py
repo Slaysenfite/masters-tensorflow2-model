@@ -5,7 +5,6 @@ from datetime import timedelta
 import tensorflow as tf
 from IPython.core.display import clear_output
 from numpy import expand_dims
-from sklearn.model_selection import train_test_split
 from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from tensorflow.python.keras.metrics import MeanIoU
 from tensorflow.python.keras.optimizer_v2.adam import Adam
@@ -30,10 +29,11 @@ print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
 
 print('[INFO] Loading images...')
-roi_data, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1))
-data, labels = load_seg_images(data_set, image_dimensions=IMAGE_DIMS)
+train_y, roi_train_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1), subset='Training')
+test_y, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1), subset='Test')
 
-(train_x, test_x, train_y, test_y) = train_test_split(data, roi_data, test_size=0.2, train_size=0.8, random_state=42)
+train_x, train_labels = load_seg_images(data_set, image_dimensions=IMAGE_DIMS, subset='Training')
+test_x, test_labels = load_seg_images(data_set, image_dimensions=IMAGE_DIMS, subset='Test')
 
 if hyperparameters.augmentation:
     print('[INFO] Augmenting data set')
@@ -78,7 +78,7 @@ callbacks = [
             monitor='val_mean_io_u', min_delta=0.001, patience=10, verbose=1, mode='max',
             baseline=1.00, restore_best_weights=True),
         ReduceLROnPlateau(
-            monitor='val_mean_io_u', factor=0.2, patience=5, verbose=1, mode='max',
+            monitor='val_mean_io_u',  patience=5, verbose=1, mode='max',
             min_delta=0.001, cooldown=0, min_lr=0.00001),
         ModelCheckpoint(
             '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.experiment_id), monitor='val_mean_io_u', verbose=0,
@@ -90,7 +90,7 @@ callbacks = [
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
         X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=20, iterations=10,
-        fitness_function=calc_seg_fitness, monitor='val_mean_io_u', factor=0.2, patience=4, verbose=1, mode='max',
+        fitness_function=calc_seg_fitness, monitor='val_mean_io_u', patience=4, verbose=1, mode='max',
         min_delta=0.05, cooldown=3)
     callbacks.append(meta_callback)
 

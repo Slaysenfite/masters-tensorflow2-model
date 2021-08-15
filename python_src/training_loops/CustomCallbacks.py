@@ -12,17 +12,14 @@ from training_loops.PsoOptimizer import PsoEnv
 class RunMetaHeuristicOnPlateau(Callback):
     """Run meta heuristic when a metric has stopped improving.
 
-    Models often benefit from reducing the learning rate by a factor
-    of 2-10 once learning stagnates. This callback monitors a
-    quantity and if no improvement is seen for a 'patience' number
-    of epochs, the learning rate is reduced.
+    This callback monitors a quantity and if no improvement is
+    seen for a 'patience' number of epochs, the a meta-heuristic
+    algorithm is run
 
     Example:
 
     Arguments:
         monitor: quantity to be monitored.
-        factor: factor by which the learning rate will be reduced.
-          `new_lr = lr * factor`.
         patience: number of epochs with no improvement after which learning rate
           will be reduced.
         verbose: int. 0: quiet, 1: update messages.
@@ -43,7 +40,6 @@ class RunMetaHeuristicOnPlateau(Callback):
                  X,
                  y,
                  monitor='val_loss',
-                 factor=0.1,
                  patience=5,
                  verbose=1,
                  mode='auto',
@@ -57,15 +53,12 @@ class RunMetaHeuristicOnPlateau(Callback):
         super(RunMetaHeuristicOnPlateau, self).__init__()
 
         self.monitor = monitor
-        if factor >= 1.0:
-            raise ValueError('RunMetaHeuristicOnPlateau ' 'does not support a factor >= 1.0.')
         if 'epsilon' in kwargs:
             min_delta = kwargs.pop('epsilon')
             logging.warning('`epsilon` argument is deprecated and '
                             'will be removed, use `min_delta` instead.')
         self.X = X
         self.y = y
-        self.factor = factor
         self.min_delta = min_delta
         self.patience = patience
         self.verbose = verbose
