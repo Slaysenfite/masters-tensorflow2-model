@@ -83,7 +83,7 @@ def build_pretrained_unet(input_shape, num_classes):
     skip_connection_names = ["input_image", "block_1_expand_relu", "block_3_expand_relu", "block_6_expand_relu"]
     encoder_output = encoder.get_layer("block_13_expand_relu").output
 
-    f = [64, 128, 256, 512] #[64, 128, 256, 512, 1024]
+    f = [32, 64, 128, 256] #[64, 128, 256, 512, 1024]
     x = encoder_output
     for i in range(1, len(skip_connection_names) + 1, 1):
         x_skip = encoder.get_layer(skip_connection_names[-i]).output
