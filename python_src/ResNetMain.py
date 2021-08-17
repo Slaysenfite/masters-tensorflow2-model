@@ -16,6 +16,7 @@ from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
 from utils.ImageLoader import load_rgb_images, supplement_training_data
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
+import gc
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
@@ -27,6 +28,7 @@ print(hyperparameters.report_hyperparameters())
 
 print('[INFO] Creating required directories...')
 create_required_directories()
+gc.enable()
 
 print('[INFO] Loading images...')
 test_x, test_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Test')

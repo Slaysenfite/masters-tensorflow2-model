@@ -5,6 +5,7 @@ from tensorflow.python.keras.layers import Conv2D, Dense
 from tensorflow.python.keras.metrics import TrueNegatives, TruePositives, FalsePositives, \
     FalseNegatives, BinaryCrossentropy, CategoricalCrossentropy
 from tensorflow.python.ops.numpy_ops.np_arrays import convert_to_tensor
+import gc
 
 from metrics.MetricsUtil import iou_coef, dice_coef
 
@@ -17,7 +18,7 @@ def calc_solution_fitness(weights, model, loss_metric, X, y):
     # This call takes 50s + to run on 128 dims and uses vast amount of memory
     # ŷ = model(X, training=True)
 
-    # The following code produces the same ouput as model(X, training=False) but in 3/4 of the time:
+    # The following code produces the same output as model(X, training=False) but in 3/4 of the time:
     predictions = model.predict(X)
     ŷ = convert_to_tensor(predictions)
 

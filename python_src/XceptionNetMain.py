@@ -1,3 +1,4 @@
+import gc
 import sys
 import time
 from datetime import timedelta
@@ -25,6 +26,7 @@ hyperparameters, opt, data_set = read_cmd_line_args(hyperparameters, data_set)
 print(' Dataset: {}\n'.format(data_set.name))
 print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
+gc.enable()
 
 print('[INFO] Creating required directories...')
 create_required_directories()
