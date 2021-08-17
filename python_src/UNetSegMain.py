@@ -1,3 +1,4 @@
+import gc
 import sys
 import time
 from datetime import timedelta
@@ -27,6 +28,7 @@ print('[BEGIN] Start script...\n')
 hyperparameters, opt, data_set = read_cmd_line_args(hyperparameters, data_set)
 print(' Image dimensions: {}\n'.format(IMAGE_DIMS))
 print(hyperparameters.report_hyperparameters())
+gc.enable()
 
 print('[INFO] Loading images...')
 train_y, roi_train_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1), subset='Training')
@@ -76,7 +78,7 @@ model.compile(optimizer=opt,
 callbacks = [
         EarlyStopping(
             monitor='val_mean_io_u', min_delta=0.001, patience=10, verbose=1, mode='max',
-            baseline=1.00, restore_best_weights=True),
+            baseline=1.00, restore_best_weights=False),
         ReduceLROnPlateau(
             monitor='val_mean_io_u',  patience=5, verbose=1, mode='max',
             min_delta=0.001, cooldown=0, min_lr=0.00001),

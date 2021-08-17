@@ -1,3 +1,5 @@
+import gc
+
 from matplotlib import pyplot
 from numpy import mean, std, arange
 from sklearn.metrics import confusion_matrix
@@ -16,6 +18,7 @@ from metrics.MetricsReporter import MetricReporter
 from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args
+gc.enable()
 
 print('[BEGIN] Start script...\n')
 hyperparameters, opt, data_set = read_cmd_line_args(hyperparameters, data_set)

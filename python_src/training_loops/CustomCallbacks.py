@@ -32,7 +32,7 @@ class RunMetaHeuristicOnPlateau(Callback):
         min_delta: threshold for measuring the new optimum, to only focus on
           significant changes.
         cooldown: number of epochs to wait before resuming normal operation after
-          lr has been reduced.
+          algorithm has been reduced.
         min_lr: lower bound on the learning rate.
     """
 
@@ -125,9 +125,9 @@ class RunMetaHeuristicOnPlateau(Callback):
                               'hyperparameters [population size: %d iterations: %d]'
                               % (epoch + 1, self.meta_heuristic, self.population_size, self.iterations))
                     model = meta_opt.get_optimized_model()
-                    return model
                     self.cooldown_counter = self.cooldown
                     self.wait = 0
+                    return model
 
     def in_cooldown(self):
         return self.cooldown_counter > 0
