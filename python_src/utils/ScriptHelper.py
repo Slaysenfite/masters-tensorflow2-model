@@ -28,8 +28,9 @@ def generate_script_report(H, model, test_x, test_y, predictions, time_taken, da
 def read_cmd_line_args(hyperparameters, dataset):
     parser = ArgumentParser()
     parser.add_argument('--meta_heuristic', type=str)
-    parser.add_argument('--meta_heuristic_order', type=str)
+    parser.add_argument('--meta_heuristic_layers', type=int)
     parser.add_argument('--optimizer', type=str)
+    parser.add_argument('--dropout_prob', type=float)
     parser.add_argument('--id', type=str)
     parser.add_argument('--epochs', type=int)
     parser.add_argument('--dataset', type=str)
@@ -46,19 +47,20 @@ def read_cmd_line_args(hyperparameters, dataset):
     if args.epochs is not None:
         hyperparameters.epochs = args.epochs
 
+    if args.dropout_prob is not None:
+        hyperparameters.dropout_prob = args.dropout_prob
+
     if args.meta_heuristic is not None:
         hyperparameters.meta_heuristic = args.meta_heuristic
+
+    if args.meta_heuristic_layers is not None:
+        hyperparameters.num_layers_for_optimization = args.meta_heuristic_layers
 
     if args.preloaded_experiment is not None:
         hyperparameters.weights_of_experiment_id = args.preloaded_experiment
 
     if args.l2 is not None:
         hyperparameters.l2 = args.l2
-
-    if args.meta_heuristic_order is not None and args.meta_heuristic_order == 'first':
-        hyperparameters.meta_heuristic_order = 'first'
-    elif args.meta_heuristic_order is not None and args.meta_heuristic_order == 'last':
-        hyperparameters.meta_heuristic_order = 'last'
 
     if args.optimizer is not None and args.optimizer == 'adam':
         hyperparameters.learning_optimization = 'Adam'

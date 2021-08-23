@@ -5,15 +5,14 @@ from tensorflow.python.keras.layers import Conv2D, Dense
 from tensorflow.python.keras.metrics import TrueNegatives, TruePositives, FalsePositives, \
     FalseNegatives, BinaryCrossentropy, CategoricalCrossentropy
 from tensorflow.python.ops.numpy_ops.np_arrays import convert_to_tensor
-import gc
 
 from metrics.MetricsUtil import iou_coef, dice_coef
 
-MAX_LAYER_FOR_OPTIMIZATION = 6
+MAX_LAYERS_FOR_OPTIMIZATION = 6
 
 
-def calc_solution_fitness(weights, model, loss_metric, X, y):
-    set_trainable_weights(model, weights)
+def calc_solution_fitness(weights, model, loss_metric, X, y, num_layers):
+    set_trainable_weights(model=model, weights=weights, num_layers=num_layers)
 
     # This call takes 50s + to run on 128 dims and uses vast amount of memory
     # ŷ = model(X, training=True)
@@ -40,8 +39,8 @@ def calc_solution_fitness(weights, model, loss_metric, X, y):
     return (fpr) + (2 * loss) + (1 - specificity) + (1 - precision)
 
 
-def calc_seg_fitness(weights, model, loss_metric, X, y):
-    set_trainable_weights(model, weights)
+def calc_seg_fitness(weights, model, loss_metric, X, y, num_layers):
+    set_trainable_weights(model=model, weights=weights, num_layers=num_layers)
     ŷ = model(X, training=True)
     return 1 - iou_coef(y, ŷ)
 
@@ -53,7 +52,7 @@ def determine_loss_function_based_on_fitness_function(fitness_function):
         return CategoricalCrossentropy()
 
 
-def get_trainable_weights(model, keras_layers=(Dense, Conv2D), num_layers=MAX_LAYER_FOR_OPTIMIZATION):
+def get_trainable_weights(model, num_layers, keras_layers=(Dense, Conv2D)):
     weights = []
     layer_count = 0
     for layer in reversed(model.layers):
@@ -67,7 +66,7 @@ def get_trainable_weights(model, keras_layers=(Dense, Conv2D), num_layers=MAX_LA
     return weights
 
 
-def set_trainable_weights(model, weights, keras_layers=(Dense, Conv2D), num_layers=MAX_LAYER_FOR_OPTIMIZATION):
+def set_trainable_weights(model, weights, num_layers, keras_layers=(Dense, Conv2D)):
     i = 0
     for layer in reversed(model.layers):
         if layer.trainable is not True or len(layer.weights) == 0 or layer.name == 'predictions':

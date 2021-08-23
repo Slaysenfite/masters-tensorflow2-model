@@ -13,13 +13,15 @@ class MetaheuristicOptimizer(ABC):
                  model=None,
                  X=None,
                  y=None,
-                 layers_to_optimize=(Conv2D, Dense)):
+                 layers_to_optimize=(Conv2D, Dense),
+                 num_layers=5):
         self.iterations = iterations
         self.num_solutions = num_solutions
         self.model = model
         self.X = X
         self.y = y
         self.layers_to_optimize = layers_to_optimize
+        self.num_layers = num_layers
         self.fitness_function = fitness_function
         self.loss_metric = determine_loss_function_based_on_fitness_function(self.fitness_function)
         super().__init__()

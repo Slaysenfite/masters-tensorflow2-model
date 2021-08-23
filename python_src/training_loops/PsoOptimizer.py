@@ -3,7 +3,6 @@ from random import uniform, seed
 from tensorflow._api.v2 import math
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
-from tensorflow.python.keras.losses import CategoricalCrossentropy
 
 from training_loops.MetaheuristicOptimizer import MetaheuristicOptimizer
 from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights, calc_solution_fitness, \
@@ -36,7 +35,8 @@ class PsoEnv(MetaheuristicOptimizer):
     def get_optimized_model(self):
         print('\nRunning PSO algorithm')
         iteration = 0
-        weights = get_trainable_weights(self.model, self.layers_to_optimize)
+        weights = get_trainable_weights(model=self.model, keras_layers=self.layers_to_optimize,
+                                        num_layers=self.num_layers)
 
         swarm = self.initialize_swarm(self.num_solutions, weights, self.model, self.loss_metric, self.X, self.y)
 
@@ -48,20 +48,21 @@ class PsoEnv(MetaheuristicOptimizer):
 
             self.update_gbest(swarm)
 
-            print(' PSO training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
-                swarm[0].gbest_fitness))
+            print(' PSO training for iteration {} - Best fitness of {}'.format((iteration + 1), swarm[0].gbest_fitness))
             iteration += 1
         best_weights = convert_tenor_weights_to_tf_variable(swarm[0].gbest)
 
-        return set_trainable_weights(self.model, best_weights, self.layers_to_optimize)
+        return set_trainable_weights(model=self.model, weights=best_weights, keras_layers=self.layers_to_optimize,
+                                     num_layers=self.num_layers)
 
     def initialize_swarm(self, swarm_size, weights, model, loss_metric, X, y):
         particles = [None] * swarm_size
         starting_velocity = [[w * 0 for w in weight] for weight in weights]
-        particles[0] = Particle(weights, self.fitness_function(weights, model, loss_metric, X, y), starting_velocity)
+        particles[0] = Particle(weights, self.fitness_function(weights, model, loss_metric, X, y, self.num_layers), starting_velocity)
+        print(' PSO starting fitness of {}'.format(particles[0].gbest_fitness))
         for p in range(1, swarm_size):
             new_weights = [[w * uniform(0, 1) for w in weight] for weight in weights]
-            initial_fitness = self.fitness_function(new_weights, model, loss_metric, X, y)
+            initial_fitness = self.fitness_function(new_weights, model, loss_metric, X, y, self.num_layers)
             particles[p] = Particle(position=new_weights, fitness=initial_fitness, velocity=starting_velocity)
         return particles
 
@@ -75,7 +76,7 @@ class PsoEnv(MetaheuristicOptimizer):
         for particle in particles:
             particle.velocity = self.update_velocity(particle, INERTIA, [C1, C2])
             particle.position = self.calc_new_position(particle)
-            particle.current_fitness = self.fitness_function(particle.position, model, loss_metric, X, y)
+            particle.current_fitness = self.fitness_function(particle.position, model, loss_metric, X, y, self.num_layers)
             if particle.current_fitness < particle.best_fitness:
                 particle.pbest = particle.position
                 particle.best_fitness = particle.current_fitness

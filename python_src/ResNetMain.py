@@ -1,3 +1,4 @@
+import gc
 import sys
 import time
 from datetime import timedelta
@@ -16,7 +17,6 @@ from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
 from utils.ImageLoader import load_rgb_images, supplement_training_data
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
-import gc
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
@@ -60,7 +60,9 @@ model = ResNet50V2(
         weights=weights,
         input_shape=IMAGE_DIMS,
         classes=len(data_set.class_names))
-model = create_classification_layers(base_model=model, classes=len(data_set.class_names))
+model = create_classification_layers(base_model=model,
+                                     classes=len(data_set.class_names),
+                                     dropout_prob=hyperparameters.dropout_prob)
 
 if hyperparameters.weights_of_experiment_id is not None:
     path_to_weights = '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.weights_of_experiment_id)
@@ -93,8 +95,7 @@ if hyperparameters.tf_fit:
                   callbacks=callbacks)
 else:
     H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
-                      meta_heuristic=hyperparameters.meta_heuristic,
-                      meta_heuristic_order=hyperparameters.meta_heuristic_order)
+                      meta_heuristic=hyperparameters.meta_heuristic)
 
 time_taken = timedelta(seconds=(time.time() - start_time))
 
