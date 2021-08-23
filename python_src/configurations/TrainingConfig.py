@@ -28,7 +28,7 @@ class Hyperparameters:
         self.sgd_lr = sgd_lr
         self.adam_lr = adam_lr
         self.batch_size = batch_size
-        self.dropout = dropout
+        self.dropout_prob = dropout
         self.learning_optimization = 'sgd'
         self.meta_heuristic = 'none'
         self.meta_heuristic_order = 'na'
@@ -44,7 +44,7 @@ class Hyperparameters:
         report += ' Epochs: {}\n'.format(self.epochs)
         report += ' Initial learning rate: {}\n'.format(self.init_lr)
         report += ' Batch size: {}\n'.format(self.batch_size)
-        report += ' Dropout: {}\n'.format(self.dropout)
+        report += ' Dropout: {}\n'.format(self.dropout_prob)
         report += ' Learning optimization: {}\n'.format(self.learning_optimization)
         report += ' Meta-heuristic used: {}\n'.format(self.meta_heuristic)
         report += ' Meta-heuristic order: {}\n'.format(self.meta_heuristic_order)

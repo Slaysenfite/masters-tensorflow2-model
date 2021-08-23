@@ -30,6 +30,7 @@ def read_cmd_line_args(hyperparameters, dataset):
     parser.add_argument('--meta_heuristic', type=str)
     parser.add_argument('--meta_heuristic_order', type=str)
     parser.add_argument('--optimizer', type=str)
+    parser.add_argument('--dropout_prob', type=float)
     parser.add_argument('--id', type=str)
     parser.add_argument('--epochs', type=int)
     parser.add_argument('--dataset', type=str)
@@ -45,6 +46,9 @@ def read_cmd_line_args(hyperparameters, dataset):
 
     if args.epochs is not None:
         hyperparameters.epochs = args.epochs
+
+    if args.dropout_prob is not None:
+        hyperparameters.dropout_prob = args.dropout_prob
 
     if args.meta_heuristic is not None:
         hyperparameters.meta_heuristic = args.meta_heuristic
