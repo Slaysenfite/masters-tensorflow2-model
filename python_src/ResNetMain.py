@@ -95,8 +95,7 @@ if hyperparameters.tf_fit:
                   callbacks=callbacks)
 else:
     H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
-                      meta_heuristic=hyperparameters.meta_heuristic,
-                      meta_heuristic_order=hyperparameters.meta_heuristic_order)
+                      meta_heuristic=hyperparameters.meta_heuristic)
 
 time_taken = timedelta(seconds=(time.time() - start_time))
 

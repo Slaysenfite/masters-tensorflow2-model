@@ -35,7 +35,8 @@ class GaEnv(MetaheuristicOptimizer):
     def get_optimized_model(self):
         print('\nRunning GA algorithm')
         iteration = 0
-        weights = get_trainable_weights(self.model, self.layers_to_optimize)
+        weights = get_trainable_weights(model=self.model, keras_layers=self.layers_to_optimize,
+                                        num_layers=self.num_layers)
 
         individuals = self.initialize_population(self.num_solutions, weights, self.model, self.X, self.y)
         individuals = self.update_fitness(individuals, self.model, self.X, self.y)
@@ -49,13 +50,15 @@ class GaEnv(MetaheuristicOptimizer):
             iteration += 1
         best_weights = convert_tenor_weights_to_tf_variable(individuals[0].weights)
 
-        return set_trainable_weights(self.model, best_weights, self.layers_to_optimize)
+        return set_trainable_weights(model=self.model, weights=best_weights, keras_layers=self.layers_to_optimize,
+                                     num_layers=self.num_layers)
 
     def initialize_population(self, population_size, weights, model, X, y):
         individuals = [None] * population_size
         weights = [[w * 1 for w in weight] for weight in weights]
-        fitness = self.fitness_function(weights, model, self.loss_metric, X, y)
+        fitness = self.fitness_function(weights, model, self.loss_metric, X, y, self.num_layers)
         individuals[0] = Solution(weights, fitness)
+        print(' GA starting fitness of {}'.format(individuals[0].fitness))
         for p in range(1, population_size):
             new_weights = [[w * uniform(0, 1) for w in weight] for weight in weights]
             individuals[p] = Solution(new_weights, 1000)
@@ -63,7 +66,8 @@ class GaEnv(MetaheuristicOptimizer):
 
     def update_fitness(self, individuals, model, X, y):
         for individual in individuals:
-            individual.fitness = self.fitness_function(individual.weights, model, self.loss_metric, X, y)
+            individual.fitness = self.fitness_function(individual.weights, model, self.loss_metric, X, y,
+                                                       self.num_layers)
         individuals.sort(key=lambda indv: indv.fitness, reverse=False)
         return individuals
 
@@ -105,7 +109,8 @@ class GaEnv(MetaheuristicOptimizer):
             )
 
         return Solution(new_weights,
-                        self.fitness_function(new_weights, self.model, self.loss_metric, self.X, self.y))
+                        self.fitness_function(new_weights, self.model, self.loss_metric, self.X, self.y,
+                                              self.num_layers))
 
     @staticmethod
     def perform_element_level_crossover(one_element, two_element):
@@ -130,7 +135,8 @@ class GaEnv(MetaheuristicOptimizer):
             )
 
         return Solution(new_weights,
-                        self.fitness_function(new_weights, self.model, self.loss_metric, self.X, self.y))
+                        self.fitness_function(new_weights, self.model, self.loss_metric, self.X, self.y,
+                                              self.num_layers))
 
     @staticmethod
     def gen_rand_num_list(size, a, b):

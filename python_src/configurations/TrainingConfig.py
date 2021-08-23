@@ -31,13 +31,13 @@ class Hyperparameters:
         self.dropout_prob = dropout
         self.learning_optimization = 'sgd'
         self.meta_heuristic = 'none'
-        self.meta_heuristic_order = 'na'
         self.experiment_id = 'na'
         self.augmentation = False
         self.preloaded_weights = False
         self.weights_of_experiment_id = None
         self.tf_fit = True
         self.l2 = 0.00001
+        self.num_layers_for_optimization = 5
 
     def report_hyperparameters(self):
         report = '*** Script Hyperparameters ***\n'
@@ -47,7 +47,7 @@ class Hyperparameters:
         report += ' Dropout: {}\n'.format(self.dropout_prob)
         report += ' Learning optimization: {}\n'.format(self.learning_optimization)
         report += ' Meta-heuristic used: {}\n'.format(self.meta_heuristic)
-        report += ' Meta-heuristic order: {}\n'.format(self.meta_heuristic_order)
+        report += ' Meta-heuristic layer optimized: {}\n'.format(self.num_layers_for_optimization)
         report += ' Data augmentation: {}\n'.format(self.augmentation)
         report += ' Preloaded weights: {}\n'.format(self.preloaded_weights)
         report += ' Existing Weights Exp Id: {}\n'.format(self.weights_of_experiment_id)
