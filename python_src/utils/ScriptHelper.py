@@ -91,7 +91,6 @@ def read_cmd_line_args(hyperparameters, dataset):
 
 def create_file_title(model_name, hyperparameters):
     meta_heuristic = hyperparameters.meta_heuristic if hyperparameters.meta_heuristic != None else 'none'
-    order = hyperparameters.meta_heuristic_order if hyperparameters.meta_heuristic_order != None else 'na'
-    return hyperparameters.experiment_id + '_' + model_name + '_' + meta_heuristic + '_' + order
+    return hyperparameters.experiment_id + '_' + model_name + '_' + meta_heuristic
 
 
