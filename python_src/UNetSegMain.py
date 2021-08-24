@@ -119,7 +119,6 @@ if hyperparameters.tf_fit:
 else:
     H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
                       meta_heuristic=hyperparameters.meta_heuristic,
-                      meta_heuristic_order=hyperparameters.meta_heuristic_order,
                       fitness_function=calc_seg_fitness, task='segmentation')
 time_taken = timedelta(seconds=(time.time() - start_time))
 

@@ -121,8 +121,7 @@ def evaluate_model(dataX, dataY, n_folds=5):
                           callbacks=callbacks)
         else:
             history = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
-                                    meta_heuristic=hyperparameters.meta_heuristic,
-                                    meta_heuristic_order=hyperparameters.meta_heuristic_order)
+                                    meta_heuristic=hyperparameters.meta_heuristic)
             # evaluate model
         acc = model.evaluate(testX, testY)
         print(str(model.metrics_names))
