@@ -59,7 +59,7 @@ class PsoEnv(MetaheuristicOptimizer):
         particles = [None] * swarm_size
         starting_velocity = [[w * 0 for w in weight] for weight in weights]
         particles[0] = Particle(weights, self.fitness_function(weights, model, loss_metric, X, y, self.num_layers), starting_velocity)
-        print(' PSO starting fitness of {}'.format(particles[0].gbest_fitness))
+        print(' PSO starting fitness of {}'.format(particles[0].current_fitness))
         for p in range(1, swarm_size):
             new_weights = [[w * uniform(0, 1) for w in weight] for weight in weights]
             initial_fitness = self.fitness_function(new_weights, model, loss_metric, X, y, self.num_layers)
