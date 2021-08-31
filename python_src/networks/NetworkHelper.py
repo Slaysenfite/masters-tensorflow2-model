@@ -1,12 +1,12 @@
 import re
 
 from tensorflow.python.keras import regularizers
-from tensorflow.python.keras.layers import Dropout, Dense, GlobalAveragePooling2D, Flatten
+from tensorflow.python.keras.layers import Dropout, Dense, GlobalAveragePooling2D, Flatten, Conv2D
 from tensorflow.python.keras.models import Model
 
 
-def create_classification_layers(base_model, classes, dropout_prob=0.3):
-    x = GlobalAveragePooling2D(name='avg_pool')(base_model.layers[-1].output)
+def create_classification_layers(base_model, classes, dropout_prob=0.3, layers_removed=-1):
+    x = GlobalAveragePooling2D(name='avg_pool')(base_model.layers[layers_removed].output)
     x = Flatten()(x)
     x = Dense(512, activation='relu', kernel_initializer='he_uniform')(x)
     x = Dropout(dropout_prob)(x)
@@ -14,22 +14,27 @@ def create_classification_layers(base_model, classes, dropout_prob=0.3):
     return Model(inputs=base_model.inputs, outputs=x)
 
 
-
-def compile_with_regularization(model, loss, optimizer, metrics, attrs=['kernel_regularizer'], regularization_type='l2',
-                                l1=0.01, l2=0.01):
+def compile_with_regularization(model,
+                                loss,
+                                optimizer,
+                                metrics,
+                                add_l_type_reg=True,
+                                attrs=['kernel_regularizer'],
+                                regularization_type='l2',
+                                l1=1.e-4,
+                                l2=1.e-4):
     regularizer = get_regularizer(regularization_type, l1, l2)
     for layer in model.layers:
-        if not isinstance(layer, (Dense)):
+        if isinstance(layer, Conv2D) and add_l_type_reg is True:
             for attr in attrs:
                 if hasattr(layer, attr):
                     setattr(layer, attr, regularizer)
-                    # print('[INFO] Adding '+ regularization_type + ' ' + attr + ' to ' + layer.name)
+                    # print('[INFO] Adding {} {} to {}'.format(regularization_type, attr, layer.name))
     # compile model
     model.compile(loss=loss, optimizer=optimizer, metrics=metrics)
 
 
 def get_regularizer(regularization_type, l1, l2):
-    regularizer = None
     if regularization_type == 'l1':
         regularizer = regularizers.l1(l1)
     elif regularization_type == 'l2':

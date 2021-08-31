@@ -1,31 +1,41 @@
 
 import tensorflow as tf
+from tensorflow.python.keras.applications.mobilenet_v2 import MobileNetV2
 from tensorflow.python.keras.layers import Conv2D, BatchNormalization, MaxPooling2D, UpSampling2D, concatenate, Dropout, \
-    Flatten, Dense
+    Flatten, Dense, Concatenate, Activation, Input
 from tensorflow.python.keras.models import Model
 
 
 def build_unet(input_shape, num_classes):
+
     inputs = tf.keras.Input(shape=input_shape)
+
     conv1 = Conv2D(64, 3, activation='relu', dilation_rate=2, padding='same', kernel_initializer='he_normal')(inputs)
     conv1 = BatchNormalization()(conv1)
     conv1 = Conv2D(64, 3, activation='relu', dilation_rate=2, padding='same', kernel_initializer='he_normal')(conv1)
     conv1 = BatchNormalization()(conv1)
+
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+
     conv2 = Conv2D(128, 3, activation='relu', dilation_rate=2, padding='same', kernel_initializer='he_normal')(pool1)
     conv2 = BatchNormalization()(conv2)
     conv2 = Conv2D(128, 3, activation='relu', dilation_rate=2, padding='same', kernel_initializer='he_normal')(conv2)
     conv2 = BatchNormalization()(conv2)
+
     pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+
     conv3 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool2)
     conv3 = BatchNormalization()(conv3)
     conv3 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv3)
     conv3 = BatchNormalization()(conv3)
+
     pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+
     conv4 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool3)
     conv4 = BatchNormalization()(conv4)
     conv4 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv4)
     conv4 = BatchNormalization()(conv4)
+
     drop4 = Dropout(0.5)(conv4, training=True)
     pool4 = MaxPooling2D(pool_size=(2, 2))(drop4)
 
@@ -33,6 +43,7 @@ def build_unet(input_shape, num_classes):
     conv5 = BatchNormalization()(conv5)
     conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
     conv5 = BatchNormalization()(conv5)
+
     drop5 = Dropout(0.5)(conv5, training=True)
 
     up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(
@@ -65,4 +76,42 @@ def build_unet(input_shape, num_classes):
     x = Dense(num_classes, activation='softmax', name='predictions')(x)
     return Model(inputs=inputs, outputs=x)
 
+
+def build_pretrained_unet(input_shape, num_classes):
+    inputs = Input(shape=input_shape, name="input_image")
+    encoder = MobileNetV2(input_tensor=inputs, weights="imagenet", include_top=False, alpha=0.35)
+    skip_connection_names = ["input_image", "block_1_expand_relu", "block_3_expand_relu", "block_6_expand_relu"]
+    encoder_output = encoder.get_layer("block_13_expand_relu").output
+
+    f = [32, 64, 128, 256] #[64, 128, 256, 512, 1024]
+    x = encoder_output
+    for i in range(1, len(skip_connection_names) + 1, 1):
+        x_skip = encoder.get_layer(skip_connection_names[-i]).output
+        x = UpSampling2D((2, 2))(x)
+        x = Concatenate()([x, x_skip])
+
+        x = Conv2D(f[-i], (3, 3), padding="same")(x)
+        x = BatchNormalization()(x)
+        x = Activation("relu")(x)
+
+        x = Conv2D(f[-i], (3, 3), padding="same")(x)
+        x = BatchNormalization()(x)
+        x = Activation("relu")(x)
+
+    x = Conv2D(1, (1, 1), padding="same")(x)
+    x = Activation("sigmoid")(x)
+
+    model = Model(inputs, x)
+    model.summary()
     return model
+
+
+def determine_weights_input_size(dim):
+    if dim == 96 or dim == 128 or dim == 160 or dim == 128 or dim == 192 or dim == 224:
+        return dim
+    elif dim < 96:
+        return 96
+    elif dim > 224:
+        return 224
+    else:
+        return 128

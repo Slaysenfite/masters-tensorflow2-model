@@ -5,7 +5,7 @@ from datetime import timedelta
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
-from tensorflow.python.keras.applications.inception_v3 import InceptionV3
+from tensorflow.python.keras.applications.inception_resnet_v2 import InceptionResNetV2
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import bcs_data_set as data_set
@@ -54,7 +54,7 @@ if hyperparameters.preloaded_weights:
     weights = 'imagenet'
 else:
     weights = None
-model = InceptionV3(
+model = InceptionResNetV2(
         include_top=False,
         weights=weights,
         input_shape=IMAGE_DIMS,
@@ -80,7 +80,7 @@ callbacks = create_callbacks(hyperparameters)
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
         X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=30, iterations=10,
-        monitor='val_loss', patience=4, verbose=1, mode='min',
+        monitor='val_loss', factor=0.2, patience=4, verbose=1, mode='min',
         min_delta=0.05, cooldown=0)
     callbacks.append(meta_callback)
 
@@ -108,7 +108,7 @@ predictions = model.predict(test_x)
 
 print('[INFO] generating metrics...')
 
-file_title = create_file_title('GoogLeNet', hyperparameters)
+file_title = create_file_title('InceptionResNet', hyperparameters)
 
 model.save(filepath=MODEL_OUTPUT + file_title + '.h5', save_format='h5')
 

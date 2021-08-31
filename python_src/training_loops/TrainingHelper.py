@@ -1,13 +1,11 @@
 from tensorflow.python.data import Dataset
 from tensorflow.python.keras.callbacks import History
 from tensorflow.python.keras.losses import CategoricalCrossentropy
-from tensorflow.python.keras.metrics import CategoricalAccuracy
+from tensorflow.python.keras.metrics import CategoricalAccuracy, BinaryAccuracy, BinaryCrossentropy
 
 
-def append_epoch_metrics(accuracy, loss, train_acc_score, train_loss_score, val_acc_score, val_accuracy, val_loss,
+def append_epoch_metrics(val_acc_score, val_accuracy, val_loss,
                              val_loss_score, val_precision, val_precision_score, val_recall, val_recall_score):
-    loss.append(train_loss_score)
-    accuracy.append(train_acc_score)
     val_loss.append(val_loss_score)
     val_accuracy.append(val_acc_score)
     val_precision.append(val_precision_score)
@@ -19,13 +17,8 @@ def reset_metrics(train_acc_metric, val_acc_metric):
     val_acc_metric.reset_states()
 
 
-def print_metrics(train_acc_score, train_loss_score, train_precision_score, train_recall_score, val_acc_score,
+def print_metrics(val_acc_score,
                   val_loss_score, val_precision_score, val_recall_score):
-    print('--- Training Scores ---')
-    print('Training acc over epoch: %s' % (float(train_acc_score)))
-    print('Training loss over epoch: %s' % (float(train_loss_score)))
-    print('Training precision over epoch: %s' % (float(train_precision_score)))
-    print('Training recall over epoch: %s' % (float(train_recall_score)))
     print('--- Validation Scores ---')
     print('Validation acc over epoch: %s' % (float(val_acc_score)))
     print('Validation loss over epoch: %s' % (float(val_loss_score)))
@@ -52,11 +45,17 @@ def generate_tf_history(model, hyperparameters, accuracy, loss, val_accuracy, va
     return H
 
 
-def prepare_metrics():
-    train_acc_metric = CategoricalAccuracy()
-    val_acc_metric = CategoricalAccuracy()
-    train_loss_metric = CategoricalCrossentropy(from_logits=True)
-    val_loss_metric = CategoricalCrossentropy(from_logits=True)
+def prepare_metrics(task):
+    if task == 'binary_classification':
+        train_acc_metric = BinaryAccuracy()
+        val_acc_metric = BinaryAccuracy()
+        train_loss_metric = BinaryCrossentropy(from_logits=True)
+        val_loss_metric = BinaryCrossentropy(from_logits=True)
+    else:
+        train_acc_metric = CategoricalAccuracy()
+        val_acc_metric = CategoricalAccuracy()
+        train_loss_metric = CategoricalCrossentropy(from_logits=True)
+        val_loss_metric = CategoricalCrossentropy(from_logits=True)
     return train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric
 
 
