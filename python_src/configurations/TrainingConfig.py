@@ -34,6 +34,7 @@ class Hyperparameters:
         self.experiment_id = 'na'
         self.augmentation = False
         self.preloaded_weights = False
+        self.kernel_initializer='he_uniform'
         self.weights_of_experiment_id = None
         self.tf_fit = True
         self.l2 = 0.00001
@@ -50,6 +51,7 @@ class Hyperparameters:
         report += ' Meta-heuristic layer optimized: {}\n'.format(self.num_layers_for_optimization)
         report += ' Data augmentation: {}\n'.format(self.augmentation)
         report += ' Preloaded weights: {}\n'.format(self.preloaded_weights)
+        report += ' Kernel initializer: {}\n'.format(self.kernel_initializer)
         report += ' Existing Weights Exp Id: {}\n'.format(self.weights_of_experiment_id)
         report += ' TF Fit Training: {}\n'.format(self.tf_fit)
         report += ' L2: {}\n'.format(self.l2)
