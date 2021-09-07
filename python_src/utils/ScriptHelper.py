@@ -16,7 +16,7 @@ def generate_script_report(H, model, test_x, test_y, predictions, time_taken, da
     with open(
             output_dir + hyperparameters.experiment_id + '_' + model_name + '_' + data_set.name + '_' + metadata_string
             + '_result_report.txt',
-              'w+') as text_file:
+            'w+') as text_file:
         text_file.write(
             hyperparameters.report_hyperparameters()
             + performance_metrics.report_metrics()
@@ -36,6 +36,7 @@ def read_cmd_line_args(hyperparameters, dataset):
     parser.add_argument('--dataset', type=str)
     parser.add_argument('--augmentation', type=str)
     parser.add_argument('--preloaded_weights', type=str)
+    parser.add_argument('--kernel_initializer', type=str)
     parser.add_argument('--preloaded_experiment', type=str)
     parser.add_argument('--tf_fit', type=str)
     parser.add_argument('--l2', type=float)
@@ -58,6 +59,9 @@ def read_cmd_line_args(hyperparameters, dataset):
 
     if args.preloaded_experiment is not None:
         hyperparameters.weights_of_experiment_id = args.preloaded_experiment
+
+    if args.kernel_initializer is not None:
+        hyperparameters.kernel_initializer = args.kernel_initializer
 
     if args.l2 is not None:
         hyperparameters.l2 = args.l2
@@ -92,5 +96,3 @@ def read_cmd_line_args(hyperparameters, dataset):
 def create_file_title(model_name, hyperparameters):
     meta_heuristic = hyperparameters.meta_heuristic if hyperparameters.meta_heuristic != None else 'none'
     return hyperparameters.experiment_id + '_' + model_name + '_' + meta_heuristic
-
-
