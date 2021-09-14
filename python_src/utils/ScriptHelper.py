@@ -27,11 +27,11 @@ def generate_script_report(H, model, test_x, test_y, predictions, time_taken, da
 
 def read_cmd_line_args(hyperparameters, dataset):
     parser = ArgumentParser()
+    parser.add_argument('--id', type=str)
     parser.add_argument('--meta_heuristic', type=str)
     parser.add_argument('--meta_heuristic_layers', type=int)
     parser.add_argument('--optimizer', type=str)
     parser.add_argument('--dropout_prob', type=float)
-    parser.add_argument('--id', type=str)
     parser.add_argument('--epochs', type=int)
     parser.add_argument('--dataset', type=str)
     parser.add_argument('--augmentation', type=str)
