@@ -14,6 +14,7 @@ from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, MODEL_OUTPUT
 from metrics.MetricsUtil import iou_coef, dice_coef
+from networks.NetworkHelper import compile_with_regularization
 from networks.UNet import build_pretrained_unet
 from networks.UNetSeg import unet_seg
 from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
@@ -70,9 +71,13 @@ if hyperparameters.weights_of_experiment_id is not None:
     print('[INFO] Loading weights from {}'.format(path_to_weights))
     model.load_weights(path_to_weights)
 
-model.compile(optimizer=opt,
-              loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy', MeanIoU(num_classes=len(data_set.class_names))])
+# Compile model
+compile_with_regularization(model=model,
+                            loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
+                            optimizer=opt,
+                            metrics=['accuracy', MeanIoU(num_classes=len(data_set.class_names))],
+                            regularization_type='l2',
+                            l2=hyperparameters.l2)
 
 # Setup callbacks
 callbacks = [
