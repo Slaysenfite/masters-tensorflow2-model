@@ -7,7 +7,8 @@ from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau, 
 def create_required_directories():
     os.makedirs(output_dir, 0o777, True)
     os.makedirs(output_dir + 'figures/', 0o777, True)
-    os.makedirs(output_dir + 'model/', 0o777, True)
+    os.makedirs(output_dir + 'segmentation/', 0o777, True)
+    os.makedirs(output_dir + 'heatmaps/', 0o777, True)
     os.makedirs(MODEL_OUTPUT, 0o777, True)
 
 
@@ -21,20 +22,19 @@ MODEL_OUTPUT = ROOT_DIRECTORY = home + '/data/models/'
 
 
 class Hyperparameters:
-    def __init__(self, epochs, init_lr, sgd_lr, adam_lr, batch_size,
-                 dropout):
+    def __init__(self, epochs, batch_size):
         self.epochs = epochs
-        self.init_lr = init_lr
-        self.sgd_lr = sgd_lr
-        self.adam_lr = adam_lr
+        self.init_lr = 0.001
+        self.sgd_lr = 0.001
+        self.adam_lr = 0.001
         self.batch_size = batch_size
-        self.dropout_prob = dropout
+        self.dropout_prob = 0.25
         self.learning_optimization = 'sgd'
         self.meta_heuristic = 'none'
         self.experiment_id = 'na'
         self.augmentation = False
         self.preloaded_weights = False
-        self.kernel_initializer='he_uniform'
+        self.kernel_initializer = 'he_uniform'
         self.weights_of_experiment_id = None
         self.tf_fit = True
         self.l2 = 0.00001
@@ -42,8 +42,11 @@ class Hyperparameters:
 
     def report_hyperparameters(self):
         report = '*** Script Hyperparameters ***\n'
+        report += ' Experiment Id: {}\n'.format(self.experiment_id)
         report += ' Epochs: {}\n'.format(self.epochs)
         report += ' Initial learning rate: {}\n'.format(self.init_lr)
+        report += ' SGD learning rate: {}\n'.format(self.sgd_lr)
+        report += ' ADAM learning rate: {}\n'.format(self.adam_lr)
         report += ' Batch size: {}\n'.format(self.batch_size)
         report += ' Dropout: {}\n'.format(self.dropout_prob)
         report += ' Learning optimization: {}\n'.format(self.learning_optimization)
@@ -62,22 +65,14 @@ class Hyperparameters:
 def create_standard_hyperparameter_singleton():
     return Hyperparameters(
         50,
-        0.001,
-        0.001,
-        0.003,
-        32,
-        0.25
+        32
     )
 
 
 def create_mnist_hyperparameter_singleton():
     return Hyperparameters(
         10,
-        5e-3,
-        5e-3,
-        5e-3,
-        32,
-        0.25
+        32
     )
 
 

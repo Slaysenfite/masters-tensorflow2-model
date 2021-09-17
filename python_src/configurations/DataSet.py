@@ -19,7 +19,6 @@ PATH_TO_MIAS = '/mias'
 PATH_TO_CBIS_DDSM = '/CBIS-DDSM-PNG'
 PATH_TO_BCS = '/BCS-DBT-PNG'
 
-
 # Dataset labels
 
 two_class_label_map = {'P': 0, 'N': 1}
@@ -36,6 +35,7 @@ class DataSetNames(Enum):
     InBreast = 'IN'
     MNIST = 'Modified National Institute of Standards and Technology'
     BCS_DBT = 'BCS-DBT'
+
 
 class DataSet:
     def __init__(self, name, root_path, train_metadata_path, test_metadata_path, class_label_index, label_map,
@@ -118,7 +118,8 @@ class SegmentationDataset(DataSet):
                  cropped_test_metadata_path, roi_train_metadata_path,
                  roi_test_metadata_path, class_label_index, label_map,
                  class_names, is_multiclass):
-        super().__init__(name, root_path, train_metadata_path, test_metadata_path, class_label_index, label_map, class_names, is_multiclass)
+        super().__init__(name, root_path, train_metadata_path, test_metadata_path, class_label_index, label_map,
+                         class_names, is_multiclass)
         self.cropped_test_metadata_path = cropped_test_metadata_path
         self.cropped_train_metadata_path = cropped_train_metadata_path
         self.roi_train_metadata_path = roi_train_metadata_path
@@ -181,6 +182,7 @@ def create_ddsm_three_class_dataset_singleton():
         three_class_names,
         True
     )
+
 
 def create_ddsm_two_class_dataset_singleton():
     return DataSet(
@@ -245,7 +247,7 @@ def create_cbis_ddsm_five_class_dataset_singleton():
         ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/train_cbis-ddsm_five.csv',
         ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/test_cbis-ddsm_five.csv',
         1,
-        {0:0, 1:1, 2:2, 3:3, 4:4, 5:5},
+        {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5},
         ['0', '1', '2', '3', '4', '5'],
         True
     )
@@ -275,6 +277,7 @@ def create_bcs_two_class_dataset_singleton():
         two_class_names,
         False
     )
+
 
 ddsm_data_set = create_ddsm_three_class_dataset_singleton()
 binary_ddsm_data_set = create_ddsm_two_class_dataset_singleton()

@@ -3,6 +3,9 @@ import re
 from tensorflow.python.keras import regularizers
 from tensorflow.python.keras.layers import Dropout, Dense, GlobalAveragePooling2D, Flatten, Conv2D
 from tensorflow.python.keras.models import Model
+from tf_explain.core import GradCAM
+
+from configurations.TrainingConfig import FIGURE_OUTPUT
 
 
 def create_classification_layers(base_model, classes, dropout_prob=0.3, kernel_initializer='he_uniform', layers_removed=-1):
@@ -46,6 +49,14 @@ def get_regularizer(regularization_type, l1, l2):
         regularizer = regularizers.l2()
     return regularizer
 
+
+def generate_heatmap(model, images, size, class_index, hyperparameters):
+    # Start explainer
+    explainer = GradCAM()
+    for i in range(size):
+        data = ([images[i]], None)
+        grid = explainer.explain(data, model, class_index=class_index)  # 281 is the tabby cat index in ImageNet
+        explainer.save(grid, FIGURE_OUTPUT, "{}_{}_class_{}.png".format(hyperparameters.experiment_id, i, class_index))
 
 def insert_layer_nonseq(model, layer_regex, insert_layer_factory,
                         insert_layer_name=None, position='after'):
