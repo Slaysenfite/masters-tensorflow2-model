@@ -4,19 +4,18 @@ import time
 from datetime import timedelta
 
 import tensorflow as tf
+from keras_preprocessing.image import ImageDataGenerator
 from sklearn.metrics import confusion_matrix
 from tensorflow.python.keras.applications.resnet_v2 import ResNet50V2
-from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
-from tf_explain.core import GradCAM
 
-from configurations.DataSet import bcs_data_set as data_set
+from configurations.DataSet import cbis_ddsm_data_set as data_set
+from configurations.DataSet import cbis_seg_data_set as c_data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks, \
-    MODEL_OUTPUT, FIGURE_OUTPUT
+    MODEL_OUTPUT
 from metrics.MetricsReporter import MetricReporter
 from networks.NetworkHelper import create_classification_layers, compile_with_regularization, generate_heatmap
 from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
-from training_loops.CustomTrainingLoop import training_loop
-from utils.ImageLoader import load_rgb_images, supplement_training_data
+from utils.ImageLoader import load_rgb_images, load_seg_images, supplement_training_data
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
 
 print('Python version: {}'.format(sys.version))
@@ -31,9 +30,12 @@ print('[INFO] Creating required directories...')
 create_required_directories()
 gc.enable()
 
-print('[INFO] Loading images...')
-test_x, test_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Test')
-train_x, train_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Training')
+"""FIRST PASS"""
+
+print('[INFO] Loading cropped images...')
+c_train_x, c_train_y = load_seg_images(c_data_set, path_suffix='cropped', image_dimensions=IMAGE_DIMS,
+                                    subset='Training')
+c_test_x, c_test_y = load_seg_images(c_data_set, path_suffix='cropped', image_dimensions=IMAGE_DIMS, subset='Test')
 
 if hyperparameters.augmentation:
     print('[INFO] Augmenting data set')
@@ -44,31 +46,65 @@ if hyperparameters.augmentation:
         zoom_range=0.05,
         fill_mode='nearest')
 
-    train_x, train_y = supplement_training_data(aug, train_x, train_y, multiclass=False)
+    train_x, train_y = supplement_training_data(aug, c_train_x, c_train_y, multiclass=False)
 
     print('[INFO] Training data shape: ' + str(train_x.shape))
-    print('[INFO] Training label shape: ' + str(train_y.shape))
 
-loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
+loss, c_train_y, c_test_y = c_data_set.get_dataset_labels(c_train_y, c_test_y)
 
 if hyperparameters.preloaded_weights:
-    print('[INFO] Loading imagenet weights')
-    weights = 'imagenet'
+ print('[INFO] Loading imagenet weights')
+ weights = 'imagenet'
 else:
-    weights = None
+ weights = None
+model = ResNet50V2(
+ include_top=False,
+ weights=weights,
+ input_shape=IMAGE_DIMS,
+ classes=len(c_data_set.class_names))
+model = create_classification_layers(base_model=model,
+                                  classes=len(c_data_set.class_names),
+                                  dropout_prob=hyperparameters.dropout_prob)
+
+# Compile model
+compile_with_regularization(model=model,
+                         loss='binary_crossentropy',
+                         optimizer=opt,
+                         metrics=['accuracy'],
+                         regularization_type='l2',
+                         l2=hyperparameters.l2)
+
+# Setup callbacks
+callbacks = create_callbacks(hyperparameters)
+
+# train the network
+start_time = time.time()
+H = model.fit(c_train_x, c_train_y, batch_size=hyperparameters.batch_size, validation_data=(c_test_x, c_test_y),
+           steps_per_epoch=len(c_train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
+           callbacks=callbacks)
+
+model = None
+c_train_x = None
+c_train_y = None
+c_test_x = None
+c_test_y = None
+gc.collect()
+
+"""SECOND PASS"""
+
+print('[INFO] Loading images...')
+test_x, test_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Test')
+train_x, train_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Training')
+loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
+
 model = ResNet50V2(
     include_top=False,
-    weights=weights,
+    weights=None,
     input_shape=IMAGE_DIMS,
     classes=len(data_set.class_names))
 model = create_classification_layers(base_model=model,
                                      classes=len(data_set.class_names),
                                      dropout_prob=hyperparameters.dropout_prob)
-
-if hyperparameters.weights_of_experiment_id is not None:
-    path_to_weights = '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.weights_of_experiment_id)
-    print('[INFO] Loading weights from {}'.format(path_to_weights))
-    model.load_weights(path_to_weights)
 
 # Compile model
 compile_with_regularization(model=model,
@@ -78,8 +114,9 @@ compile_with_regularization(model=model,
                             regularization_type='l2',
                             l2=hyperparameters.l2)
 
-# Setup callbacks
-callbacks = create_callbacks(hyperparameters)
+path_to_weights = '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.experiment_id)
+print('[INFO] Loading weights from {}'.format(path_to_weights))
+model.load_weights(path_to_weights)
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
@@ -87,18 +124,12 @@ if hyperparameters.meta_heuristic != 'none':
         monitor='val_loss', patience=6, verbose=1, mode='min', min_delta=0.001, cooldown=4)
     callbacks.append(meta_callback)
 
-# train the network
-start_time = time.time()
-
-if hyperparameters.tf_fit:
-    H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
-                  steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
-                  callbacks=callbacks)
-else:
-    H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
-                      meta_heuristic=hyperparameters.meta_heuristic)
-
+H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+              steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
+              callbacks=callbacks)
 time_taken = timedelta(seconds=(time.time() - start_time))
+
+"""EVALUATION"""
 
 # evaluate the network
 print('[INFO] evaluating network...')
