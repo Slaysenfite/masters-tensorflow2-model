@@ -49,6 +49,12 @@ class DataSet:
         self.class_names = class_names
         self.is_multiclass = is_multiclass
 
+    def get_num_classes(self):
+        if self.is_multiclass:
+            return len(self.class_names)
+        else:
+            return 1
+
     def get_image_metadata(self):
         df_images = pd.read_csv(self.train_metadata_path)
         return np.array(df_images)

@@ -102,7 +102,6 @@ def build_pretrained_unet(input_shape, num_classes):
     x = Activation("sigmoid")(x)
 
     model = Model(inputs, x)
-    model.summary()
     return model
 
 

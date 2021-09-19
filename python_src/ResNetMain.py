@@ -7,11 +7,10 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from tensorflow.python.keras.applications.resnet_v2 import ResNet50V2
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
-from tf_explain.core import GradCAM
 
 from configurations.DataSet import bcs_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks, \
-    MODEL_OUTPUT, FIGURE_OUTPUT
+    MODEL_OUTPUT
 from metrics.MetricsReporter import MetricReporter
 from networks.NetworkHelper import create_classification_layers, compile_with_regularization, generate_heatmap
 from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
@@ -109,9 +108,6 @@ print(str(acc))
 
 predictions = model.predict(test_x)
 
-generate_heatmap(model, test_x, 10, 0, hyperparameters)
-generate_heatmap(model, test_x, 10, 1, hyperparameters)
-
 print('[INFO] generating metrics...')
 
 file_title = create_file_title('ResNet', hyperparameters)
@@ -128,5 +124,8 @@ reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
 reporter.plot_roc(data_set.class_names, test_y, predictions)
 
 reporter.plot_network_metrics(H, file_title)
+
+generate_heatmap(model, test_x, 10, 0, hyperparameters)
+generate_heatmap(model, test_x, 10, 1, hyperparameters)
 
 print('[END] Finishing script...\n')

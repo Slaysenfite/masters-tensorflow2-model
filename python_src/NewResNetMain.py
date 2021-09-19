@@ -34,7 +34,7 @@ gc.enable()
 
 print('[INFO] Loading cropped images...')
 c_train_x, c_train_y = load_seg_images(c_data_set, path_suffix='cropped', image_dimensions=IMAGE_DIMS,
-                                    subset='Training')
+                                       subset='Training')
 c_test_x, c_test_y = load_seg_images(c_data_set, path_suffix='cropped', image_dimensions=IMAGE_DIMS, subset='Test')
 
 if hyperparameters.augmentation:
@@ -53,26 +53,26 @@ if hyperparameters.augmentation:
 loss, c_train_y, c_test_y = c_data_set.get_dataset_labels(c_train_y, c_test_y)
 
 if hyperparameters.preloaded_weights:
- print('[INFO] Loading imagenet weights')
- weights = 'imagenet'
+    print('[INFO] Loading imagenet weights')
+    weights = 'imagenet'
 else:
- weights = None
+    weights = None
 model = ResNet50V2(
- include_top=False,
- weights=weights,
- input_shape=IMAGE_DIMS,
- classes=len(c_data_set.class_names))
+    include_top=False,
+    weights=weights,
+    input_shape=IMAGE_DIMS,
+    classes=len(c_data_set.class_names))
 model = create_classification_layers(base_model=model,
-                                  classes=len(c_data_set.class_names),
-                                  dropout_prob=hyperparameters.dropout_prob)
+                                     classes=len(c_data_set.class_names),
+                                     dropout_prob=hyperparameters.dropout_prob)
 
 # Compile model
 compile_with_regularization(model=model,
-                         loss='binary_crossentropy',
-                         optimizer=opt,
-                         metrics=['accuracy'],
-                         regularization_type='l2',
-                         l2=hyperparameters.l2)
+                            loss='binary_crossentropy',
+                            optimizer=opt,
+                            metrics=['accuracy'],
+                            regularization_type='l2',
+                            l2=hyperparameters.l2)
 
 # Setup callbacks
 callbacks = create_callbacks(hyperparameters)
@@ -80,8 +80,8 @@ callbacks = create_callbacks(hyperparameters)
 # train the network
 start_time = time.time()
 H = model.fit(c_train_x, c_train_y, batch_size=hyperparameters.batch_size, validation_data=(c_test_x, c_test_y),
-           steps_per_epoch=len(c_train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
-           callbacks=callbacks)
+              steps_per_epoch=len(c_train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
+              callbacks=callbacks)
 
 model = None
 c_train_x = None
@@ -140,14 +140,10 @@ print(str(acc))
 
 predictions = model.predict(test_x)
 
-generate_heatmap(model, test_x, 10, 0, hyperparameters)
-generate_heatmap(model, test_x, 10, 1, hyperparameters)
-
 print('[INFO] generating metrics...')
 
 file_title = create_file_title('ResNet', hyperparameters)
 
-model.save(filepath=MODEL_OUTPUT + file_title + '.h5', save_format='h5')
 
 generate_script_report(H, model, test_x, test_y, predictions, time_taken, data_set, hyperparameters, file_title)
 
@@ -159,5 +155,10 @@ reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
 reporter.plot_roc(data_set.class_names, test_y, predictions)
 
 reporter.plot_network_metrics(H, file_title)
+
+generate_heatmap(model, test_x, 10, 0, hyperparameters)
+generate_heatmap(model, test_x, 10, 1, hyperparameters)
+
+model.save(filepath=MODEL_OUTPUT + file_title + '2.h5', save_format='h5', overwrite=True)
 
 print('[END] Finishing script...\n')

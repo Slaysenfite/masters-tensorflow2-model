@@ -5,23 +5,24 @@ from datetime import timedelta
 
 import tensorflow as tf
 from IPython.core.display import clear_output
-from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+from sklearn.metrics import confusion_matrix
+from tensorflow.python.keras.applications.resnet_v2 import ResNet50V2
 from tensorflow.python.keras.losses import CategoricalHinge
-from tensorflow.python.keras.metrics import MeanIoU, Hinge
+from tensorflow.python.keras.metrics import MeanIoU
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, MODEL_OUTPUT, \
     create_required_directories, create_callbacks
+from metrics.MetricsReporter import MetricReporter
 from metrics.MetricsUtil import iou_coef, dice_coef
-from networks.NetworkHelper import compile_with_regularization, generate_heatmap
-from networks.UNet import build_pretrained_unet
-from networks.UNetSeg import unet_seg
+from networks.NetworkHelper import compile_with_regularization, generate_heatmap, create_classification_layers, \
+    create_segmentation_layers
 from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
 from training_loops.OptimizerHelper import calc_seg_fitness
 from utils.ImageLoader import load_seg_images, supplement_seg_training_data
-from utils.ScriptHelper import create_file_title, read_cmd_line_args
+from utils.ScriptHelper import create_file_title, read_cmd_line_args, generate_script_report
 from utils.SegScriptHelper import show_predictions
 
 print('Python version: {}'.format(sys.version))
@@ -61,15 +62,22 @@ print('[INFO] Training label shape: ' + str(train_y.shape))
 clear_output()
 
 if hyperparameters.preloaded_weights:
-    model = build_pretrained_unet(IMAGE_DIMS, len(data_set.class_names))
+    print('[INFO] Loading imagenet weights')
+    weights = 'imagenet'
 else:
-    model = unet_seg(IMAGE_DIMS)
+    weights = None
+model = ResNet50V2(
+    include_top=False,
+    weights=weights,
+    input_shape=IMAGE_DIMS,
+    classes=len(data_set.class_names))
 
 if hyperparameters.weights_of_experiment_id is not None:
     path_to_weights = '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.weights_of_experiment_id)
     print('[INFO] Loading weights from {}'.format(path_to_weights))
     model.load_weights(path_to_weights)
 
+model = create_segmentation_layers(model)
 # Compile model
 compile_with_regularization(model=model,
                             loss=CategoricalHinge(),
@@ -91,6 +99,7 @@ if hyperparameters.meta_heuristic != 'none':
 start_time = time.time()
 
 if hyperparameters.tf_fit:
+
     H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
                   steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
                   callbacks=callbacks)
@@ -98,30 +107,75 @@ else:
     H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
                       meta_heuristic=hyperparameters.meta_heuristic,
                       fitness_function=calc_seg_fitness, task='segmentation')
-time_taken = timedelta(seconds=(time.time() - start_time))
+
+show_predictions(model, test_x, test_y, 2, output_dir + 'segmentation/' + hyperparameters.experiment_id + '_pred2.png')
+show_predictions(model, test_x, test_y, 12,
+                 output_dir + 'segmentation/' + hyperparameters.experiment_id + '_pred12.png')
+show_predictions(model, test_x, test_y, 22,
+                 output_dir + 'segmentation/' + hyperparameters.experiment_id + '_pred22.png')
 
 # evaluate the network
 print('[INFO] evaluating network...')
 
 predictions = model.predict(test_x, batch_size=32)
 
-print('[INFO] generating metrics...')
+print('[INFO] generating metrics for first pass...')
 
-file_title = create_file_title('UNetSeg', hyperparameters)
+file_title = create_file_title('UNetSeg2', hyperparameters)
 
 acc = model.evaluate(test_x, test_y)
 output = str(model.metrics_names) + '\n'
 output += str(acc) + '\n'
 output += 'IOU: {}\n'.format(iou_coef(test_y, predictions))
 output += 'Dice: {}\n'.format(dice_coef(test_y, predictions))
-output += 'Time taken: {}\n'.format(time_taken)
-
-show_predictions(model, test_x, test_y, 2, output_dir + 'segmentation/' + file_title + '_pred2.png')
-show_predictions(model, test_x, test_y, 12, output_dir + 'segmentation/' + file_title + '_pred12.png')
-show_predictions(model, test_x, test_y, 22, output_dir + 'segmentation/' + file_title + '_pred22.png')
 
 with open(output_dir + file_title + '_metrics.txt', 'w+') as text_file:
     text_file.write(output)
+
+""" SECOND PASS"""
+
+loss, train_labels, test_labels = data_set.get_dataset_labels(train_labels, test_labels)
+
+model = create_classification_layers(base_model=model,
+                                     classes=len(data_set.class_names),
+                                     dropout_prob=hyperparameters.dropout_prob)
+
+# Compile model
+compile_with_regularization(model=model,
+                            loss='binary_crossentropy',
+                            optimizer=opt,
+                            metrics=['accuracy'],
+                            regularization_type='l2',
+                            l2=hyperparameters.l2)
+
+H = model.fit(train_x, train_labels, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_labels),
+              steps_per_epoch=len(train_labels) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
+              callbacks=callbacks)
+
+time_taken = timedelta(seconds=(time.time() - start_time))
+
+print('[INFO] evaluating network...')
+
+acc = model.evaluate(test_x, test_labels)
+print(str(model.metrics_names))
+print(str(acc))
+
+predictions = model.predict(test_x)
+
+print('[INFO] generating metrics for second pass...')
+
+model.save(filepath=MODEL_OUTPUT + file_title + '.h5', save_format='h5')
+
+generate_script_report(H, model, test_x, test_labels, predictions, time_taken, data_set, hyperparameters, file_title)
+
+reporter = MetricReporter(data_set.name, file_title)
+cm1 = confusion_matrix(test_labels.argmax(axis=1), predictions.argmax(axis=1))
+reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
+                               title='Confusion matrix, without normalization')
+
+reporter.plot_roc(data_set.class_names, test_labels, predictions)
+
+reporter.plot_network_metrics(H, file_title)
 
 generate_heatmap(model, test_x, 10, 0, hyperparameters)
 generate_heatmap(model, test_x, 10, 1, hyperparameters)

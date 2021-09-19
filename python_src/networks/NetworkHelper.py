@@ -1,7 +1,7 @@
 import re
 
 from tensorflow.python.keras import regularizers
-from tensorflow.python.keras.layers import Dropout, Dense, GlobalAveragePooling2D, Flatten, Conv2D
+from tensorflow.python.keras.layers import Dropout, Dense, GlobalAveragePooling2D, Flatten, Conv2D, Activation
 from tensorflow.python.keras.models import Model
 from tf_explain.core import GradCAM
 
@@ -14,6 +14,12 @@ def create_classification_layers(base_model, classes, dropout_prob=0.3, kernel_i
     x = Dense(512, activation='relu', kernel_initializer=kernel_initializer)(x)
     x = Dropout(dropout_prob)(x)
     x = Dense(classes, activation='softmax', name='predictions')(x)
+    return Model(inputs=base_model.inputs, outputs=x)
+
+
+def create_segmentation_layers(base_model, layers_removed=-1):
+    x = Conv2D(1, (1, 1), padding="same")(base_model.layers[layers_removed].output)
+    x = Activation("sigmoid")(x)
     return Model(inputs=base_model.inputs, outputs=x)
 
 

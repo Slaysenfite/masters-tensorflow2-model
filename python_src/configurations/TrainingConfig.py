@@ -3,6 +3,14 @@ from os.path import expanduser
 
 from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 
+home = expanduser("~")
+output_dir = 'output/'
+
+FIGURE_OUTPUT = output_dir + 'figures/'
+SEGMENTATION_OUTPUT = output_dir + 'segmentation/'
+HEATMAPS_OUTPUT = output_dir + 'heatmaps/'
+MODEL_OUTPUT = ROOT_DIRECTORY = home + '/data/models/'
+
 
 def create_required_directories():
     os.makedirs(output_dir, 0o777, True)
