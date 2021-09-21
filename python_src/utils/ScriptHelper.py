@@ -1,12 +1,15 @@
 from argparse import ArgumentParser
 
+from sklearn.metrics import confusion_matrix
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 
 from configurations.DataSet import cbis_ddsm_data_set, bcs_data_set, cbis_seg_data_set
 from configurations.TrainingConfig import output_dir
 from metrics.MetricResults import MetricResult
+from metrics.MetricsReporter import MetricReporter
 from metrics.PerformanceMetrics import PerformanceMetrics
+from networks.NetworkHelper import generate_heatmap
 
 
 def generate_script_report(H, model, test_x, test_y, predictions, time_taken, data_set, hyperparameters, model_name,
@@ -96,3 +99,32 @@ def read_cmd_line_args(hyperparameters, dataset):
 def create_file_title(model_name, hyperparameters):
     meta_heuristic = hyperparameters.meta_heuristic if hyperparameters.meta_heuristic != None else 'none'
     return hyperparameters.experiment_id + '_' + model_name + '_' + meta_heuristic
+
+def evaluate_classification_model(model, model_name, hyperparameters, data_set, H, time_taken,test_x, test_y):
+    print('[INFO] evaluating network...')
+    acc = model.evaluate(test_x, test_y)
+    print(str(model.metrics_names))
+    print(str(acc))
+    predictions = model.predict(test_x)
+    print('[INFO] generating metrics...')
+    file_title = create_file_title(model_name, hyperparameters)
+    generate_script_report(H, model, test_x, test_y, predictions, time_taken, data_set, hyperparameters, file_title)
+    reporter = MetricReporter(data_set.name, file_title)
+    cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
+    reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
+                                   title='Confusion matrix, without normalization')
+    reporter.plot_roc(data_set.class_names, test_y, predictions)
+    reporter.plot_network_metrics(H, file_title)
+
+def evaluate_meta_model(model, model_name, hyperparameters, data_set, test_x, test_y):
+    print('[INFO] evaluating network...')
+    acc = model.evaluate(test_x, test_y)
+    print(str(model.metrics_names))
+    print(str(acc))
+    predictions = model.predict(test_x)
+    file_title = create_file_title(model_name, hyperparameters)
+    reporter = MetricReporter(data_set.name, file_title)
+    cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
+    reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
+                                   title='Confusion matrix, without normalization')
+    reporter.plot_roc(data_set.class_names, test_y, predictions)

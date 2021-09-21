@@ -5,10 +5,11 @@ from tensorflow.python.keras.layers import Dropout, Dense, GlobalAveragePooling2
 from tensorflow.python.keras.models import Model
 from tf_explain.core import GradCAM
 
-from configurations.TrainingConfig import FIGURE_OUTPUT
+from configurations.TrainingConfig import SEGMENTATION_OUTPUT, HEATMAP_OUTPUT
 
 
-def create_classification_layers(base_model, classes, dropout_prob=0.3, kernel_initializer='he_uniform', layers_removed=-1):
+def create_classification_layers(base_model, classes, dropout_prob=0.3, kernel_initializer='he_uniform',
+                                 layers_removed=-1):
     x = GlobalAveragePooling2D(name='avg_pool')(base_model.layers[layers_removed].output)
     x = Flatten()(x)
     x = Dense(512, activation='relu', kernel_initializer=kernel_initializer)(x)
@@ -56,13 +57,15 @@ def get_regularizer(regularization_type, l1, l2):
     return regularizer
 
 
-def generate_heatmap(model, images, size, class_index, hyperparameters):
+def generate_heatmap(model, images, size, class_index, hyperparameters, path_suffix=''):
     # Start explainer
     explainer = GradCAM()
     for i in range(size):
         data = ([images[i]], None)
-        grid = explainer.explain(data, model, class_index=class_index)  # 281 is the tabby cat index in ImageNet
-        explainer.save(grid, FIGURE_OUTPUT, "{}_{}_class_{}.png".format(hyperparameters.experiment_id, i, class_index))
+        grid = explainer.explain(data, model, class_index=class_index)
+        explainer.save(grid, HEATMAP_OUTPUT,
+                       "{}_{}_class_{}{}.png".format(hyperparameters.experiment_id, i, class_index, path_suffix))
+
 
 def insert_layer_nonseq(model, layer_regex, insert_layer_factory,
                         insert_layer_name=None, position='after'):

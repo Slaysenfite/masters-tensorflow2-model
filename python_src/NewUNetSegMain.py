@@ -4,7 +4,6 @@ import time
 from datetime import timedelta
 
 import tensorflow as tf
-from sklearn.metrics import confusion_matrix
 from tensorflow.python.keras.losses import CategoricalHinge
 from tensorflow.python.keras.metrics import MeanIoU
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
@@ -12,7 +11,6 @@ from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, MODEL_OUTPUT, \
     create_required_directories, create_callbacks
-from metrics.MetricsReporter import MetricReporter
 from metrics.MetricsUtil import iou_coef, dice_coef
 from networks.NetworkHelper import compile_with_regularization, generate_heatmap, create_classification_layers
 from networks.UNet import build_pretrained_unet
@@ -21,7 +19,7 @@ from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
 from training_loops.OptimizerHelper import calc_seg_fitness
 from utils.ImageLoader import load_seg_images, supplement_seg_training_data
-from utils.ScriptHelper import create_file_title, read_cmd_line_args, generate_script_report
+from utils.ScriptHelper import create_file_title, read_cmd_line_args, evaluate_classification_model, evaluate_meta_model
 from utils.SegScriptHelper import show_predictions
 
 print('Python version: {}'.format(sys.version))
@@ -145,30 +143,23 @@ H = model.fit(train_x, train_labels, batch_size=hyperparameters.batch_size, vali
 
 time_taken = timedelta(seconds=(time.time() - start_time))
 
-print('[INFO] evaluating network...')
+# evaluate the network
+evaluate_classification_model(model, 'UNetClassification', hyperparameters, data_set, H, time_taken, test_x, test_labels)
 
-acc = model.evaluate(test_x, test_labels)
-print(str(model.metrics_names))
-print(str(acc))
+generate_heatmap(model, test_x, 10, 0, hyperparameters, '_2nd_pass')
+generate_heatmap(model, test_x, 10, 1, hyperparameters, '_2nd_pass')
 
-predictions = model.predict(test_x)
+print('META-HEURISTIC')
 
-print('[INFO] generating metrics for second pass...')
+H = training_loop(model, hyperparameters, train_x, train_labels, test_x, test_labels,
+                  meta_heuristic=hyperparameters.meta_heuristic)
 
-model.save(filepath=MODEL_OUTPUT + file_title + '.h5', save_format='h5')
+print('EVALUATION')
 
-generate_script_report(H, model, test_x, test_labels, predictions, time_taken, data_set, hyperparameters, file_title)
+generate_heatmap(model, test_x, 10, 0, hyperparameters, '_meta_pass')
+generate_heatmap(model, test_x, 10, 1, hyperparameters, '_meta_pass')
 
-reporter = MetricReporter(data_set.name, file_title)
-cm1 = confusion_matrix(test_labels.argmax(axis=1), predictions.argmax(axis=1))
-reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
-                               title='Confusion matrix, without normalization')
-
-reporter.plot_roc(data_set.class_names, test_labels, predictions)
-
-reporter.plot_network_metrics(H, file_title)
-
-generate_heatmap(model, test_x, 10, 0, hyperparameters)
-generate_heatmap(model, test_x, 10, 1, hyperparameters)
+# evaluate the network
+evaluate_meta_model(model, 'UNetClassMeta', hyperparameters, data_set, test_x, test_labels)
 
 print('[END] Finishing script...\n')

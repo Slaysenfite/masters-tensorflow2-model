@@ -27,6 +27,8 @@ output_dir = 'output/'
 
 FIGURE_OUTPUT = output_dir + 'figures/'
 MODEL_OUTPUT = ROOT_DIRECTORY = home + '/data/models/'
+SEGMENTATION_OUTPUT = output_dir + 'segmentation/'
+HEATMAP_OUTPUT = output_dir + 'heatmaps/'
 
 
 class Hyperparameters:
@@ -46,7 +48,7 @@ class Hyperparameters:
         self.weights_of_experiment_id = None
         self.tf_fit = True
         self.l2 = 0.00001
-        self.num_layers_for_optimization = 5
+        self.num_layers_for_optimization = 10
 
     def report_hyperparameters(self):
         report = '*** Script Hyperparameters ***\n'

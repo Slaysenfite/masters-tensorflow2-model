@@ -5,7 +5,7 @@ from datetime import timedelta
 
 import tensorflow as tf
 from keras_preprocessing.image import ImageDataGenerator
-from tensorflow.python.keras.applications.resnet_v2 import ResNet50V2
+from tensorflow.python.keras.applications.xception import Xception
 
 from configurations.DataSet import cbis_ddsm_data_set as data_set
 from configurations.DataSet import cbis_seg_data_set as c_data_set
@@ -42,7 +42,7 @@ if hyperparameters.preloaded_weights:
 else:
     weights = None
 
-model = ResNet50V2(
+model = Xception(
     include_top=False,
     weights=weights,
     input_shape=IMAGE_DIMS,
@@ -100,7 +100,7 @@ if hyperparameters.augmentation:
 
 loss, c_train_y, c_test_y = c_data_set.get_dataset_labels(c_train_y, c_test_y)
 
-model = ResNet50V2(
+model = Xception(
     include_top=False,
     weights=None,
     input_shape=IMAGE_DIMS,
@@ -134,7 +134,7 @@ generate_heatmap(model, test_x, 10, 1, hyperparameters, '_2nd_pass')
 
 print('THIRD PASS')
 
-model = ResNet50V2(
+model = Xception(
     include_top=False,
     weights=None,
     input_shape=IMAGE_DIMS,
@@ -168,7 +168,7 @@ generate_heatmap(model, test_x, 10, 0, hyperparameters, '_3rd_pass')
 generate_heatmap(model, test_x, 10, 1, hyperparameters, '_2rd_pass')
 
 # evaluate the network
-evaluate_classification_model(model, 'ResNet50Class', hyperparameters, data_set, H, time_taken, test_x, test_y)
+evaluate_classification_model(model, 'XceptionClass', hyperparameters, data_set, H, time_taken, test_x, test_y)
 
 print('META-HEURISTIC')
 
@@ -181,6 +181,6 @@ generate_heatmap(model, test_x, 10, 0, hyperparameters, '_meta_pass')
 generate_heatmap(model, test_x, 10, 1, hyperparameters, '_meta_pass')
 
 # evaluate the network
-evaluate_meta_model(model, 'ResNet50Meta', hyperparameters, data_set, test_x, test_y)
+evaluate_meta_model(model, 'XceptionMeta', hyperparameters, data_set, test_x, test_y)
 
 print('[END] Finishing script...\n')
