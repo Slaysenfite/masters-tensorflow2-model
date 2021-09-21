@@ -5,8 +5,9 @@ from datetime import timedelta
 
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
-from tensorflow.python.keras.losses import CategoricalHinge
+from tensorflow.python.keras.losses import BinaryCrossentropy
 from tensorflow.python.keras.metrics import MeanIoU
+from tensorflow.python.keras.metrics import Precision, Recall, AUC
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import cbis_seg_data_set as data_set
@@ -61,7 +62,7 @@ print('[INFO] Training label shape: ' + str(train_y.shape))
 print('FIRST PASS \n')
 
 if hyperparameters.preloaded_weights:
-    model = build_pretrained_unet(IMAGE_DIMS, len(data_set.class_names))
+    model = build_pretrained_unet(IMAGE_DIMS, data_set.get_num_classes())
 else:
     model = unet_seg(IMAGE_DIMS)
 
@@ -72,9 +73,9 @@ if hyperparameters.weights_of_experiment_id is not None:
 
 # Compile model
 compile_with_regularization(model=model,
-                            loss=CategoricalHinge(),
+                            loss=BinaryCrossentropy(),
                             optimizer=opt,
-                            metrics=['accuracy', MeanIoU(num_classes=len(data_set.class_names))],
+                            metrics=['accuracy', MeanIoU(num_classes=2)],
                             regularization_type='l2',
                             l2=hyperparameters.l2)
 
@@ -128,14 +129,14 @@ print('SECOND PASS \n')
 loss, train_labels, test_labels = data_set.get_dataset_labels(train_labels, test_labels)
 
 model = create_classification_layers(base_model=model,
-                                     classes=len(data_set.class_names),
+                                     classes=data_set.get_num_classes(),
                                      dropout_prob=hyperparameters.dropout_prob)
 
 # Compile model
 compile_with_regularization(model=model,
                             loss='binary_crossentropy',
                             optimizer=opt,
-                            metrics=['accuracy'],
+                            metrics=['accuracy', Precision(), Recall(), AUC()],
                             regularization_type='l2',
                             l2=hyperparameters.l2)
 

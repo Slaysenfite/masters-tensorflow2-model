@@ -5,8 +5,8 @@ from datetime import timedelta
 
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import train_test_split
 from tensorflow.python.keras.applications.xception import Xception
+from tensorflow.python.keras.metrics import Precision, Recall, AUC
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import bcs_data_set as data_set
@@ -56,11 +56,11 @@ if hyperparameters.preloaded_weights:
 else:
     weights = None
 model = Xception(
-        include_top=False,
-        weights=weights,
-        input_shape=IMAGE_DIMS,
-        classes=len(data_set.class_names))
-model = create_classification_layers(base_model=model, classes=len(data_set.class_names))
+    include_top=False,
+    weights=weights,
+    input_shape=IMAGE_DIMS,
+    classes=data_set.get_num_classes())
+model = create_classification_layers(base_model=model, classes=data_set.get_num_classes())
 
 if hyperparameters.weights_of_experiment_id is not None:
     path_to_weights = '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.weights_of_experiment_id)
@@ -71,7 +71,7 @@ if hyperparameters.weights_of_experiment_id is not None:
 compile_with_regularization(model=model,
                             loss='binary_crossentropy',
                             optimizer=opt,
-                            metrics=['accuracy'],
+                            metrics=['accuracy', Precision(), Recall(), AUC()],
                             regularization_type='l2',
                             l2=hyperparameters.l2)
 
@@ -81,7 +81,7 @@ callbacks = create_callbacks(hyperparameters)
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
         X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=30, iterations=10,
-        monitor='val_loss',  patience=4, verbose=1, mode='min',
+        monitor='val_loss', patience=4, verbose=1, mode='min',
         min_delta=0.05, cooldown=0)
     callbacks.append(meta_callback)
 
@@ -115,7 +115,7 @@ model.save(filepath=MODEL_OUTPUT + file_title + '.h5', save_format='h5')
 
 generate_script_report(H, model, test_x, test_y, predictions, time_taken, data_set, hyperparameters, file_title)
 
-reporter = MetricReporter(data_set.name,file_title)
+reporter = MetricReporter(data_set.name, file_title)
 cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
 reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
                                title='Confusion matrix, without normalization')

@@ -32,9 +32,8 @@ MODEL_OUTPUT = ROOT_DIRECTORY = home + '/data/models/'
 class Hyperparameters:
     def __init__(self, epochs, batch_size):
         self.epochs = epochs
-        self.init_lr = 0.001
-        self.sgd_lr = 0.001
-        self.adam_lr = 0.001
+        self.sgd_lr = 0.0001
+        self.adam_lr = 0.0001
         self.batch_size = batch_size
         self.dropout_prob = 0.25
         self.learning_optimization = 'sgd'
@@ -52,7 +51,6 @@ class Hyperparameters:
         report = '*** Script Hyperparameters ***\n'
         report += ' Experiment Id: {}\n'.format(self.experiment_id)
         report += ' Epochs: {}\n'.format(self.epochs)
-        report += ' Initial learning rate: {}\n'.format(self.init_lr)
         report += ' SGD learning rate: {}\n'.format(self.sgd_lr)
         report += ' ADAM learning rate: {}\n'.format(self.adam_lr)
         report += ' Batch size: {}\n'.format(self.batch_size)

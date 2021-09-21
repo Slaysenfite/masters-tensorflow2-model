@@ -77,7 +77,7 @@ def build_unet(input_shape, num_classes):
     return Model(inputs=inputs, outputs=x)
 
 
-def build_pretrained_unet(input_shape, num_classes):
+def build_pretrained_unet(input_shape, num_classes=1):
     inputs = Input(shape=input_shape, name="input_image")
     encoder = MobileNetV2(input_tensor=inputs, weights="imagenet", include_top=False, alpha=0.35)
     skip_connection_names = ["input_image", "block_1_expand_relu", "block_3_expand_relu", "block_6_expand_relu"]
@@ -98,7 +98,7 @@ def build_pretrained_unet(input_shape, num_classes):
         x = BatchNormalization()(x)
         x = Activation("relu")(x)
 
-    x = Conv2D(1, (1, 1), padding="same")(x)
+    x = Conv2D(num_classes, (1, 1), padding="same")(x)
     x = Activation("sigmoid")(x)
 
     model = Model(inputs, x)

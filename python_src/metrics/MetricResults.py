@@ -1,8 +1,5 @@
 import operator
 
-from sklearn.metrics import accuracy_score, precision_score, recall_score, classification_report
-
-
 class MetricResult:
     # General metrics
     accuracy = 0.0
@@ -31,17 +28,9 @@ class MetricResult:
         self.predictions = predictions
         self.data_set = data_set
         self.model = model
-        self.get_general_metrics(test_y, predictions, data_set)
         self.get_best_network_metrics(H)
         self.get_final_network_metrics(H)
         self.get_model_internal_metrics(model, test_x, test_y)
-
-    def get_general_metrics(self, test_y, predictions, data_set):
-        self.accuracy = accuracy_score(test_y.argmax(axis=1), predictions.argmax(axis=1)) * 100
-        self.precision = precision_score(test_y.argmax(axis=1), predictions.argmax(axis=1), average='macro') * 100
-        self.recall = recall_score(test_y.argmax(axis=1), predictions.argmax(axis=1), average='macro') * 100
-        self.report_dict = classification_report(test_y.argmax(axis=1), predictions.argmax(axis=1),
-                                                 target_names=data_set.class_names)
 
     def get_best_network_metrics(self, H):
         idx, min_loss = min(enumerate(H.history['val_loss']), key=operator.itemgetter(1))
@@ -86,9 +75,5 @@ class MetricResult:
         report += '*** INTERNAL METRICS ***\n'
         report += str(self.model.metrics_names) + '\n'
         report += str(self.internal_metrics)
-
-        report += '*** Predictions *** \n'
-        report += ' Predictions: {} \n'.format(self.predictions)
-        report += ' Ground Truth Labels: {} \n'.format(self.test_y)
 
         return report

@@ -5,8 +5,10 @@ from datetime import timedelta
 
 import tensorflow as tf
 from keras_preprocessing.image import ImageDataGenerator
+from numpy import AxisError
 from sklearn.metrics import confusion_matrix
 from tensorflow.python.keras.applications.resnet_v2 import ResNet50V2
+from tensorflow.python.keras.metrics import Precision, Recall, AUC
 
 from configurations.DataSet import cbis_ddsm_data_set as data_set
 from configurations.DataSet import cbis_seg_data_set as c_data_set
@@ -61,16 +63,16 @@ model = ResNet50V2(
     include_top=False,
     weights=weights,
     input_shape=IMAGE_DIMS,
-    classes=len(c_data_set.class_names))
+    classes=c_data_set.get_num_classes())
 model = create_classification_layers(base_model=model,
-                                     classes=len(c_data_set.class_names),
+                                     classes=c_data_set.get_num_classes(),
                                      dropout_prob=hyperparameters.dropout_prob)
 
 # Compile model
 compile_with_regularization(model=model,
                             loss='binary_crossentropy',
                             optimizer=opt,
-                            metrics=['accuracy'],
+                            metrics=['accuracy', Precision(), Recall(), AUC()],
                             regularization_type='l2',
                             l2=hyperparameters.l2)
 
@@ -101,16 +103,16 @@ model = ResNet50V2(
     include_top=False,
     weights=None,
     input_shape=IMAGE_DIMS,
-    classes=len(data_set.class_names))
+    classes=data_set.get_num_classes())
 model = create_classification_layers(base_model=model,
-                                     classes=len(data_set.class_names),
+                                     classes=data_set.get_num_classes(),
                                      dropout_prob=hyperparameters.dropout_prob)
 
 # Compile model
 compile_with_regularization(model=model,
                             loss='binary_crossentropy',
                             optimizer=opt,
-                            metrics=['accuracy'],
+                            metrics=['accuracy', Precision(), Recall(), AUC()],
                             regularization_type='l2',
                             l2=hyperparameters.l2)
 
@@ -144,20 +146,24 @@ print('[INFO] generating metrics...')
 
 file_title = create_file_title('ResNet', hyperparameters)
 
+generate_heatmap(model, test_x, 10, 0, hyperparameters)
+generate_heatmap(model, test_x, 10, 1, hyperparameters)
 
 generate_script_report(H, model, test_x, test_y, predictions, time_taken, data_set, hyperparameters, file_title)
 
 reporter = MetricReporter(data_set.name, file_title)
-cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
-reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
+try:
+    cm1 = confusion_matrix(test_y.argmax(axis=1), predictions.argmax(axis=1))
+    reporter.plot_confusion_matrix(cm1, classes=data_set.class_names,
                                title='Confusion matrix, without normalization')
+except AxisError:
+    print('pee pee poo poo')
 
 reporter.plot_roc(data_set.class_names, test_y, predictions)
 
 reporter.plot_network_metrics(H, file_title)
 
-generate_heatmap(model, test_x, 10, 0, hyperparameters)
-generate_heatmap(model, test_x, 10, 1, hyperparameters)
+
 
 model.save(filepath=MODEL_OUTPUT + file_title + '2.h5', save_format='h5', overwrite=True)
 

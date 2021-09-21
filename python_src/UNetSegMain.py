@@ -5,9 +5,8 @@ from datetime import timedelta
 
 import tensorflow as tf
 from IPython.core.display import clear_output
-from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
-from tensorflow.python.keras.losses import CategoricalHinge
-from tensorflow.python.keras.metrics import MeanIoU, Hinge
+from tensorflow.python.keras.losses import BinaryCrossentropy, CategoricalHinge
+from tensorflow.python.keras.metrics import MeanIoU
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import cbis_seg_data_set as data_set
@@ -61,7 +60,7 @@ print('[INFO] Training label shape: ' + str(train_y.shape))
 clear_output()
 
 if hyperparameters.preloaded_weights:
-    model = build_pretrained_unet(IMAGE_DIMS, len(data_set.class_names))
+    model = build_pretrained_unet(IMAGE_DIMS, data_set.get_num_classes())
 else:
     model = unet_seg(IMAGE_DIMS)
 
@@ -72,9 +71,9 @@ if hyperparameters.weights_of_experiment_id is not None:
 
 # Compile model
 compile_with_regularization(model=model,
-                            loss=CategoricalHinge(),
+                            loss=BinaryCrossentropy(),
                             optimizer=opt,
-                            metrics=['accuracy', MeanIoU(num_classes=len(data_set.class_names))],
+                            metrics=['accuracy'],
                             regularization_type='l2',
                             l2=hyperparameters.l2)
 
@@ -124,6 +123,5 @@ with open(output_dir + file_title + '_metrics.txt', 'w+') as text_file:
     text_file.write(output)
 
 generate_heatmap(model, test_x, 10, 0, hyperparameters)
-generate_heatmap(model, test_x, 10, 1, hyperparameters)
 
 print('[END] Finishing script...\n')

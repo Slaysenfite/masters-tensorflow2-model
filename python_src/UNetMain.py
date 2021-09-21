@@ -6,6 +6,7 @@ from datetime import timedelta
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
+from tensorflow.python.keras.metrics import Precision, Recall, AUC
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import cbis_ddsm_data_set as data_set
@@ -51,10 +52,10 @@ if hyperparameters.augmentation:
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
 if hyperparameters.preloaded_weights:
-    model = build_pretrained_unet(IMAGE_DIMS, len(data_set.class_names))
-    model = create_classification_layers(base_model=model, classes=len(data_set.class_names), dropout_prob=0.3)
+    model = build_pretrained_unet(IMAGE_DIMS, data_set.get_num_classes())
+    model = create_classification_layers(base_model=model, classes=data_set.get_num_classes(), dropout_prob=0.3)
 else:
-    model = build_unet(IMAGE_DIMS, len(data_set.class_names))
+    model = build_unet(IMAGE_DIMS, data_set.get_num_classes())
 
 if hyperparameters.weights_of_experiment_id is not None:
     path_to_weights = '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.weights_of_experiment_id)

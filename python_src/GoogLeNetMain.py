@@ -6,6 +6,8 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from tensorflow.python.keras.applications.inception_v3 import InceptionV3
+from tensorflow.python.keras.metrics import Precision, Recall, AUC
+from tensorflow.python.keras.metrics import Precision, Recall, AUC
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import bcs_data_set as data_set
@@ -58,8 +60,8 @@ model = InceptionV3(
         include_top=False,
         weights=weights,
         input_shape=IMAGE_DIMS,
-        classes=len(data_set.class_names))
-model = create_classification_layers(base_model=model, classes=len(data_set.class_names))
+        classes=data_set.get_num_classes())
+model = create_classification_layers(base_model=model, classes=data_set.get_num_classes())
 
 if hyperparameters.weights_of_experiment_id is not None:
     path_to_weights = '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.weights_of_experiment_id)
@@ -70,7 +72,7 @@ if hyperparameters.weights_of_experiment_id is not None:
 compile_with_regularization(model=model,
                             loss='binary_crossentropy',
                             optimizer=opt,
-                            metrics=['accuracy'],
+                            metrics=['accuracy', Precision(), Recall(), AUC()],
                             regularization_type='l2',
                             l2=hyperparameters.l2)
 

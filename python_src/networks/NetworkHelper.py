@@ -13,12 +13,15 @@ def create_classification_layers(base_model, classes, dropout_prob=0.3, kernel_i
     x = Flatten()(x)
     x = Dense(512, activation='relu', kernel_initializer=kernel_initializer)(x)
     x = Dropout(dropout_prob)(x)
-    x = Dense(classes, activation='softmax', name='predictions')(x)
+    if classes == 1:
+        x = Dense(classes, activation='sigmoid', name='predictions')(x)
+    else:
+        x = Dense(classes, activation='softmax', name='predictions')(x)
     return Model(inputs=base_model.inputs, outputs=x)
 
 
-def create_segmentation_layers(base_model, layers_removed=-1):
-    x = Conv2D(1, (1, 1), padding="same")(base_model.layers[layers_removed].output)
+def create_segmentation_layers(base_model, classes=1, layers_removed=-1):
+    x = Conv2D(1, (1, 1), padding="same")(base_model.layers[len(base_model.layers)-1].output)
     x = Activation("sigmoid")(x)
     return Model(inputs=base_model.inputs, outputs=x)
 

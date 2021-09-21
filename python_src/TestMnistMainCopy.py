@@ -85,7 +85,7 @@ def define_model(input=(28, 28, 1), classes=10):
     output = Dense(classes, activation='softmax')(x)
     model = Model(inputs=input, outputs=output)
 
-    opt = SGD(lr=hyperparameters.init_lr, momentum=0.9)
+    opt = SGD(lr=hyperparameters.sgd_lr, momentum=0.9)
 
     model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy', Precision(), Recall()])
     return model, opt

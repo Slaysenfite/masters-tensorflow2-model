@@ -6,6 +6,8 @@ from datetime import timedelta
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from tensorflow.python.keras.applications.resnet_v2 import ResNet50V2
+from tensorflow.python.keras.metrics import Precision, Recall, AUC
+from tensorflow.python.keras.metrics import Precision, Recall, AUC
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import bcs_data_set as data_set
@@ -59,9 +61,9 @@ model = ResNet50V2(
     include_top=False,
     weights=weights,
     input_shape=IMAGE_DIMS,
-    classes=len(data_set.class_names))
+    classes=data_set.get_num_classes())
 model = create_classification_layers(base_model=model,
-                                     classes=len(data_set.class_names),
+                                     classes=data_set.get_num_classes(),
                                      dropout_prob=hyperparameters.dropout_prob)
 
 if hyperparameters.weights_of_experiment_id is not None:
@@ -73,7 +75,7 @@ if hyperparameters.weights_of_experiment_id is not None:
 compile_with_regularization(model=model,
                             loss='binary_crossentropy',
                             optimizer=opt,
-                            metrics=['accuracy'],
+                            metrics=['accuracy', Precision(), Recall(), AUC()],
                             regularization_type='l2',
                             l2=hyperparameters.l2)
 

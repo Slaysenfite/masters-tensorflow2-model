@@ -72,8 +72,8 @@ class DataSet:
             loss = 'categorical_crossentropy'
         else:
             print('[INFO] Configure for binary classification')
-            train_y = to_categorical(train_y)
-            test_y = to_categorical(test_y)
+            # train_y = to_categorical(train_y)
+            # test_y = to_categorical(test_y)
             loss = 'binary_crossentropy'
         return loss, train_y, test_y
 
