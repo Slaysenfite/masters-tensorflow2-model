@@ -34,9 +34,7 @@ HEATMAP_OUTPUT = output_dir + 'heatmaps/'
 class Hyperparameters:
     def __init__(self, epochs, batch_size):
         self.epochs = epochs
-        self.init_lr = 0.001
-        self.sgd_lr = 0.001
-        self.adam_lr = 0.001
+        self.lr = 0.001
         self.batch_size = batch_size
         self.dropout_prob = 0.25
         self.learning_optimization = 'sgd'
@@ -49,14 +47,13 @@ class Hyperparameters:
         self.tf_fit = True
         self.l2 = 0.00001
         self.num_layers_for_optimization = 10
+        self.dataset_segment = "All Segments"
 
     def report_hyperparameters(self):
         report = '*** Script Hyperparameters ***\n'
         report += ' Experiment Id: {}\n'.format(self.experiment_id)
         report += ' Epochs: {}\n'.format(self.epochs)
-        report += ' Initial learning rate: {}\n'.format(self.init_lr)
-        report += ' SGD learning rate: {}\n'.format(self.sgd_lr)
-        report += ' ADAM learning rate: {}\n'.format(self.adam_lr)
+        report += ' Initial learning rate: {}\n'.format(self.lr)
         report += ' Batch size: {}\n'.format(self.batch_size)
         report += ' Dropout: {}\n'.format(self.dropout_prob)
         report += ' Learning optimization: {}\n'.format(self.learning_optimization)
@@ -68,6 +65,7 @@ class Hyperparameters:
         report += ' Existing Weights Exp Id: {}\n'.format(self.weights_of_experiment_id)
         report += ' TF Fit Training: {}\n'.format(self.tf_fit)
         report += ' L2: {}\n'.format(self.l2)
+        report += ' Dataset subset: {}\n'.format(self.dataset_segment)
 
         return report
 

@@ -33,6 +33,7 @@ def read_cmd_line_args(hyperparameters, dataset):
     parser.add_argument('--id', type=str)
     parser.add_argument('--meta_heuristic', type=str)
     parser.add_argument('--meta_heuristic_layers', type=int)
+    parser.add_argument('--lr', type=float)
     parser.add_argument('--optimizer', type=str)
     parser.add_argument('--dropout_prob', type=float)
     parser.add_argument('--epochs', type=int)
@@ -43,6 +44,7 @@ def read_cmd_line_args(hyperparameters, dataset):
     parser.add_argument('--preloaded_experiment', type=str)
     parser.add_argument('--tf_fit', type=str)
     parser.add_argument('--l2', type=float)
+    parser.add_argument('--data_subset', type=str)
     args = parser.parse_args()
 
     if args.id is not None:
@@ -69,12 +71,15 @@ def read_cmd_line_args(hyperparameters, dataset):
     if args.l2 is not None:
         hyperparameters.l2 = args.l2
 
+    if args.lr is not None:
+        hyperparameters.lr = args.lr
+
     if args.optimizer is not None and args.optimizer == 'adam':
         hyperparameters.learning_optimization = 'Adam'
-        opt = Adam(learning_rate=hyperparameters.adam_lr, decay=True)
+        opt = Adam(learning_rate=hyperparameters.lr)
     else:
         hyperparameters.learning_optimization = 'Stochastic Gradient Descent'
-        opt = SGD(learning_rate=hyperparameters.sgd_lr)
+        opt = SGD(learning_rate=hyperparameters.lr)
 
     if args.dataset is not None:
         if 'cbis' in args.dataset:
@@ -89,6 +94,9 @@ def read_cmd_line_args(hyperparameters, dataset):
 
     if args.tf_fit == 'False' or args.tf_fit == 'false':
         hyperparameters.tf_fit = False
+
+    if args.data_subset.lower() == 'mass' or args.data_subset.lower() == 'calc':
+        hyperparameters.data_subset = args.data_subset.lower()
 
     if args.preloaded_weights == 'True' or args.preloaded_weights == 'true':
         hyperparameters.preloaded_weights = True
