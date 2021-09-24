@@ -33,8 +33,8 @@ create_required_directories()
 gc.enable()
 
 print('[INFO] Loading images...')
-test_x, test_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Test')
-train_x, train_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Training')
+test_x, test_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Test', segment=hyperparameters.dataset_segment)
+train_x, train_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Training', segment=hyperparameters.dataset_segment)
 
 if hyperparameters.augmentation:
     print('[INFO] Augmenting data set')
