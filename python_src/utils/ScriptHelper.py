@@ -4,7 +4,7 @@ from sklearn.metrics import confusion_matrix
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 
-from configurations.DataSet import cbis_ddsm_data_set, bcs_data_set, cbis_seg_data_set
+from configurations.DataSet import cbis_ddsm_data_set, bcs_data_set, cbis_seg_data_set, binary_ddsm_data_set
 from configurations.TrainingConfig import output_dir
 from metrics.MetricResults import MetricResult
 from metrics.MetricsReporter import MetricReporter
@@ -88,6 +88,8 @@ def read_cmd_line_args(hyperparameters, dataset):
             dataset = cbis_seg_data_set
         if 'bcs' in args.dataset:
             dataset = bcs_data_set
+        if 'ddsm' in args.dataset:
+            dataset = binary_ddsm_data_set
 
     if args.augmentation == 'True' or args.augmentation == 'true':
         hyperparameters.augmentation = True
@@ -95,8 +97,9 @@ def read_cmd_line_args(hyperparameters, dataset):
     if args.tf_fit == 'False' or args.tf_fit == 'false':
         hyperparameters.tf_fit = False
 
-    if args.data_subset.lower() == 'mass' or args.data_subset.lower() == 'calc':
-        hyperparameters.data_subset = args.data_subset.lower()
+    if args.data_subset is not None:
+        if args.data_subset.lower() == 'mass' or args.data_subset.lower() == 'calc':
+            hyperparameters.data_subset = args.data_subset.lower()
 
     if args.preloaded_weights == 'True' or args.preloaded_weights == 'true':
         hyperparameters.preloaded_weights = True
