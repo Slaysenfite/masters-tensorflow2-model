@@ -8,7 +8,7 @@ from sklearn.metrics import confusion_matrix
 from tensorflow.python.keras.applications.resnet_v2 import ResNet50V2
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
-from configurations.DataSet import bcs_data_set as data_set
+from configurations.DataSet import cbis_ddsm_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks, \
     MODEL_OUTPUT
 from metrics.MetricsReporter import MetricReporter

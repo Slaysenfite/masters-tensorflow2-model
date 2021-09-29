@@ -95,8 +95,9 @@ def read_cmd_line_args(hyperparameters, dataset):
     if args.tf_fit == 'False' or args.tf_fit == 'false':
         hyperparameters.tf_fit = False
 
-    if args.data_subset.lower() == 'mass' or args.data_subset.lower() == 'calc':
-        hyperparameters.data_subset = args.data_subset.lower()
+    if args.data_subset is not None:
+        if args.data_subset.lower() == 'mass' or args.data_subset.lower() == 'calc':
+            hyperparameters.data_subset = args.data_subset.lower()
 
     if args.preloaded_weights == 'True' or args.preloaded_weights == 'true':
         hyperparameters.preloaded_weights = True
