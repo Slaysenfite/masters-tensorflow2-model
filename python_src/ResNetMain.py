@@ -94,8 +94,14 @@ if hyperparameters.tf_fit:
                   steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
                   callbacks=callbacks)
 else:
-    H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
-                      meta_heuristic=hyperparameters.meta_heuristic)
+    H = training_loop(model,
+                  hyperparameters,
+                  train_x,
+                  train_y,
+                  test_x,
+                  test_y,
+                  meta_heuristic=hyperparameters.meta_heuristic
+                  )
 
 time_taken = timedelta(seconds=(time.time() - start_time))
 
