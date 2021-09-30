@@ -6,7 +6,7 @@ from datetime import timedelta
 import tensorflow as tf
 from IPython.core.display import clear_output
 from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
-from tensorflow.python.keras.losses import CategoricalHinge
+from tensorflow.python.keras.losses import CategoricalHinge, BinaryCrossentropy
 from tensorflow.python.keras.metrics import MeanIoU, Hinge
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
@@ -72,14 +72,23 @@ if hyperparameters.weights_of_experiment_id is not None:
 
 # Compile model
 compile_with_regularization(model=model,
-                            loss=CategoricalHinge(),
+                            loss=BinaryCrossentropy(),
                             optimizer=opt,
                             metrics=['accuracy', MeanIoU(num_classes=len(data_set.class_names))],
                             regularization_type='l2',
                             l2=hyperparameters.l2)
 
 # Setup callbacks
-callbacks = create_callbacks(hyperparameters)
+callbacks = [
+        ReduceLROnPlateau(
+            monitor='val_loss', factor=0.2, patience=10, verbose=1, mode='min',
+            min_delta=0.001, cooldown=0, min_lr=0.00001),
+        ModelCheckpoint(
+            '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.experiment_id), monitor='val_loss', verbose=0,
+            save_best_only=True, save_weights_only=True, mode='min', save_freq='epoch',
+            options=None
+        )
+    ]
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
@@ -116,9 +125,8 @@ output += 'IOU: {}\n'.format(iou_coef(test_y, predictions))
 output += 'Dice: {}\n'.format(dice_coef(test_y, predictions))
 output += 'Time taken: {}\n'.format(time_taken)
 
-show_predictions(model, test_x, test_y, 2, output_dir + 'segmentation/' + file_title + '_pred2.png')
-show_predictions(model, test_x, test_y, 12, output_dir + 'segmentation/' + file_title + '_pred12.png')
-show_predictions(model, test_x, test_y, 22, output_dir + 'segmentation/' + file_title + '_pred22.png')
+for i in range(10):
+    show_predictions(model, test_x, test_y, i, output_dir + 'segmentation/' + file_title + '_pred_{}.png'.format(i))
 
 with open(output_dir + file_title + '_metrics.txt', 'w+') as text_file:
     text_file.write(output)
