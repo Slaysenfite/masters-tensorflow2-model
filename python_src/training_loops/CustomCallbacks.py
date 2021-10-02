@@ -1,4 +1,6 @@
 import logging as logging
+import time
+from datetime import timedelta
 
 import numpy as np
 from tensorflow.python.keras import backend as K
@@ -124,7 +126,10 @@ class RunMetaHeuristicOnPlateau(Callback):
                         print('\nEpoch %05d: RunMetaHeuristicOnPlateau running meta-heuristic algorithm %s with '
                               'hyperparameters [population size: %d iterations: %d]'
                               % (epoch + 1, self.meta_heuristic, self.population_size, self.iterations))
+                    start_time = time.time()
                     model = meta_opt.get_optimized_model()
+                    time_taken = timedelta(seconds=(time.time() - start_time))
+                    print('\nTime take to run {}: {}'.format(self.meta_heuristic, time_taken))
                     self.cooldown_counter = self.cooldown
                     self.wait = 0
                     return model

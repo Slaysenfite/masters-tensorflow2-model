@@ -6,7 +6,7 @@ from tensorflow.python.keras.metrics import TrueNegatives, TruePositives, FalseP
     FalseNegatives, BinaryCrossentropy, CategoricalCrossentropy
 from tensorflow.python.ops.numpy_ops.np_arrays import convert_to_tensor
 
-from metrics.MetricsUtil import iou_coef, dice_coef
+from metrics.MetricsUtil import iou_coef
 
 MAX_LAYERS_FOR_OPTIMIZATION = 6
 
@@ -43,6 +43,13 @@ def calc_seg_fitness(weights, model, loss_metric, X, y, num_layers):
     set_trainable_weights(model=model, weights=weights, num_layers=num_layers)
     ŷ = model(X, training=True)
     return 1 - iou_coef(y, ŷ)
+
+
+def calc_solution_fitness_only_loss(weights, model, loss_metric, X, y, num_layers):
+    set_trainable_weights(model=model, weights=weights, num_layers=num_layers)
+    predictions = model.predict(X)
+    ŷ = convert_to_tensor(predictions)
+    return loss_metric(y, ŷ).numpy()
 
 
 def determine_loss_function_based_on_fitness_function(fitness_function):
@@ -83,7 +90,7 @@ def set_trainable_weights(model, weights, num_layers, keras_layers=(Dense, Conv2
             layer.set_weights(np_weights)
             i += 1
         if i == num_layers:
-            return weights
+            return model
     return model
 
 
@@ -101,9 +108,7 @@ def perform_tensor_operations(operation_function, tensor_1, tensor_2):
         vars = []
         for n in range(len(tensor_1[i])):
             vars.append(operation_function(tensor_1[i][n], tensor_2[i][n]))
-        new_tensor.append(
-            vars
-        )
+        new_tensor.append(vars)
     return new_tensor
 
 
@@ -113,9 +118,7 @@ def add_three_tensors(tensor_1, tensor_2, tensor_3):
         vars = []
         for n in range(len(tensor_1[i])):
             vars.append(tensor_1[i][n] + tensor_2[i][n] + tensor_3[i][n])
-        new_tensor.append(
-            vars
-        )
+        new_tensor.append(vars)
     return new_tensor
 
 
@@ -125,7 +128,5 @@ def create_empty_tensor_with_same_shape(tensor):
         vars = []
         for x in tensor:
             vars.append(0 * x)
-        new_tensor.append(
-            vars
-        )
+        new_tensor.append(vars)
     return new_tensor

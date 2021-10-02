@@ -1,5 +1,6 @@
 from random import uniform, seed
 
+from tensorflow.python.ops.clip_ops import clip_by_value
 from tensorflow._api.v2 import math
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.core import Dense
@@ -14,6 +15,7 @@ INERTIA = 0.75
 C1 = 2
 C2 = 2
 V_MAX = 2
+V_MIN = -2
 
 
 class Particle:
@@ -58,7 +60,8 @@ class PsoEnv(MetaheuristicOptimizer):
     def initialize_swarm(self, swarm_size, weights, model, loss_metric, X, y):
         particles = [None] * swarm_size
         starting_velocity = [[w * 0 for w in weight] for weight in weights]
-        particles[0] = Particle(weights, self.fitness_function(weights, model, loss_metric, X, y, self.num_layers), starting_velocity)
+        particles[0] = Particle(weights, self.fitness_function(weights, model, loss_metric, X, y, self.num_layers),
+                                starting_velocity)
         print(' PSO starting fitness of {}'.format(particles[0].current_fitness))
         for p in range(1, swarm_size):
             new_weights = [[w * uniform(0, 1) for w in weight] for weight in weights]
@@ -76,7 +79,8 @@ class PsoEnv(MetaheuristicOptimizer):
         for particle in particles:
             particle.velocity = self.update_velocity(particle, INERTIA, [C1, C2])
             particle.position = self.calc_new_position(particle)
-            particle.current_fitness = self.fitness_function(particle.position, model, loss_metric, X, y, self.num_layers)
+            particle.current_fitness = self.fitness_function(particle.position, model, loss_metric, X, y,
+                                                             self.num_layers)
             if particle.current_fitness < particle.best_fitness:
                 particle.pbest = particle.position
                 particle.best_fitness = particle.current_fitness
@@ -103,7 +107,18 @@ class PsoEnv(MetaheuristicOptimizer):
         cognitive_component = self.get_cognitive_component(particle, acc_c)
         social_component = self.get_social_component(particle, acc_c)
 
-        return add_three_tensors(initial, cognitive_component, social_component)
+        raw_v = add_three_tensors(initial, cognitive_component, social_component)
+        return self.clamp_velocity(raw_v)
+
+    @staticmethod
+    def clamp_velocity(raw_v):
+        clamped_velocity = []
+        for i in range(len(raw_v)):
+            new_vel = []
+            for n in range(len(raw_v[i])):
+                new_vel.append(clip_by_value(raw_v[i][n], V_MIN, V_MAX))
+            clamped_velocity.append(new_vel)
+        return clamped_velocity
 
     @staticmethod
     def get_cognitive_component(particle, acc_c):

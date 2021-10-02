@@ -9,6 +9,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
+from utils.ImageLoader import load_rgb_images
+
 home = expanduser("~")
 
 # Dataset paths
@@ -18,7 +20,6 @@ PATH_TO_DDSM = '/ddsm_lr'
 PATH_TO_MIAS = '/mias'
 PATH_TO_CBIS_DDSM = '/CBIS-DDSM-PNG'
 PATH_TO_BCS = '/BCS-DBT-PNG'
-
 
 # Dataset labels
 
@@ -37,6 +38,7 @@ class DataSetNames(Enum):
     MNIST = 'Modified National Institute of Standards and Technology'
     BCS_DBT = 'BCS-DBT'
 
+
 class DataSet:
     def __init__(self, name, root_path, train_metadata_path, test_metadata_path, class_label_index, label_map,
                  class_names, is_multiclass):
@@ -49,13 +51,21 @@ class DataSet:
         self.class_names = class_names
         self.is_multiclass = is_multiclass
 
+    def get_num_classes(self):
+        if self.is_multiclass:
+            return len(self.class_names)
+        else:
+            return 1
+
     def get_image_metadata(self):
         df_images = pd.read_csv(self.train_metadata_path)
         return np.array(df_images)
 
-    def split_data_set(self, data, labels):
-        return train_test_split(data, labels, test_size=0.3, train_size=0.7,
-                                random_state=42)
+    def split_data_set(self, IMAGE_DIMS, subset=None, segment=None):
+        data, labels = load_rgb_images(self, IMAGE_DIMS, subset, segment)
+        train_x, test_x, train_y, test_y = train_test_split(data, labels, test_size=0.25, train_size=0.75,
+                                                            random_state=42)
+        return train_x, test_x, train_y, test_y
 
     def get_dataset_labels(self, train_y, test_y):
         if self.is_multiclass:
@@ -109,8 +119,10 @@ class MultiPartDataset(DataSet):
 
         return np.array(paths_train + paths_test)
 
-    def split_data_set(self, data, labels):
-        return train_test_split(data, labels, test_size=0.25, train_size=0.75, random_state=None, shuffle=False)
+    def split_data_set(self, IMAGE_DIMS, subset=None, segment=None):
+        test_x, test_y = load_rgb_images(self, IMAGE_DIMS, subset='Test', segment=segment)
+        train_x, train_y = load_rgb_images(self, IMAGE_DIMS, subset='Training', segment=segment)
+        return train_x, test_x, train_y, test_y
 
 
 class SegmentationDataset(DataSet):
@@ -118,7 +130,8 @@ class SegmentationDataset(DataSet):
                  cropped_test_metadata_path, roi_train_metadata_path,
                  roi_test_metadata_path, class_label_index, label_map,
                  class_names, is_multiclass):
-        super().__init__(name, root_path, train_metadata_path, test_metadata_path, class_label_index, label_map, class_names, is_multiclass)
+        super().__init__(name, root_path, train_metadata_path, test_metadata_path, class_label_index, label_map,
+                         class_names, is_multiclass)
         self.cropped_test_metadata_path = cropped_test_metadata_path
         self.cropped_train_metadata_path = cropped_train_metadata_path
         self.roi_train_metadata_path = roi_train_metadata_path
@@ -181,6 +194,7 @@ def create_ddsm_three_class_dataset_singleton():
         three_class_names,
         True
     )
+
 
 def create_ddsm_two_class_dataset_singleton():
     return DataSet(
@@ -245,7 +259,7 @@ def create_cbis_ddsm_five_class_dataset_singleton():
         ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/train_cbis-ddsm_five.csv',
         ROOT_DIRECTORY + PATH_TO_CBIS_DDSM + '/test_cbis-ddsm_five.csv',
         1,
-        {0:0, 1:1, 2:2, 3:3, 4:4, 5:5},
+        {0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5},
         ['0', '1', '2', '3', '4', '5'],
         True
     )
@@ -275,6 +289,7 @@ def create_bcs_two_class_dataset_singleton():
         two_class_names,
         False
     )
+
 
 ddsm_data_set = create_ddsm_three_class_dataset_singleton()
 binary_ddsm_data_set = create_ddsm_two_class_dataset_singleton()

@@ -4,24 +4,22 @@ import time
 from datetime import timedelta
 
 import tensorflow as tf
-from IPython.core.display import clear_output
-from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
-from tensorflow.python.keras.losses import CategoricalHinge, BinaryCrossentropy
-from tensorflow.python.keras.metrics import MeanIoU, Hinge
+from tensorflow.python.keras.losses import CategoricalHinge
+from tensorflow.python.keras.metrics import MeanIoU
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, MODEL_OUTPUT, \
     create_required_directories, create_callbacks
 from metrics.MetricsUtil import iou_coef, dice_coef
-from networks.NetworkHelper import compile_with_regularization, generate_heatmap
+from networks.NetworkHelper import compile_with_regularization, generate_heatmap, create_classification_layers
 from networks.UNet import build_pretrained_unet
 from networks.UNetSeg import unet_seg
 from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
 from training_loops.OptimizerHelper import calc_seg_fitness
 from utils.ImageLoader import load_seg_images, supplement_seg_training_data
-from utils.ScriptHelper import create_file_title, read_cmd_line_args
+from utils.ScriptHelper import create_file_title, read_cmd_line_args, evaluate_classification_model, evaluate_meta_model
 from utils.SegScriptHelper import show_predictions
 
 print('Python version: {}'.format(sys.version))
@@ -58,7 +56,7 @@ if hyperparameters.augmentation:
 print('[INFO] Training data shape: ' + str(train_x.shape))
 print('[INFO] Training label shape: ' + str(train_y.shape))
 
-clear_output()
+print('FIRST PASS \n')
 
 if hyperparameters.preloaded_weights:
     model = build_pretrained_unet(IMAGE_DIMS, len(data_set.class_names))
@@ -72,23 +70,14 @@ if hyperparameters.weights_of_experiment_id is not None:
 
 # Compile model
 compile_with_regularization(model=model,
-                            loss=BinaryCrossentropy(),
+                            loss=CategoricalHinge(),
                             optimizer=opt,
                             metrics=['accuracy', MeanIoU(num_classes=len(data_set.class_names))],
                             regularization_type='l2',
                             l2=hyperparameters.l2)
 
 # Setup callbacks
-callbacks = [
-        ReduceLROnPlateau(
-            monitor='val_loss', factor=0.2, patience=10, verbose=1, mode='min',
-            min_delta=0.001, cooldown=0, min_lr=0.00001),
-        ModelCheckpoint(
-            '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.experiment_id), monitor='val_loss', verbose=0,
-            save_best_only=True, save_weights_only=True, mode='min', save_freq='epoch',
-            options=None
-        )
-    ]
+callbacks = create_callbacks(hyperparameters)
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
@@ -107,31 +96,70 @@ else:
     H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
                       meta_heuristic=hyperparameters.meta_heuristic,
                       fitness_function=calc_seg_fitness, task='segmentation')
-time_taken = timedelta(seconds=(time.time() - start_time))
+
+show_predictions(model, test_x, test_y, 2, output_dir + 'segmentation/' + hyperparameters.experiment_id + '_pred2.png')
+show_predictions(model, test_x, test_y, 12,
+                 output_dir + 'segmentation/' + hyperparameters.experiment_id + '_pred12.png')
+show_predictions(model, test_x, test_y, 22,
+                 output_dir + 'segmentation/' + hyperparameters.experiment_id + '_pred22.png')
 
 # evaluate the network
 print('[INFO] evaluating network...')
 
 predictions = model.predict(test_x, batch_size=32)
 
-print('[INFO] generating metrics...')
+print('[INFO] generating metrics for first pass...')
 
-file_title = create_file_title('UNetSeg', hyperparameters)
+file_title = create_file_title('UNetSeg2', hyperparameters)
 
 acc = model.evaluate(test_x, test_y)
 output = str(model.metrics_names) + '\n'
 output += str(acc) + '\n'
 output += 'IOU: {}\n'.format(iou_coef(test_y, predictions))
 output += 'Dice: {}\n'.format(dice_coef(test_y, predictions))
-output += 'Time taken: {}\n'.format(time_taken)
-
-for i in range(10):
-    show_predictions(model, test_x, test_y, i, output_dir + 'segmentation/' + file_title + '_pred_{}.png'.format(i))
 
 with open(output_dir + file_title + '_metrics.txt', 'w+') as text_file:
     text_file.write(output)
 
-generate_heatmap(model, test_x, 10, 0, hyperparameters)
-generate_heatmap(model, test_x, 10, 1, hyperparameters)
+print('SECOND PASS \n')
+
+loss, train_labels, test_labels = data_set.get_dataset_labels(train_labels, test_labels)
+
+model = create_classification_layers(base_model=model,
+                                     classes=len(data_set.class_names),
+                                     dropout_prob=hyperparameters.dropout_prob)
+
+# Compile model
+compile_with_regularization(model=model,
+                            loss='binary_crossentropy',
+                            optimizer=opt,
+                            metrics=['accuracy'],
+                            regularization_type='l2',
+                            l2=hyperparameters.l2)
+
+H = model.fit(train_x, train_labels, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_labels),
+              steps_per_epoch=len(train_labels) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
+              callbacks=callbacks)
+
+time_taken = timedelta(seconds=(time.time() - start_time))
+
+# evaluate the network
+evaluate_classification_model(model, 'UNetClassification', hyperparameters, data_set, H, time_taken, test_x, test_labels)
+
+generate_heatmap(model, test_x, 10, 0, hyperparameters, '_2nd_pass')
+generate_heatmap(model, test_x, 10, 1, hyperparameters, '_2nd_pass')
+
+print('META-HEURISTIC')
+
+H = training_loop(model, hyperparameters, train_x, train_labels, test_x, test_labels,
+                  meta_heuristic=hyperparameters.meta_heuristic)
+
+print('EVALUATION')
+
+generate_heatmap(model, test_x, 10, 0, hyperparameters, '_meta_pass')
+generate_heatmap(model, test_x, 10, 1, hyperparameters, '_meta_pass')
+
+# evaluate the network
+evaluate_meta_model(model, 'UNetClassMeta', hyperparameters, data_set, test_x, test_labels)
 
 print('[END] Finishing script...\n')

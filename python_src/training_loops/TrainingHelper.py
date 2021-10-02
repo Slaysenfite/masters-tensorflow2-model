@@ -5,7 +5,7 @@ from tensorflow.python.keras.metrics import CategoricalAccuracy, BinaryAccuracy,
 
 
 def append_epoch_metrics(val_acc_score, val_accuracy, val_loss,
-                             val_loss_score, val_precision, val_precision_score, val_recall, val_recall_score):
+                         val_loss_score, val_precision, val_precision_score, val_recall, val_recall_score):
     val_loss.append(val_loss_score)
     val_accuracy.append(val_acc_score)
     val_precision.append(val_precision_score)
@@ -17,13 +17,10 @@ def reset_metrics(train_acc_metric, val_acc_metric):
     val_acc_metric.reset_states()
 
 
-def print_metrics(val_acc_score,
-                  val_loss_score, val_precision_score, val_recall_score):
-    print('--- Validation Scores ---')
-    print('Validation acc over epoch: %s' % (float(val_acc_score)))
-    print('Validation loss over epoch: %s' % (float(val_loss_score)))
-    print('Validation precision over epoch: %s' % (float(val_precision_score)))
-    print('Validation recall over epoch: %s' % (float(val_recall_score)))
+def print_metrics(val_acc_score, val_loss_score, val_precision_score, val_recall_score):
+    print('--- Validation Metrics ---')
+    print('val_loss: {} val_acc: {} val_pre:{} val_rec: {}'.format(float(val_loss_score), float(val_acc_score),
+                                                                   float(val_precision_score), float(val_recall_score)))
 
 
 def generate_tf_history(model, hyperparameters, accuracy, loss, val_accuracy, val_loss, val_precision, val_recall):
@@ -34,7 +31,7 @@ def generate_tf_history(model, hyperparameters, accuracy, loss, val_accuracy, va
         'epochs': hyperparameters.epochs,
         'metrics': ['loss', 'accuracy', 'val_loss', 'val_accuracy', 'val_precision', 'val_recall']
     })
-    history = {'loss': [], 'accuracy': [], 'val_loss': [], 'val_accuracy': [],'val_precision': [], 'val_recall': []}
+    history = {'loss': [], 'accuracy': [], 'val_loss': [], 'val_accuracy': [], 'val_precision': [], 'val_recall': []}
     history['loss'] = loss
     history['accuracy'] = accuracy
     history['val_loss'] = val_loss
@@ -46,7 +43,7 @@ def generate_tf_history(model, hyperparameters, accuracy, loss, val_accuracy, va
 
 
 def prepare_metrics(task):
-    if task == 'binary_classification':
+    if 'binary' in task:
         train_acc_metric = BinaryAccuracy()
         val_acc_metric = BinaryAccuracy()
         train_loss_metric = BinaryCrossentropy(from_logits=True)
@@ -65,4 +62,3 @@ def batch_data_set(hyperparameters, test_x, test_y, train_x, train_y):
     test_data = Dataset.from_tensor_slices((test_x, test_y)).shuffle(buffer_size=len(test_x)).batch(
         hyperparameters.batch_size)
     return test_data, train_data
-

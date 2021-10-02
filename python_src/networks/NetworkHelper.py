@@ -1,16 +1,26 @@
 import re
 
 from tensorflow.python.keras import regularizers
-from tensorflow.python.keras.layers import Dropout, Dense, GlobalAveragePooling2D, Flatten, Conv2D
+from tensorflow.python.keras.layers import Dropout, Dense, GlobalAveragePooling2D, Flatten, Conv2D, Activation
 from tensorflow.python.keras.models import Model
+from tf_explain.core import GradCAM
+
+from configurations.TrainingConfig import SEGMENTATION_OUTPUT, HEATMAP_OUTPUT
 
 
-def create_classification_layers(base_model, classes, dropout_prob=0.3, layers_removed=-1):
+def create_classification_layers(base_model, classes, dropout_prob=0.3, kernel_initializer='he_uniform',
+                                 layers_removed=-1):
     x = GlobalAveragePooling2D(name='avg_pool')(base_model.layers[layers_removed].output)
     x = Flatten()(x)
-    x = Dense(512, activation='relu', kernel_initializer='he_uniform')(x)
+    x = Dense(512, activation='relu', kernel_initializer=kernel_initializer)(x)
     x = Dropout(dropout_prob)(x)
     x = Dense(classes, activation='softmax', name='predictions')(x)
+    return Model(inputs=base_model.inputs, outputs=x)
+
+
+def create_segmentation_layers(base_model, layers_removed=-1):
+    x = Conv2D(1, (1, 1), padding="same")(base_model.layers[layers_removed].output)
+    x = Activation("sigmoid")(x)
     return Model(inputs=base_model.inputs, outputs=x)
 
 
@@ -45,6 +55,16 @@ def get_regularizer(regularization_type, l1, l2):
         print('[ERROR] Regularizer not recognised. Defaulting to L2.')
         regularizer = regularizers.l2()
     return regularizer
+
+
+def generate_heatmap(model, images, size, class_index, hyperparameters, path_suffix=''):
+    # Start explainer
+    explainer = GradCAM()
+    for i in range(size):
+        data = ([images[i]], None)
+        grid = explainer.explain(data, model, class_index=class_index)
+        explainer.save(grid, HEATMAP_OUTPUT,
+                       "{}_{}_class_{}{}.png".format(hyperparameters.experiment_id, i, class_index, path_suffix))
 
 
 def insert_layer_nonseq(model, layer_regex, insert_layer_factory,

@@ -3,11 +3,20 @@ from os.path import expanduser
 
 from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 
+home = expanduser("~")
+output_dir = 'output/'
+
+FIGURE_OUTPUT = output_dir + 'figures/'
+SEGMENTATION_OUTPUT = output_dir + 'segmentation/'
+HEATMAPS_OUTPUT = output_dir + 'heatmaps/'
+MODEL_OUTPUT = ROOT_DIRECTORY = home + '/data/models/'
+
 
 def create_required_directories():
     os.makedirs(output_dir, 0o777, True)
     os.makedirs(output_dir + 'figures/', 0o777, True)
-    os.makedirs(output_dir + 'model/', 0o777, True)
+    os.makedirs(output_dir + 'segmentation/', 0o777, True)
+    os.makedirs(output_dir + 'heatmaps/', 0o777, True)
     os.makedirs(MODEL_OUTPUT, 0o777, True)
 
 
@@ -18,31 +27,33 @@ output_dir = 'output/'
 
 FIGURE_OUTPUT = output_dir + 'figures/'
 MODEL_OUTPUT = ROOT_DIRECTORY = home + '/data/models/'
+SEGMENTATION_OUTPUT = output_dir + 'segmentation/'
+HEATMAP_OUTPUT = output_dir + 'heatmaps/'
 
 
 class Hyperparameters:
-    def __init__(self, epochs, init_lr, sgd_lr, adam_lr, batch_size,
-                 dropout):
+    def __init__(self, epochs, batch_size):
         self.epochs = epochs
-        self.init_lr = init_lr
-        self.sgd_lr = sgd_lr
-        self.adam_lr = adam_lr
+        self.lr = 0.001
         self.batch_size = batch_size
-        self.dropout_prob = dropout
+        self.dropout_prob = 0.25
         self.learning_optimization = 'sgd'
         self.meta_heuristic = 'none'
         self.experiment_id = 'na'
         self.augmentation = False
         self.preloaded_weights = False
+        self.kernel_initializer = 'he_uniform'
         self.weights_of_experiment_id = None
         self.tf_fit = True
         self.l2 = 0.00001
-        self.num_layers_for_optimization = 5
+        self.num_layers_for_optimization = 10
+        self.dataset_segment = "All Segments"
 
     def report_hyperparameters(self):
         report = '*** Script Hyperparameters ***\n'
+        report += ' Experiment Id: {}\n'.format(self.experiment_id)
         report += ' Epochs: {}\n'.format(self.epochs)
-        report += ' Initial learning rate: {}\n'.format(self.init_lr)
+        report += ' Initial learning rate: {}\n'.format(self.lr)
         report += ' Batch size: {}\n'.format(self.batch_size)
         report += ' Dropout: {}\n'.format(self.dropout_prob)
         report += ' Learning optimization: {}\n'.format(self.learning_optimization)
@@ -50,9 +61,11 @@ class Hyperparameters:
         report += ' Meta-heuristic layer optimized: {}\n'.format(self.num_layers_for_optimization)
         report += ' Data augmentation: {}\n'.format(self.augmentation)
         report += ' Preloaded weights: {}\n'.format(self.preloaded_weights)
+        report += ' Kernel initializer: {}\n'.format(self.kernel_initializer)
         report += ' Existing Weights Exp Id: {}\n'.format(self.weights_of_experiment_id)
         report += ' TF Fit Training: {}\n'.format(self.tf_fit)
         report += ' L2: {}\n'.format(self.l2)
+        report += ' Dataset subset: {}\n'.format(self.dataset_segment)
 
         return report
 
@@ -60,22 +73,14 @@ class Hyperparameters:
 def create_standard_hyperparameter_singleton():
     return Hyperparameters(
         50,
-        0.001,
-        0.001,
-        0.003,
-        32,
-        0.25
+        32
     )
 
 
 def create_mnist_hyperparameter_singleton():
     return Hyperparameters(
         10,
-        5e-3,
-        5e-3,
-        5e-3,
-        32,
-        0.25
+        32
     )
 
 

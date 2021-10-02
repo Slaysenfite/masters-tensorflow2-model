@@ -6,7 +6,7 @@ from numpy import ma, asarray
 PATH_INDEX = 0
 
 
-def load_rgb_images(dataset, image_dimensions=(128, 128, 3), subset='Default'):
+def load_rgb_images(dataset, image_dimensions=(128, 128, 3), subset='Default', segment='non_functional'):
     data = []
     labels = []
 
@@ -18,8 +18,9 @@ def load_rgb_images(dataset, image_dimensions=(128, 128, 3), subset='Default'):
     for image_path, raw_label in metadata:
         # print_progress_bar(i + 1, len(image_paths), prefix=' Progress:', suffix='Complete')
 
-        if subset not in image_path:
-            continue
+        if subset is not None and segment is 'All Segments':
+            if subset not in image_path or segment in image_path.lower():
+                continue
 
         image = cv2.imread(image_path)
         image = cv2.resize(image, (image_dimensions[1], image_dimensions[0]))
@@ -97,6 +98,8 @@ def load_seg_images(dataset, path_suffix='full', image_dimensions=(128, 128, 3),
             continue
 
         image = cv2.imread(image_path)
+        if image is None:
+            continue
         if image_dimensions[2] == 3:
             image = cv2.resize(image, (image_dimensions[1], image_dimensions[0]))
         elif image_dimensions[2] == 1:
