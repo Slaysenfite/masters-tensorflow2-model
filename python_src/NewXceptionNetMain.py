@@ -29,8 +29,9 @@ gc.enable()
 print('FIRST PASS')
 
 print('[INFO] Loading images...')
-test_x, test_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Test')
-train_x, train_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Training')
+train_x, test_x, train_y, test_y = data_set.split_data_set(IMAGE_DIMS,
+                                                           subset=None,
+                                                           segment=hyperparameters.dataset_segment)
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
 if hyperparameters.preloaded_weights:

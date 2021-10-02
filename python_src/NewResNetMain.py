@@ -4,17 +4,13 @@ import time
 from datetime import timedelta
 
 import tensorflow as tf
-from keras_preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras.applications.resnet_v2 import ResNet50V2
 
 from configurations.DataSet import cbis_ddsm_data_set as data_set
-from configurations.DataSet import cbis_seg_data_set as c_data_set
-from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks, \
-    MODEL_OUTPUT
+from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks
 from networks.NetworkHelper import create_classification_layers, compile_with_regularization, generate_heatmap
 from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
-from utils.ImageLoader import load_rgb_images, load_seg_images, supplement_training_data
 from utils.ScriptHelper import read_cmd_line_args, evaluate_classification_model, evaluate_meta_model
 
 print('Python version: {}'.format(sys.version))
@@ -32,8 +28,9 @@ gc.enable()
 print('FIRST PASS')
 
 print('[INFO] Loading images...')
-test_x, test_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Test')
-train_x, train_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Training')
+train_x, test_x, train_y, test_y = data_set.split_data_set(IMAGE_DIMS,
+                                                           subset=None,
+                                                           segment=hyperparameters.dataset_segment)
 loss, train_y, test_y = data_set.get_dataset_labels(train_y, test_y)
 
 if hyperparameters.preloaded_weights:

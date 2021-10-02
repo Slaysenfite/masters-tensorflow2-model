@@ -63,8 +63,9 @@ class DataSet:
 
     def split_data_set(self, IMAGE_DIMS, subset=None, segment=None):
         data, labels = load_rgb_images(self, IMAGE_DIMS, subset, segment)
-        return train_test_split(data, labels, test_size=0.25, train_size=0.75,
-                                random_state=42)
+        train_x, test_x, train_y, test_y = train_test_split(data, labels, test_size=0.25, train_size=0.75,
+                                                            random_state=42)
+        return train_x, test_x, train_y, test_y
 
     def get_dataset_labels(self, train_y, test_y):
         if self.is_multiclass:
@@ -121,7 +122,7 @@ class MultiPartDataset(DataSet):
     def split_data_set(self, IMAGE_DIMS, subset=None, segment=None):
         test_x, test_y = load_rgb_images(self, IMAGE_DIMS, subset='Test', segment=segment)
         train_x, train_y = load_rgb_images(self, IMAGE_DIMS, subset='Training', segment=segment)
-        return train_x, train_y, test_x, test_y
+        return train_x, test_x, train_y, test_y
 
 
 class SegmentationDataset(DataSet):
