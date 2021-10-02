@@ -39,15 +39,17 @@ class GaEnv(MetaheuristicOptimizer):
                                         num_layers=self.num_layers)
 
         individuals = self.initialize_population(self.num_solutions, weights, self.model, self.X, self.y)
-        individuals = self.update_fitness(individuals, self.model, self.X, self.y)
 
         while iteration < self.iterations:
-            individuals = self.reproduce_next_gen(individuals)
 
+            individuals = self.reproduce_next_gen(individuals)
             individuals = self.update_fitness(individuals, self.model, self.X, self.y)
+
             print(' GA training for iteration {}'.format(iteration + 1) + ' - Best fitness of {}'.format(
                 individuals[0].fitness))
             iteration += 1
+
+        individuals.sort(key=lambda indv: indv.fitness, reverse=False)
         best_weights = convert_tenor_weights_to_tf_variable(individuals[0].weights)
 
         return set_trainable_weights(model=self.model, weights=best_weights, keras_layers=self.layers_to_optimize,
@@ -61,7 +63,7 @@ class GaEnv(MetaheuristicOptimizer):
         print(' GA starting fitness of {}'.format(individuals[0].fitness))
         for p in range(1, population_size):
             new_weights = [[w * uniform(0, 1) for w in weight] for weight in weights]
-            individuals[p] = Solution(new_weights, 1000)
+            individuals[p] = Solution(new_weights, self.fitness_function(new_weights, model, self.loss_metric, X, y, self.num_layers))
         return individuals
 
     def update_fitness(self, individuals, model, X, y):

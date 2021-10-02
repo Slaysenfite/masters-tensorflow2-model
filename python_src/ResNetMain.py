@@ -8,7 +8,7 @@ from sklearn.metrics import confusion_matrix
 from tensorflow.python.keras.applications.resnet_v2 import ResNet50V2
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
-from configurations.DataSet import bcs_data_set as data_set
+from configurations.DataSet import cbis_ddsm_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks, \
     MODEL_OUTPUT
 from metrics.MetricsReporter import MetricReporter
@@ -95,8 +95,14 @@ if hyperparameters.tf_fit:
                   steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
                   callbacks=callbacks)
 else:
-    H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
-                      meta_heuristic=hyperparameters.meta_heuristic)
+    H = training_loop(model,
+                  hyperparameters,
+                  train_x,
+                  train_y,
+                  test_x,
+                  test_y,
+                  meta_heuristic=hyperparameters.meta_heuristic
+                  )
 
 time_taken = timedelta(seconds=(time.time() - start_time))
 
