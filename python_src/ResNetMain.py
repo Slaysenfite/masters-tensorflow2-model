@@ -15,7 +15,7 @@ from metrics.MetricsReporter import MetricReporter
 from networks.NetworkHelper import create_classification_layers, compile_with_regularization, generate_heatmap
 from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
-from utils.ImageLoader import load_rgb_images, supplement_training_data
+from utils.ImageLoader import supplement_training_data
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
 
 print('Python version: {}'.format(sys.version))
@@ -31,8 +31,9 @@ create_required_directories()
 gc.enable()
 
 print('[INFO] Loading images...')
-test_x, test_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Test', segment=hyperparameters.dataset_segment)
-train_x, train_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Training', segment=hyperparameters.dataset_segment)
+train_x, test_x, train_y, test_y = data_set.split_data_set(IMAGE_DIMS,
+                                                           subset=None,
+                                                           segment=hyperparameters.dataset_segment)
 
 if hyperparameters.augmentation:
     print('[INFO] Augmenting data set')

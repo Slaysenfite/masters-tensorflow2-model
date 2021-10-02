@@ -1,7 +1,10 @@
 import os
 from os.path import expanduser
+import pathlib as path
 
 import pandas as pd
+
+from utils.IOHandler import clean_dir
 
 home = expanduser("~")
 
@@ -66,8 +69,8 @@ def append_fives_row(image_path, metadata_csv_path, path_to_data_folder, row):
 
 
 def create_cbis_metadata_file(tuple=cropped_image_tuple):
-    os.remove(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_train_cbis-ddsm.csv')
-    os.remove(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_test_cbis-ddsm.csv')
+    clean_dir(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_train_cbis-ddsm.csv')
+    clean_dir(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_test_cbis-ddsm.csv')
     append_to_ddsm_csv(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_train_cbis-ddsm.csv', 'image,label')
     append_to_ddsm_csv(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_test_cbis-ddsm.csv', 'image,label')
     generate_cbis_ddsm_metadata_file('calc_case_description_train_set.csv', tuple[2] + '_train_cbis-ddsm.csv', tuple)
@@ -77,8 +80,8 @@ def create_cbis_metadata_file(tuple=cropped_image_tuple):
 
 
 def create_cbis_five_metadata_file(tuple=cropped_image_tuple):
-    os.remove(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_train_cbis-ddsm_five.csv')
-    os.remove(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_test_cbis-ddsm_five.csv')
+    clean_dir(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_train_cbis-ddsm_five.csv')
+    clean_dir(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_test_cbis-ddsm_five.csv')
     append_to_ddsm_csv(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_train_cbis-ddsm_five.csv', 'image,label')
     append_to_ddsm_csv(home + RELATIVE_DATA_SET_PATH + tuple[2] + '_test_cbis-ddsm_five.csv', 'image,label')
     generate_cbis_ddsm_five_metadata_file('calc_case_description_train_set.csv', tuple[2] + '_train_cbis-ddsm_five.csv', tuple)

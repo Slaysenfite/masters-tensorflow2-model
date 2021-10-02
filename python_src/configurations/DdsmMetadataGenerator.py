@@ -1,6 +1,7 @@
 import os
 
 from configurations.DataSet import ddsm_data_set
+from utils.IOHandler import clean_dir
 
 
 def gen_ddsm_metadata(rootDir):
@@ -20,17 +21,19 @@ def gen_ddsm_metadata(rootDir):
 
 def gen_binary_classification_ddsm_metadata(rootDir):
     csv_path = rootDir + '/binary_ddsm.csv'
+    clean_dir(csv_path)
     append_to_ddsm_csv(csv_path, 'image,label')
     for dirName, subdirList, fileList in os.walk(rootDir):
         for fname in fileList:
+            if '.png' in fname:
                 if 'normal' in dirName:
-                    append_to_ddsm_csv(csv_path, fname + ',N')
+                    append_to_ddsm_csv(csv_path, '{}/{},N'.format(dirName,fname))
                 elif 'benign' in dirName and check_for_overlay(fname, dirName) is True:
-                    append_to_ddsm_csv(csv_path, fname + ',P')
+                    append_to_ddsm_csv(csv_path, '{}/{},P'.format(dirName,fname))
                 elif 'cancer' in dirName and check_for_overlay(fname, dirName) is True:
-                    append_to_ddsm_csv(csv_path, fname + ',P')
+                    append_to_ddsm_csv(csv_path, '{}/{},P'.format(dirName,fname))
                 else:
-                    append_to_ddsm_csv(csv_path, fname + ',N')
+                    append_to_ddsm_csv(csv_path, '{}/{},N'.format(dirName,fname))
 
 
 def append_to_ddsm_csv(path, string):

@@ -18,8 +18,9 @@ def load_rgb_images(dataset, image_dimensions=(128, 128, 3), subset='Default', s
     for image_path, raw_label in metadata:
         # print_progress_bar(i + 1, len(image_paths), prefix=' Progress:', suffix='Complete')
 
-        if subset not in image_path or segment in image_path.lower():
-            continue
+        if subset is not None and segment is 'All Segments':
+            if subset not in image_path or segment in image_path.lower():
+                continue
 
         image = cv2.imread(image_path)
         image = cv2.resize(image, (image_dimensions[1], image_dimensions[0]))

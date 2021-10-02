@@ -31,8 +31,9 @@ print('[INFO] Creating required directories...')
 create_required_directories()
 
 print('[INFO] Loading images...')
-test_x, test_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Test')
-train_x, train_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Training')
+train_x, test_x, train_y, test_y = data_set.split_data_set(IMAGE_DIMS,
+                                                           subset=None,
+                                                           segment=hyperparameters.dataset_segment)
 
 if hyperparameters.augmentation:
     print('[INFO] Augmenting data set')

@@ -9,6 +9,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow.python.keras.utils.np_utils import to_categorical
 
+from utils.ImageLoader import load_rgb_images
+
 home = expanduser("~")
 
 # Dataset paths
@@ -59,8 +61,9 @@ class DataSet:
         df_images = pd.read_csv(self.train_metadata_path)
         return np.array(df_images)
 
-    def split_data_set(self, data, labels):
-        return train_test_split(data, labels, test_size=0.3, train_size=0.7,
+    def split_data_set(self, IMAGE_DIMS, subset=None, segment=None):
+        data, labels = load_rgb_images(self, IMAGE_DIMS, subset, segment)
+        return train_test_split(data, labels, test_size=0.25, train_size=0.75,
                                 random_state=42)
 
     def get_dataset_labels(self, train_y, test_y):
@@ -115,8 +118,10 @@ class MultiPartDataset(DataSet):
 
         return np.array(paths_train + paths_test)
 
-    def split_data_set(self, data, labels):
-        return train_test_split(data, labels, test_size=0.25, train_size=0.75, random_state=None, shuffle=False)
+    def split_data_set(self, IMAGE_DIMS, subset=None, segment=None):
+        test_x, test_y = load_rgb_images(self, IMAGE_DIMS, subset='Test', segment=segment)
+        train_x, train_y = load_rgb_images(self, IMAGE_DIMS, subset='Training', segment=segment)
+        return train_x, train_y, test_x, test_y
 
 
 class SegmentationDataset(DataSet):
