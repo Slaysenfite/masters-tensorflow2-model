@@ -90,7 +90,7 @@ def set_trainable_weights(model, weights, num_layers, keras_layers=(Dense, Conv2
             layer.set_weights(np_weights)
             i += 1
         if i == num_layers:
-            return weights
+            return model
     return model
 
 
