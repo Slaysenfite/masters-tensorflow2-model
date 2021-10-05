@@ -59,7 +59,7 @@ def determine_loss_function_based_on_fitness_function(fitness_function):
         return CategoricalCrossentropy()
 
 
-def get_trainable_weights(model, num_layers, keras_layers=(Dense, Conv2D)):
+def get_trainable_weights(model, num_layers, keras_layers=(Conv2D, Dense)):
     weights = []
     layer_count = 0
     for layer in reversed(model.layers):
@@ -73,7 +73,7 @@ def get_trainable_weights(model, num_layers, keras_layers=(Dense, Conv2D)):
     return weights
 
 
-def set_trainable_weights(model, weights, num_layers, keras_layers=(Dense, Conv2D)):
+def set_trainable_weights(model, weights, num_layers, keras_layers=(Conv2D, Dense)):
     i = 0
     for layer in reversed(model.layers):
         if layer.trainable is not True or len(layer.weights) == 0 or layer.name == 'predictions':
