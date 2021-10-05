@@ -1,8 +1,10 @@
 import re
 
 from tensorflow.python.keras import regularizers
+from tensorflow.python.keras.applications import imagenet_utils
 from tensorflow.python.keras.layers import Dropout, Dense, GlobalAveragePooling2D, Flatten, Conv2D, Activation
 from tensorflow.python.keras.models import Model
+from tensorflow.python.layers.pooling import AveragePooling2D
 from tf_explain.core import GradCAM
 
 from configurations.TrainingConfig import SEGMENTATION_OUTPUT, HEATMAP_OUTPUT
@@ -11,10 +13,8 @@ from configurations.TrainingConfig import SEGMENTATION_OUTPUT, HEATMAP_OUTPUT
 def create_classification_layers(base_model, classes, dropout_prob=0.3, kernel_initializer='he_uniform',
                                  layers_removed=-1):
     x = GlobalAveragePooling2D(name='avg_pool')(base_model.layers[layers_removed].output)
-    x = Flatten()(x)
-    x = Dense(512, activation='relu', kernel_initializer=kernel_initializer)(x)
-    x = Dropout(dropout_prob)(x)
-    x = Dense(classes, activation='softmax', name='predictions')(x)
+    x = Dense(classes, activation='softmax',
+                     name='predictions')(x)
     return Model(inputs=base_model.inputs, outputs=x)
 
 
