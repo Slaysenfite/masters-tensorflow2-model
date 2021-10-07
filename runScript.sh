@@ -22,7 +22,7 @@ workon wesselsenv
 #python python_src/UNetSegMain.py --id=MSUD001-ImageNet --dataset=cbis_seg --optimizer=sgd --preloaded_weights=True --epochs=100
 
 python python_src/ResNetMain.py --optimizer=adam --id=MCRF001-ImageNet --dataset=ddsm --preloaded_weights=True --epochs=100
-python python_src/XceptionNetMain.py --optimizer=adam --id=MCXF001-ImageNet --dataset=ddsm --preloaded_weights=True --epochs=100
+#python python_src/XceptionNetMain.py --optimizer=adam --id=MCXF001-ImageNet --dataset=ddsm --preloaded_weights=True --epochs=100
 
 ## Metaheuristics ##
 

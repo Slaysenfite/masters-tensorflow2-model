@@ -18,7 +18,7 @@ def load_rgb_images(dataset, image_dimensions=(128, 128, 3), subset='Default', s
     for image_path, raw_label in metadata:
         # print_progress_bar(i + 1, len(image_paths), prefix=' Progress:', suffix='Complete')
 
-        if subset not in image_path:
+        if subset is not None and subset not in image_path:
             continue
         if segment is not 'All Segments' and segment in image_path.lower():
             continue
