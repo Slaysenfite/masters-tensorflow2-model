@@ -35,8 +35,9 @@ def calc_solution_fitness(weights, model, loss_metric, X, y, num_layers):
     precision = tp_score / (tp_score + fn_score)
     specificity = tn_score / (tn_score + fp_score)
 
-    fpr = fp_score / (tn_score + fn_score + tp_score + fp_score)
-    return (fpr) + (2 * loss) + (1 - specificity) + (1 - precision)
+    fpr = fp_score / (fp_score + tn_score)
+    # fnr = fn_score / (fn_score + tp_score)
+    return fpr + (2 * loss) + (1 - specificity) + (1 - precision)
 
 
 def calc_seg_fitness(weights, model, loss_metric, X, y, num_layers):

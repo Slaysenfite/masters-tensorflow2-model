@@ -13,7 +13,7 @@ from configurations.TrainingConfig import IMAGE_DIMS, create_required_directorie
     MODEL_OUTPUT
 from metrics.MetricsReporter import MetricReporter
 from networks.NetworkHelper import create_classification_layers, compile_with_regularization, generate_heatmap
-from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
+from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau, RunMetaHeuristicAtEpochEnd
 from training_loops.CustomTrainingLoop import training_loop
 from utils.ImageLoader import supplement_training_data
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
@@ -96,13 +96,13 @@ if hyperparameters.tf_fit:
                   callbacks=callbacks)
 else:
     H = training_loop(model,
-                  hyperparameters,
-                  train_x,
-                  train_y,
-                  test_x,
-                  test_y,
-                  meta_heuristic=hyperparameters.meta_heuristic
-                  )
+                      hyperparameters,
+                      train_x,
+                      train_y,
+                      test_x,
+                      test_y,
+                      meta_heuristic=hyperparameters.meta_heuristic
+                      )
 
 time_taken = timedelta(seconds=(time.time() - start_time))
 

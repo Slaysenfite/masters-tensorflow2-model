@@ -56,9 +56,9 @@ def prepare_metrics(task):
     return train_acc_metric, train_loss_metric, val_acc_metric, val_loss_metric
 
 
-def batch_data_set(hyperparameters, test_x, test_y, train_x, train_y):
+def batch_data_set(batch_size, test_x, test_y, train_x, train_y):
     train_data = Dataset.from_tensor_slices((train_x, train_y)).shuffle(buffer_size=len(train_x)).batch(
-        hyperparameters.batch_size)
+        batch_size)
     test_data = Dataset.from_tensor_slices((test_x, test_y)).shuffle(buffer_size=len(test_x)).batch(
-        hyperparameters.batch_size)
+        batch_size)
     return test_data, train_data
