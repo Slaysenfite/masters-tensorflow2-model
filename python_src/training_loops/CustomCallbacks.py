@@ -6,9 +6,82 @@ import numpy as np
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.callbacks import Callback
 
+from training_loops.CustomTrainingLoop import training_loop_callback
 from training_loops.GAOptimizer import GaEnv
 from training_loops.OptimizerHelper import calc_solution_fitness
 from training_loops.PsoOptimizer import PsoEnv
+
+
+class RunMetaHeuristicAtEpochEnd(Callback):
+
+    def __init__(self,
+                 train_x,
+                 train_y,
+                 test_x,
+                 test_y,
+                 hyperparameters,
+                 monitor='val_loss',
+                 max_patience=5,
+                 verbose=1,
+                 mode='auto',
+                 min_delta=0.0001,
+                 cooldown=0,
+                 meta_heuristic='pso',
+                 population_size=30,
+                 iterations=10,
+                 **kwargs):
+        super(RunMetaHeuristicAtEpochEnd, self).__init__()
+
+        self.monitor = monitor
+        if 'epsilon' in kwargs:
+            min_delta = kwargs.pop('epsilon')
+            logging.warning('`epsilon` argument is deprecated and '
+                            'will be removed, use `min_delta` instead.')
+        self.train_x = train_x
+        self.train_y = train_y
+        self.test_x = test_x
+        self.test_y = test_y
+        self.hyperparameters = hyperparameters
+        self.min_delta = min_delta
+        self.patience = 1
+        self.max_patience = max_patience
+        self.verbose = verbose
+        self.cooldown = cooldown
+        self.cooldown_counter = 0  # Cooldown counter.
+        self.wait = 0
+        self.best = 0
+        self.mode = mode
+        self.monitor_op = None
+        self.meta_heuristic = meta_heuristic
+        self.population_size = population_size
+        self.iterations = iterations
+        self._reset()
+
+    def _reset(self):
+        """Resets wait counter and cooldown counter.
+        """
+        if self.mode not in ['auto', 'min', 'max']:
+            logging.warning('Run Metaheuristic On Plateau Reducing mode %s is unknown, '
+                            'fallback to auto mode.', self.mode)
+            self.mode = 'auto'
+        if (self.mode == 'min' or
+                (self.mode == 'auto' and 'acc' not in self.monitor)):
+            self.monitor_op = lambda a, b: np.less(a, b - self.min_delta)
+            self.best = np.Inf
+        else:
+            self.monitor_op = lambda a, b: np.greater(a, b + self.min_delta)
+            self.best = -np.Inf
+        self.cooldown_counter = 0
+        self.wait = 0
+
+    def on_train_begin(self, logs=None):
+        self._reset()
+
+    def on_epoch_end(self, epoch, logs=None):
+        self.patience += 1
+        if self.patience >= self.max_patience:
+            return training_loop_callback(self.model, self.hyperparameters, self.train_x, self.train_y, self.test_x,
+                                          self.test_y, meta_heuristic=self.hyperparameters.meta_heuristic)
 
 
 class RunMetaHeuristicOnPlateau(Callback):

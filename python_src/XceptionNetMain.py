@@ -8,6 +8,7 @@ from sklearn.metrics import confusion_matrix
 from tensorflow.python.keras.applications.xception import Xception
 from tensorflow.python.keras.metrics import Precision, Recall, AUC
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.python.training import optimizer
 
 from configurations.DataSet import bcs_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks, \

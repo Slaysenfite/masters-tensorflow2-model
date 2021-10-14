@@ -44,7 +44,6 @@ def read_cmd_line_args(hyperparameters, dataset):
     parser.add_argument('--preloaded_experiment', type=str)
     parser.add_argument('--tf_fit', type=str)
     parser.add_argument('--l2', type=float)
-    parser.add_argument('--data_subset', type=str)
     args = parser.parse_args()
 
     if args.id is not None:
@@ -94,9 +93,6 @@ def read_cmd_line_args(hyperparameters, dataset):
 
     if args.tf_fit == 'False' or args.tf_fit == 'false':
         hyperparameters.tf_fit = False
-
-    if args.data_subset.lower() == 'mass' or args.data_subset.lower() == 'calc':
-        hyperparameters.data_subset = args.data_subset.lower()
 
     if args.preloaded_weights == 'True' or args.preloaded_weights == 'true':
         hyperparameters.preloaded_weights = True

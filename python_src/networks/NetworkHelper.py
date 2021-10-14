@@ -12,7 +12,8 @@ def create_classification_layers(base_model, classes, dropout_prob=0.3, kernel_i
                                  layers_removed=-1):
     x = GlobalAveragePooling2D(name='avg_pool')(base_model.layers[layers_removed].output)
     x = Flatten()(x)
-    x = Dense(512, activation='relu', kernel_initializer=kernel_initializer)(x)
+    x = Dense(256, activation='relu', kernel_initializer=kernel_initializer)(x)
+    x = Dense(256, activation='relu', kernel_initializer=kernel_initializer)(x)
     x = Dropout(dropout_prob)(x)
     if classes == 1:
         x = Dense(classes, activation='sigmoid', name='predictions')(x)
@@ -32,7 +33,7 @@ def compile_with_regularization(model,
                                 optimizer,
                                 metrics,
                                 add_l_type_reg=True,
-                                attrs=['kernel_regularizer'],
+                                attrs=['weight_regularizer'],
                                 regularization_type='l2',
                                 l1=1.e-4,
                                 l2=1.e-4):

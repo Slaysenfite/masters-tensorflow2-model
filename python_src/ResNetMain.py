@@ -7,15 +7,14 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix
 from tensorflow.python.keras.applications.resnet_v2 import ResNet50V2
 from tensorflow.python.keras.metrics import Precision, Recall, AUC
-from tensorflow.python.keras.metrics import Precision, Recall, AUC
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
-from configurations.DataSet import bcs_data_set as data_set
+from configurations.DataSet import cbis_ddsm_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks, \
     MODEL_OUTPUT
 from metrics.MetricsReporter import MetricReporter
 from networks.NetworkHelper import create_classification_layers, compile_with_regularization, generate_heatmap
-from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
+from training_loops.CustomCallbacks import RunMetaHeuristicAtEpochEnd
 from training_loops.CustomTrainingLoop import training_loop
 from utils.ImageLoader import load_rgb_images, supplement_training_data
 from utils.ScriptHelper import generate_script_report, read_cmd_line_args, create_file_title
@@ -33,8 +32,8 @@ create_required_directories()
 gc.enable()
 
 print('[INFO] Loading images...')
-test_x, test_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Test', segment=hyperparameters.dataset_segment)
-train_x, train_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Training', segment=hyperparameters.dataset_segment)
+test_x, test_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Test')
+train_x, train_y = load_rgb_images(data_set, IMAGE_DIMS, subset='Training')
 
 if hyperparameters.augmentation:
     print('[INFO] Augmenting data set')
@@ -83,9 +82,16 @@ compile_with_regularization(model=model,
 callbacks = create_callbacks(hyperparameters)
 
 if hyperparameters.meta_heuristic != 'none':
-    meta_callback = RunMetaHeuristicOnPlateau(
-        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=30, iterations=10,
-        monitor='val_loss', patience=6, verbose=1, mode='min', min_delta=0.001, cooldown=4)
+    meta_callback = RunMetaHeuristicAtEpochEnd(train_x=train_x,
+                                               train_y=train_y,
+                                               test_x=test_x,
+                                               test_y=test_y,
+                                               hyperparameters=hyperparameters,
+                                               meta_heuristic=hyperparameters.meta_heuristic,
+                                               population_size=30,
+                                               iterations=3,
+                                               max_patience=14
+                                               )
     callbacks.append(meta_callback)
 
 # train the network
