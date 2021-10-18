@@ -8,13 +8,13 @@
 
 cd $HOME/masters-tensorflow2-model/
 
-rm -r output
-
 git checkout instance/uber
+
+rm -r output
 
 workon wesselsenv
 
-python python_src/DdsmMetadataGenerator.py
+#python python_src/DdsmMetadataGenerator.py
 
 # Run Scripts
 
