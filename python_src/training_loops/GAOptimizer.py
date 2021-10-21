@@ -8,7 +8,7 @@ from training_loops.MetaheuristicOptimizer import MetaheuristicOptimizer
 from training_loops.OptimizerHelper import get_trainable_weights, set_trainable_weights, calc_solution_fitness, \
     convert_tenor_weights_to_tf_variable
 
-HALL_OF_FAME_SIZE = 0
+HALL_OF_FAME_SIZE = 1
 
 CROSSOVER_THRESHOLD = 60
 

@@ -77,7 +77,7 @@ evaluate_classification_model(model, 'ResNet50Class', hyperparameters, data_set,
 print('META-HEURISTIC')
 
 H = training_loop(model, hyperparameters, train_x, train_y, test_x, test_y,
-                  meta_heuristic=hyperparameters.meta_heuristic)
+                  meta_heuristic=hyperparameters.meta_heuristic, num_solutions=20, iterations=5)
 
 print('EVALUATION')
 

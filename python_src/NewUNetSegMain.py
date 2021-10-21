@@ -1,25 +1,25 @@
 import gc
 import sys
 import time
-from datetime import timedelta
 
 import tensorflow as tf
+from tensorflow.python.keras.callbacks import ReduceLROnPlateau, ModelCheckpoint
 from tensorflow.python.keras.losses import CategoricalHinge
 from tensorflow.python.keras.metrics import MeanIoU
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, MODEL_OUTPUT, \
-    create_required_directories, create_callbacks
+    create_required_directories
 from metrics.MetricsUtil import iou_coef, dice_coef
-from networks.NetworkHelper import compile_with_regularization, generate_heatmap, create_classification_layers
+from networks.NetworkHelper import compile_with_regularization, generate_heatmap
 from networks.UNet import build_pretrained_unet
 from networks.UNetSeg import unet_seg
 from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
 from training_loops.CustomTrainingLoop import training_loop
 from training_loops.OptimizerHelper import calc_seg_fitness
 from utils.ImageLoader import load_seg_images, supplement_seg_training_data
-from utils.ScriptHelper import create_file_title, read_cmd_line_args, evaluate_classification_model, evaluate_meta_model
+from utils.ScriptHelper import create_file_title, read_cmd_line_args, evaluate_meta_model
 from utils.SegScriptHelper import show_predictions
 
 print('Python version: {}'.format(sys.version))
@@ -77,7 +77,23 @@ compile_with_regularization(model=model,
                             l2=hyperparameters.l2)
 
 # Setup callbacks
-callbacks = create_callbacks(hyperparameters)
+callbacks = [
+    ReduceLROnPlateau(
+        monitor='val_loss', factor=0.2, patience=10, verbose=1, mode='min',
+        min_delta=0.001, cooldown=0, min_lr=0.00001),
+    ModelCheckpoint(
+        '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.experiment_id), monitor='val_loss', verbose=0,
+        save_best_only=True, save_weights_only=True, mode='min', save_freq='epoch',
+        options=None
+    )
+]
+
+if hyperparameters.meta_heuristic != 'none':
+    meta_callback = RunMetaHeuristicOnPlateau(
+        X=train_x, y=train_y, meta_heuristic=hyperparameters.meta_heuristic, population_size=30, iterations=10,
+        fitness_function=calc_seg_fitness, monitor='val_loss', patience=4, verbose=1, mode='max',
+        min_delta=0.05, cooldown=3)
+    callbacks.append(meta_callback)
 
 start_time = time.time()
 
@@ -114,38 +130,10 @@ output += 'Dice: {}\n'.format(dice_coef(test_y, predictions))
 with open(output_dir + file_title + '_metrics.txt', 'w+') as text_file:
     text_file.write(output)
 
-print('SECOND PASS \n')
-
-loss, train_labels, test_labels = data_set.get_dataset_labels(train_labels, test_labels)
-
-model = create_classification_layers(base_model=model,
-                                     classes=len(data_set.class_names),
-                                     dropout_prob=hyperparameters.dropout_prob)
-
-# Compile model
-compile_with_regularization(model=model,
-                            loss='binary_crossentropy',
-                            optimizer=opt,
-                            metrics=['accuracy'],
-                            regularization_type='l2',
-                            l2=hyperparameters.l2)
-
-H = model.fit(train_x, train_labels, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_labels),
-              steps_per_epoch=len(train_labels) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
-              callbacks=callbacks)
-
-time_taken = timedelta(seconds=(time.time() - start_time))
-
-# evaluate the network
-evaluate_classification_model(model, 'UNetClassification', hyperparameters, data_set, H, time_taken, test_x, test_labels)
-
-generate_heatmap(model, test_x, 10, 0, hyperparameters, '_2nd_pass')
-generate_heatmap(model, test_x, 10, 1, hyperparameters, '_2nd_pass')
-
 print('META-HEURISTIC')
 
 H = training_loop(model, hyperparameters, train_x, train_labels, test_x, test_labels,
-                  meta_heuristic=hyperparameters.meta_heuristic)
+                  meta_heuristic=hyperparameters.meta_heuristic, num_solutions=10, iterations=5)
 
 print('EVALUATION')
 
