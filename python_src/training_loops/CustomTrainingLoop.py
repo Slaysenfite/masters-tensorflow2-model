@@ -9,33 +9,6 @@ from training_loops.TrainingHelper import reset_metrics, \
     prepare_metrics, generate_tf_history, print_metrics, append_epoch_metrics, batch_data_set
 
 
-def train_on_batch(model, X, y, accuracy_metric, loss_metric):
-    ŷ = model(X, training=True)
-    # Calculate loss after pso weight updating
-    precision_metric = Precision()
-    recall_metric = Recall()
-    accuracy = accuracy_metric(y, ŷ)
-    loss = loss_metric(y, ŷ)
-    precision = precision_metric(y, ŷ)
-    recall = recall_metric(y, ŷ)
-    # Update training metric.
-    return accuracy.numpy(), loss.numpy(), precision.numpy(), recall.numpy()
-
-
-def apply_swarm_optimization(X, model, y, fitness_function, hyperparameters, num_solutions=30, iterations=5):
-    pso = PsoEnv(num_solutions, iterations, model=model, X=X, y=y, fitness_function=fitness_function)
-    pso.num_layers = hyperparameters.num_layers_for_optimization
-    model = pso.get_optimized_model()
-    return model
-
-
-def apply_genetic_algorithm(X, model, y, fitness_function, hyperparameters, num_solutions=30, iterations=5):
-    ga = GaEnv(num_solutions, iterations, model=model, X=X, y=y, fitness_function=fitness_function)
-    ga.num_layers = hyperparameters.num_layers_for_optimization
-    model = ga.get_optimized_model()
-    return model
-
-
 # The validate_on_batch function
 # Find out how the model works
 # @tf.function
@@ -87,7 +60,8 @@ def training_loop(model,
                   end='')
 
             # Run Algorithm
-            model = run_meta_heuristic(meta_heuristic, model, X, y, fitness_function, hyperparameters, num_solutions, iterations)
+            model = run_meta_heuristic(model, meta_heuristic, X, y, fitness_function, hyperparameters, num_solutions,
+                                       iterations)
             gc.collect()
             train_acc_score, train_loss_score, train_precision_score, train_recall_score = train_on_batch(model,
                                                                                                           X, y,
@@ -120,17 +94,44 @@ def training_loop(model,
                                val_recall)
 
 
-def run_meta_heuristic(meta_heuristic, model, train_x, train_y, fitness_function, hyperparameters, num_solutions,
+def run_meta_heuristic(model, meta_heuristic, train_x, train_y, fitness_function, hyperparameters, num_solutions,
                        iterations):
     if meta_heuristic == 'pso':
-        model = apply_swarm_optimization(train_x, model, train_y, fitness_function, hyperparameters, num_solutions,
+        model = apply_swarm_optimization(model, train_x, train_y, fitness_function, hyperparameters, num_solutions,
                                          iterations)
     elif meta_heuristic == 'ga':
-        model = apply_genetic_algorithm(train_x, model, train_y, fitness_function, hyperparameters, num_solutions,
+        model = apply_genetic_algorithm(model, train_x, train_y, fitness_function, hyperparameters, num_solutions,
                                         iterations)
     else:
-        model = apply_genetic_algorithm(train_x, model, train_y, fitness_function, hyperparameters, num_solutions,
+        model = apply_genetic_algorithm(model, train_x, train_y, fitness_function, hyperparameters, num_solutions,
                                         iterations)
+    return model
+
+
+def train_on_batch(model, X, y, accuracy_metric, loss_metric):
+    ŷ = model(X, training=True)
+    # Calculate loss after pso weight updating
+    precision_metric = Precision()
+    recall_metric = Recall()
+    accuracy = accuracy_metric(y, ŷ)
+    loss = loss_metric(y, ŷ)
+    precision = precision_metric(y, ŷ)
+    recall = recall_metric(y, ŷ)
+    # Update training metric.
+    return accuracy.numpy(), loss.numpy(), precision.numpy(), recall.numpy()
+
+
+def apply_swarm_optimization(model, X, y, fitness_function, hyperparameters, num_solutions=30, iterations=5):
+    pso = PsoEnv(fitness_function, num_solutions=num_solutions, iterations=iterations, model=model, X=X, y=y)
+    pso.num_layers = hyperparameters.num_layers_for_optimization
+    model = pso.get_optimized_model()
+    return model
+
+
+def apply_genetic_algorithm(model, X, y, fitness_function, hyperparameters, num_solutions=30, iterations=5):
+    ga = GaEnv(fitness_function, num_solutions=num_solutions, iterations=iterations, model=model, X=X, y=y)
+    ga.num_layers = hyperparameters.num_layers_for_optimization
+    model = ga.get_optimized_model()
     return model
 
 

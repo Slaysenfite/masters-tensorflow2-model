@@ -28,7 +28,7 @@ class Solution:
 
 
 class GaEnv(MetaheuristicOptimizer):
-    def __init__(self, fitness_function=calc_solution_fitness, iterations=10, num_solutions=30, model=None, X=None,
+    def __init__(self, fitness_function, iterations=10, num_solutions=30, model=None, X=None,
                  y=None, layers_to_optimize=(Conv2D, Dense)):
         super().__init__(fitness_function, iterations, num_solutions, model, X, y, layers_to_optimize)
 
