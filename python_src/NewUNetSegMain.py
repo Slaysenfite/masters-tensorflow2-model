@@ -97,38 +97,38 @@ if hyperparameters.meta_heuristic != 'none':
 
 start_time = time.time()
 
-# if hyperparameters.tf_fit:
-#     H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
-#                   steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
-#                   callbacks=callbacks)
-# else:
-#     H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
-#                       meta_heuristic=hyperparameters.meta_heuristic,
-#                       fitness_function=calc_seg_fitness, task='segmentation')
-#
-# show_predictions(model, test_x, test_y, 2, output_dir + 'segmentation/' + hyperparameters.experiment_id + '_pred2.png')
-# show_predictions(model, test_x, test_y, 12,
-#                  output_dir + 'segmentation/' + hyperparameters.experiment_id + '_pred12.png')
-# show_predictions(model, test_x, test_y, 22,
-#                  output_dir + 'segmentation/' + hyperparameters.experiment_id + '_pred22.png')
-#
-# # evaluate the network
-# print('[INFO] evaluating network...')
-#
-# predictions = model.predict(test_x, batch_size=32)
-#
-# print('[INFO] generating metrics for first pass...')
-#
-# file_title = create_file_title('UNetSeg2', hyperparameters)
-#
-# acc = model.evaluate(test_x, test_y)
-# output = str(model.metrics_names) + '\n'
-# output += str(acc) + '\n'
-# output += 'IOU: {}\n'.format(iou_coef(test_y, predictions))
-# output += 'Dice: {}\n'.format(dice_coef(test_y, predictions))
-#
-# with open(output_dir + file_title + '_metrics.txt', 'w+') as text_file:
-#     text_file.write(output)
+if hyperparameters.tf_fit:
+    H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+                  steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs,
+                  callbacks=callbacks)
+else:
+    H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
+                      meta_heuristic=hyperparameters.meta_heuristic,
+                      fitness_function=calc_seg_fitness, task='segmentation')
+
+show_predictions(model, test_x, test_y, 2, output_dir + 'segmentation/' + hyperparameters.experiment_id + '_pred2.png')
+show_predictions(model, test_x, test_y, 12,
+                 output_dir + 'segmentation/' + hyperparameters.experiment_id + '_pred12.png')
+show_predictions(model, test_x, test_y, 22,
+                 output_dir + 'segmentation/' + hyperparameters.experiment_id + '_pred22.png')
+
+# evaluate the network
+print('[INFO] evaluating network...')
+
+predictions = model.predict(test_x, batch_size=32)
+
+print('[INFO] generating metrics for first pass...')
+
+file_title = create_file_title('UNetSeg2', hyperparameters)
+
+acc = model.evaluate(test_x, test_y)
+output = str(model.metrics_names) + '\n'
+output += str(acc) + '\n'
+output += 'IOU: {}\n'.format(iou_coef(test_y, predictions))
+output += 'Dice: {}\n'.format(dice_coef(test_y, predictions))
+
+with open(output_dir + file_title + '_metrics.txt', 'w+') as text_file:
+    text_file.write(output)
 
 print('META-HEURISTIC')
 

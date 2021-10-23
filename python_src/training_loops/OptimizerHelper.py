@@ -42,7 +42,8 @@ def calc_solution_fitness(weights, model, loss_metric, X, y, num_layers):
 
 def calc_seg_fitness(weights, model, loss_metric, X, y, num_layers):
     set_trainable_weights(model=model, weights=weights, num_layers=num_layers)
-    ŷ = model(X, training=True)
+    predictions = model.predict(X)
+    ŷ = convert_to_tensor(predictions)
     return 1 - iou_coef(y, ŷ)
 
 

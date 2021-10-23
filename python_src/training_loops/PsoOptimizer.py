@@ -1,3 +1,4 @@
+import gc
 from random import uniform, seed
 
 from tensorflow.python.ops.clip_ops import clip_by_value

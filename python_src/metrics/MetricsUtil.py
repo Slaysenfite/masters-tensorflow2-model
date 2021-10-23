@@ -1,13 +1,13 @@
 from array import array
 
-import tensorflow as tf
+from numpy.ma import array
 from scipy.spatial.distance import dice
 from tensorflow.python.keras import backend as K
-from numpy.ma import array
+from tensorflow.python.keras.metrics import MeanIoU
 
 
-def iou_coef(y_true, y_pred, smooth=1):
-    m = tf.keras.metrics.MeanIoU(num_classes=3)
+def iou_coef(y_true, y_pred, num_classes=2, smooth=1):
+    m = MeanIoU(num_classes)
     m.update_state(y_true, y_pred)
     return m.result().numpy()
 
