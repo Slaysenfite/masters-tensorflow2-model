@@ -38,15 +38,14 @@ workon wesselsenv
 #python python_src/NewResNetMain.py --id=CRD2-PSO --optimizer=adam --preloaded_weights=True --epochs=100 --meta_heuristic=pso
 #python python_src/NewXceptionNetMain.py --id=CXD2-PSO --optimizer=adam --preloaded_weights=True --epochs=100 --meta_heuristic=pso
 
+#python python_src/NewResNetMain.py --id=CRF2-GA-2 --optimizer=adam --preloaded_experiment=CRF2-GA --epochs=100 --meta_heuristic=ga --dataset=ddsm
+python python_src/NewXception NetMain.py --id=CXF2-GA-2 --optimizer=adam --preloaded_experiment=CXF2-GA --epochs=100 --meta_heuristic=ga --dataset=ddsm
+
+#python python_src/NewResNetMain.py --id=CRF2-PSO-2 --optimizer=adam --preloaded_experiment=CRF2-PSO --epochs=100 --meta_heuristic=pso --dataset=ddsm
+python python_src/NewXceptionNetMain.py --id=CXF2-PSO-2 --optimizer=adam --preloaded_experiment=CXF2-PSO --epochs=100 --meta_heuristic=pso --dataset=ddsm
+
 python python_src/NewUNetSegMain.py --id=SUD2-GA-2 --optimizer=sgd --dataset=cbis_seg --preloaded_experiment=MSUD001 --epochs=100 --meta_heuristic=ga
 python python_src/NewUNetSegMain.py --id=SUD2-PSO-2 --optimizer=sgd --dataset=cbis_seg --preloaded_experiment=MSUD001 --epochs=100 --meta_heuristic=pso
 
-python python_src/NewUNetSegMain.py --id=SUD2-I-GA-2 --optimizer=sgd --dataset=cbis_seg --preloaded_experiment=MSUD001-ImageNet --epochs=100 --meta_heuristic=ga
-python python_src/NewUNetSegMain.py --id=SUD2-I-PSO-2 --optimizer=sgd --dataset=cbis_seg --preloaded_experiment=MSUD001-ImageNet --epochs=100 --meta_heuristic=pso
-
-python python_src/NewResNetMain.py --id=CRF2-GA-2 --optimizer=adam --preloaded_experiment=CRF2-GA --epochs=100 --meta_heuristic=ga --dataset=ddsm
-python python_src/NewXception NetMain.py --id=CXF2-GA-2 --optimizer=adam --preloaded_experiment=CXF2-GA --epochs=100 --meta_heuristic=ga --dataset=ddsm
-
-python python_src/NewResNetMain.py --id=CRF2-PSO-2 --optimizer=adam --preloaded_experiment=CRF2-PSO --epochs=100 --meta_heuristic=pso --dataset=ddsm
-python python_src/NewXceptionNetMain.py --id=CXF2-PSO-2 --optimizer=adam --preloaded_experiment=CXF2-PSO --epochs=100 --meta_heuristic=pso --dataset=ddsm
-
+python python_src/NewUNetSegMain.py --id=SUD2-I-GA-2 --optimizer=sgd --dataset=cbis_seg --preloaded_weights=True --preloaded_experiment=MSUD001-ImageNet --epochs=100 --meta_heuristic=ga
+python python_src/NewUNetSegMain.py --id=SUD2-I-PSO-2 --optimizer=sgd --dataset=cbis_seg --preloaded_weights=True --preloaded_experiment=MSUD001-ImageNet --epochs=100 --meta_heuristic=pso

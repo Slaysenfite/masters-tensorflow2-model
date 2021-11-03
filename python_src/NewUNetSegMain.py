@@ -65,6 +65,7 @@ print('META-HEURISTIC')
 H = training_loop(model, hyperparameters, train_x, train_y, test_x, test_y, fitness_function=calc_seg_fitness,
                   meta_heuristic=hyperparameters.meta_heuristic, num_solutions=10, iterations=5)
 time_taken = timedelta(seconds=(time.time() - start_time))
+print(time_taken)
 
 print('EVALUATION')
 

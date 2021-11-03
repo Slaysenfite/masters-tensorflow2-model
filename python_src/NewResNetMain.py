@@ -67,12 +67,14 @@ H = training_loop(model, hyperparameters, train_x, train_y, test_x, test_y,
                   meta_heuristic=hyperparameters.meta_heuristic, num_solutions=20, iterations=5)
 time_taken = timedelta(seconds=(time.time() - start_time))
 
+print(time_taken)
+
 print('EVALUATION')
 
 generate_heatmap(model, test_x, 10, 0, hyperparameters, '_meta_pass')
 generate_heatmap(model, test_x, 10, 1, hyperparameters, '_meta_pass')
 
 # evaluate the network
-evaluate_meta_model(model, 'ResNet50Meta', hyperparameters, data_set, test_x, test_y)
+evaluate_classification_model(model, 'ResNet50Meta', hyperparameters, data_set, H, time_taken,test_x, test_y)
 
 print('[END] Finishing script...\n')
