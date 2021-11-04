@@ -39,7 +39,7 @@ workon wesselsenv
 #python python_src/NewXceptionNetMain.py --id=CXD2-PSO --optimizer=adam --preloaded_weights=True --epochs=100 --meta_heuristic=pso
 
 #python python_src/NewResNetMain.py --id=CRF2-GA-2 --optimizer=adam --preloaded_experiment=CRF2-GA --epochs=100 --meta_heuristic=ga --dataset=ddsm
-python python_src/NewXception NetMain.py --id=CXF2-GA-2 --optimizer=adam --preloaded_experiment=CXF2-GA --epochs=100 --meta_heuristic=ga --dataset=ddsm
+python python_src/NewXceptionNetMain.py --id=CXF2-GA-2 --optimizer=adam --preloaded_experiment=CXF2-GA --epochs=100 --meta_heuristic=ga --dataset=ddsm
 
 #python python_src/NewResNetMain.py --id=CRF2-PSO-2 --optimizer=adam --preloaded_experiment=CRF2-PSO --epochs=100 --meta_heuristic=pso --dataset=ddsm
 python python_src/NewXceptionNetMain.py --id=CXF2-PSO-2 --optimizer=adam --preloaded_experiment=CXF2-PSO --epochs=100 --meta_heuristic=pso --dataset=ddsm
