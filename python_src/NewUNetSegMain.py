@@ -11,7 +11,7 @@ from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, MODEL_OUTPUT, \
     create_required_directories
 from metrics.MetricsUtil import iou_coef, dice_coef
-from networks.NetworkHelper import generate_heatmap
+from networks.NetworkHelper import generate_heatmap, compile_with_regularization
 from networks.UNet import build_pretrained_unet
 from networks.UNetSeg import unet_seg
 from training_loops.CustomTrainingLoop import training_loop
@@ -54,9 +54,48 @@ if hyperparameters.weights_of_experiment_id is not None:
     model.load_weights(path_to_weights)
 
 # Compile model
-model.compile(loss=BinaryCrossentropy(),
-              optimizer=opt,
-              metrics=['accuracy', MeanIoU(num_classes=len(data_set.class_names))], )
+compile_with_regularization(model=model,
+                            loss=BinaryCrossentropy(),
+                            optimizer=opt,
+                            metrics=['accuracy', MeanIoU(num_classes=len(data_set.class_names))],
+                            regularization_type='l2',
+                            l2=hyperparameters.l2)
+
+start_time = time.time()
+
+if hyperparameters.tf_fit:
+    H = model.fit(train_x, train_y, batch_size=hyperparameters.batch_size, validation_data=(test_x, test_y),
+                  steps_per_epoch=len(train_x) // hyperparameters.batch_size, epochs=hyperparameters.epochs)
+else:
+    H = training_loop(model, opt, hyperparameters, train_x, train_y, test_x, test_y,
+                      meta_heuristic=hyperparameters.meta_heuristic,
+                      fitness_function=calc_seg_fitness, task='segmentation')
+time_taken = timedelta(seconds=(time.time() - start_time))
+
+# evaluate the network
+print('[INFO] evaluating network...')
+
+predictions = model.predict(test_x, batch_size=32)
+
+print('[INFO] generating metrics...')
+
+file_title = create_file_title('UNetSeg', hyperparameters)
+
+acc = model.evaluate(test_x, test_y)
+output = str(model.metrics_names) + '\n'
+output += str(acc) + '\n'
+output += 'IOU: {}\n'.format(iou_coef(test_y, predictions))
+output += 'Dice: {}\n'.format(dice_coef(test_y, predictions))
+output += 'Time taken: {}\n'.format(time_taken)
+
+for i in range(10):
+    show_predictions(model, test_x, test_y, i, output_dir + 'segmentation/' + file_title + '_pred_{}.png'.format(i))
+
+with open(output_dir + file_title + '_metrics.txt', 'w+') as text_file:
+    text_file.write(output)
+
+generate_heatmap(model, test_x, 10, 0, hyperparameters)
+generate_heatmap(model, test_x, 10, 1, hyperparameters)
 
 start_time = time.time()
 
