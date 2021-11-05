@@ -54,7 +54,7 @@ def load_greyscale_images(data, labels, dataset, image_dimensions=(128, 128, 1))
 
         image = cv2.imread(image_path)
         image = cv2.resize(image, (image_dimensions[1], image_dimensions[0]))
-        image = cv2.cv2.cvtColor(image, cv2.COLOR_RGB2GRAY, dstCn=0)
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY, dstCn=0)
         image = image[:, :, np.newaxis]
         data.append(image)
 
