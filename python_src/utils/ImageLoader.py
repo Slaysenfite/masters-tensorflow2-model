@@ -105,7 +105,7 @@ def load_seg_images(dataset, path_suffix='full', image_dimensions=(128, 128, 3),
             image = cv2.resize(image, (image_dimensions[1], image_dimensions[0]))
         elif image_dimensions[2] == 1:
             image = cv2.resize(image, (image_dimensions[1], image_dimensions[0]))
-            image = cv2.cv2.cvtColor(image, cv2.COLOR_RGB2GRAY, dstCn=0)
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY, dstCn=0)
             image = image[:, :, np.newaxis]
         data.append(image)
 

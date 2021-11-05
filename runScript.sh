@@ -49,3 +49,5 @@ python python_src/NewUNetSegMain.py --id=SUD2-PSO-2 --optimizer=sgd --dataset=cb
 
 python python_src/NewUNetSegMain.py --id=SUD2-I-GA-2 --optimizer=sgd --dataset=cbis_seg --preloaded_weights=True --preloaded_experiment=MSUD001-ImageNet --epochs=100 --meta_heuristic=ga
 python python_src/NewUNetSegMain.py --id=SUD2-I-PSO-2 --optimizer=sgd --dataset=cbis_seg --preloaded_weights=True --preloaded_experiment=MSUD001-ImageNet --epochs=100 --meta_heuristic=pso
+
+nohup python python_src/NewUNetSegMain.py --id=SUD2-GA-2 --optimizer=sgd --dataset=cbis_seg --epochs=100 --meta_heuristic=ga > SUD2-GA-2 .out &
