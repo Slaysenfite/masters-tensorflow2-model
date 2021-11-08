@@ -1,0 +1,19 @@
+2021-11-05 21:06:15.264982: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2021-11-05 21:06:15.265035: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
+usage: NewUNetSegMain.py [-h] [--id ID] [--meta_heuristic META_HEURISTIC]
+                         [--meta_heuristic_layers META_HEURISTIC_LAYERS]
+                         [--lr LR] [--optimizer OPTIMIZER]
+                         [--dropout_prob DROPOUT_PROB] [--epochs EPOCHS]
+                         [--dataset DATASET] [--augmentation AUGMENTATION]
+                         [--preloaded_weights PRELOADED_WEIGHTS]
+                         [--kernel_initializer KERNEL_INITIALIZER]
+                         [--preloaded_experiment PRELOADED_EXPERIMENT]
+                         [--tf_fit TF_FIT] [--l2 L2]
+                         [--data_subset DATA_SUBSET]
+NewUNetSegMain.py: error: unrecognized arguments: .out
+Python version: 3.7.3 (default, Jan 22 2021, 20:04:44) 
+[GCC 8.3.0]
+Tensorflow version: 2.5.0
+
+[BEGIN] Start script...
+
