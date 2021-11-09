@@ -4,15 +4,13 @@ import time
 from datetime import timedelta
 
 import tensorflow as tf
-from tensorflow.python.keras.losses import BinaryCrossentropy
-from tensorflow.python.keras.metrics import MeanIoU
 
 from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, MODEL_OUTPUT, \
     create_required_directories
+from metrics.LossFunctions import Semantic_loss_functions
 from metrics.MetricsUtil import iou_coef, dice_coef
 from networks.NetworkHelper import generate_heatmap
-from networks.UNet import build_pretrained_unet
 from networks.UNetSeg import unet_seg
 from training_loops.CustomTrainingLoop import training_loop
 from training_loops.OptimizerHelper import calc_seg_fitness
@@ -37,16 +35,13 @@ train_y, roi_train_labels = load_seg_images(data_set, path_suffix='roi',
 test_y, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1),
                                      subset='Test')
 
-train_x, train_labels = load_seg_images(data_set, image_dimensions=IMAGE_DIMS, subset='Training')
-test_x, test_labels = load_seg_images(data_set, image_dimensions=IMAGE_DIMS, subset='Test')
+train_x, train_labels = load_seg_images(data_set, image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1), subset='Training')
+test_x, test_labels = load_seg_images(data_set, image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1), subset='Test')
 
 print('[INFO] Training data shape: ' + str(train_x.shape))
 print('[INFO] Training label shape: ' + str(train_y.shape))
 
-if hyperparameters.preloaded_weights:
-    model = build_pretrained_unet(IMAGE_DIMS, len(data_set.class_names))
-else:
-    model = unet_seg(IMAGE_DIMS)
+model = unet_seg((IMAGE_DIMS[0], IMAGE_DIMS[1], 1))
 
 if hyperparameters.weights_of_experiment_id is not None:
     path_to_weights = '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.weights_of_experiment_id)
@@ -54,9 +49,10 @@ if hyperparameters.weights_of_experiment_id is not None:
     model.load_weights(path_to_weights)
 
 # Compile model
-model.compile(loss=BinaryCrossentropy(),
+s = Semantic_loss_functions()
+model.compile(loss=s.bce_dice_loss,
               optimizer=opt,
-              metrics=['accuracy', MeanIoU(num_classes=len(data_set.class_names))], )
+              metrics=['accuracy', s.dice_coef, s.sensitivity])
 
 start_time = time.time()
 
@@ -87,7 +83,10 @@ acc = model.evaluate(test_x, test_y)
 output = str(model.metrics_names) + '\n'
 output += str(acc) + '\n'
 output += 'IOU: {}\n'.format(iou_coef(test_y, predictions))
-output += 'Dice: {}\n'.format(dice_coef(test_y, predictions))
+output += 'Dice: {}\n'.format(s.dice_coef(test_y, predictions))
+output += 'Bad_Dice: {}\n'.format(dice_coef(test_y, predictions))
+output += 'Sensitivity: {}\n'.format(s.sensitivity(test_y, predictions))
+output += 'Specificity: {}\n'.format(s.specificity(test_y, predictions))
 
 with open(output_dir + file_title + '_metrics.txt', 'w+') as text_file:
     text_file.write(output)

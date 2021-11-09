@@ -5,14 +5,16 @@ from datetime import timedelta
 
 import tensorflow as tf
 from IPython.core.display import clear_output
-from tensorflow.python.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
-from tensorflow.python.keras.losses import CategoricalHinge, BinaryCrossentropy
-from tensorflow.python.keras.metrics import MeanIoU, Hinge
+from segmentation_models.losses import dice_loss
+from tensorflow.python.keras.callbacks import ReduceLROnPlateau, ModelCheckpoint
+from tensorflow.python.keras.losses import BinaryCrossentropy
+from tensorflow.python.keras.metrics import MeanIoU
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, MODEL_OUTPUT, \
-    create_required_directories, create_callbacks
+    create_required_directories
+from metrics.LossFunctions import Semantic_loss_functions
 from metrics.MetricsUtil import iou_coef, dice_coef
 from networks.NetworkHelper import compile_with_regularization, generate_heatmap
 from networks.UNet import build_pretrained_unet
@@ -38,11 +40,11 @@ gc.enable()
 print('[INFO] Loading images...')
 train_y, roi_train_labels = load_seg_images(data_set, path_suffix='roi',
                                             image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1), subset='Training')
-test_y, roi_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1),
-                                     subset='Test')
+test_y, roi_test_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1),
+                                          subset='Test')
 
-train_x, train_labels = load_seg_images(data_set, image_dimensions=IMAGE_DIMS, subset='Training')
-test_x, test_labels = load_seg_images(data_set, image_dimensions=IMAGE_DIMS, subset='Test')
+train_x, train_labels = load_seg_images(data_set, image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1), subset='Training')
+test_x, test_labels = load_seg_images(data_set, image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1), subset='Test')
 
 if hyperparameters.augmentation:
     print('[INFO] Augmenting data set')
@@ -53,7 +55,7 @@ if hyperparameters.augmentation:
         zoom_range=0.05,
         fill_mode='nearest')
 
-    train_x, train_y = supplement_seg_training_data(aug, train_x, train_y, roi_labels)
+    train_x, train_y = supplement_seg_training_data(aug, train_x, train_y, roi_test_labels)
 
 print('[INFO] Training data shape: ' + str(train_x.shape))
 print('[INFO] Training label shape: ' + str(train_y.shape))
@@ -61,9 +63,9 @@ print('[INFO] Training label shape: ' + str(train_y.shape))
 clear_output()
 
 if hyperparameters.preloaded_weights:
-    model = build_pretrained_unet(IMAGE_DIMS, len(data_set.class_names))
+    model = build_pretrained_unet((IMAGE_DIMS[0], IMAGE_DIMS[1], 1), 1)
 else:
-    model = unet_seg(IMAGE_DIMS)
+    model = unet_seg((IMAGE_DIMS[0], IMAGE_DIMS[1], 1))
 
 if hyperparameters.weights_of_experiment_id is not None:
     path_to_weights = '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.weights_of_experiment_id)
@@ -71,24 +73,29 @@ if hyperparameters.weights_of_experiment_id is not None:
     model.load_weights(path_to_weights)
 
 # Compile model
+s = Semantic_loss_functions()
 compile_with_regularization(model=model,
-                            loss=BinaryCrossentropy(),
+                            loss=s.bce_dice_loss,
                             optimizer=opt,
-                            metrics=['accuracy', MeanIoU(num_classes=len(data_set.class_names))],
+                            metrics=['accuracy', s.dice_coef, s.sensitivity],
                             regularization_type='l2',
                             l2=hyperparameters.l2)
 
 # Setup callbacks
 callbacks = [
-        ReduceLROnPlateau(
-            monitor='val_loss', factor=0.2, patience=10, verbose=1, mode='min',
-            min_delta=0.001, cooldown=0, min_lr=0.00001),
-        ModelCheckpoint(
-            '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.experiment_id), monitor='val_loss', verbose=0,
-            save_best_only=True, save_weights_only=True, mode='min', save_freq='epoch',
-            options=None
-        )
-    ]
+    ReduceLROnPlateau(
+        monitor='val_loss', factor=0.2, patience=10, verbose=1, mode='min',
+        min_delta=0.001, cooldown=0, min_lr=0.00001),
+    ModelCheckpoint(
+        '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.experiment_id), monitor='val_loss', verbose=0,
+        save_best_only=True, save_weights_only=True, mode='min', save_freq='epoch',
+        options=None),
+    ModelCheckpoint(
+        '{}{}.h5'.format(MODEL_OUTPUT, hyperparameters.experiment_id), monitor='val_loss', verbose=0,
+        save_best_only=True, save_weights_only=True, mode='min', save_freq='epoch',
+        options=None
+    )
+]
 
 if hyperparameters.meta_heuristic != 'none':
     meta_callback = RunMetaHeuristicOnPlateau(
@@ -122,8 +129,10 @@ acc = model.evaluate(test_x, test_y)
 output = str(model.metrics_names) + '\n'
 output += str(acc) + '\n'
 output += 'IOU: {}\n'.format(iou_coef(test_y, predictions))
-output += 'Dice: {}\n'.format(dice_coef(test_y, predictions))
-output += 'Time taken: {}\n'.format(time_taken)
+output += 'Dice: {}\n'.format(s.dice_coef(test_y, predictions))
+output += 'Bad_Dice: {}\n'.format(dice_coef(test_y, predictions))
+output += 'Sensitivity: {}\n'.format(s.sensitivity(test_y, predictions))
+output += 'Specificity: {}\n'.format(s.specificity(test_y, predictions))
 
 for i in range(10):
     show_predictions(model, test_x, test_y, i, output_dir + 'segmentation/' + file_title + '_pred_{}.png'.format(i))
