@@ -6,6 +6,7 @@ from tensorflow.python.keras.metrics import TrueNegatives, TruePositives, FalseP
     FalseNegatives, BinaryCrossentropy, CategoricalCrossentropy
 from tensorflow.python.ops.numpy_ops.np_arrays import convert_to_tensor
 
+from metrics.LossFunctions import Semantic_loss_functions
 from metrics.MetricsUtil import iou_coef
 
 MAX_LAYERS_FOR_OPTIMIZATION = 6
@@ -44,7 +45,8 @@ def calc_seg_fitness(weights, model, loss_metric, X, y, num_layers):
     set_trainable_weights(model=model, weights=weights, num_layers=num_layers)
     predictions = model.predict(X)
     ŷ = convert_to_tensor(predictions)
-    return 1 - iou_coef(y, ŷ)
+    s = Semantic_loss_functions()
+    return 1 - s.dice_coef(y, ŷ)
 
 
 def calc_solution_fitness_only_loss(weights, model, loss_metric, X, y, num_layers):
