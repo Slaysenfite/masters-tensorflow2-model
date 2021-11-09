@@ -124,7 +124,7 @@ generate_heatmap(model, test_x, 10, 0, hyperparameters, '_meta_pass')
 generate_heatmap(model, test_x, 10, 1, hyperparameters, '_meta_pass')
 
 # evaluate the network
-evaluate_classification_model(model, 'XceptionMeta', hyperparameters, data_set, H, time_taken,test_x, test_y)
+evaluate_meta_model(model, 'XceptionMeta', hyperparameters, data_set, test_x, test_y)
 
 print('[END] Finishing script...\n')
 
