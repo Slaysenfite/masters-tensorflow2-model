@@ -44,6 +44,7 @@ workon wesselsenv
 #
 #python python_src/NewUNetSegMain.py --id=SUD2-I-GA-2 --optimizer=sgd --dataset=cbis_seg --preloaded_weights=True --preloaded_experiment=MSUD001-ImageNet --epochs=100 --meta_heuristic=ga
 #python python_src/NewUNetSegMain.py --id=SUD2-I-PSO-2 --optimizer=sgd --dataset=cbis_seg --preloaded_weights=True --preloaded_experiment=MSUD001-ImageNet --epochs=100 --meta_heuristic=pso
+pip install segmentation_models
 
 python python_src/UNetSegMain.py --id=SUD1 --dataset=cbis_seg --optimizer=sgd --preloaded_weights=False --epochs=100
 

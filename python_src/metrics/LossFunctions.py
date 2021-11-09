@@ -9,7 +9,7 @@ epsilon = 1e-5
 smooth = 1
 
 
-class Semantic_loss_functions(object):
+class SegmentationLossFunctions(object):
     def __init__(self):
         print("semantic loss functions initialized")
 

@@ -8,7 +8,7 @@ import tensorflow as tf
 from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, MODEL_OUTPUT, \
     create_required_directories
-from metrics.LossFunctions import Semantic_loss_functions
+from metrics.LossFunctions import SegmentationLossFunctions
 from metrics.MetricsUtil import iou_coef, dice_coef
 from networks.NetworkHelper import generate_heatmap
 from networks.UNetSeg import unet_seg
@@ -49,7 +49,7 @@ if hyperparameters.weights_of_experiment_id is not None:
     model.load_weights(path_to_weights)
 
 # Compile model
-s = Semantic_loss_functions()
+s = SegmentationLossFunctions()
 model.compile(loss=s.bce_dice_loss,
               optimizer=opt,
               metrics=['accuracy', s.dice_coef, s.sensitivity])

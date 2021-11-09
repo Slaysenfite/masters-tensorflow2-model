@@ -5,16 +5,13 @@ from datetime import timedelta
 
 import tensorflow as tf
 from IPython.core.display import clear_output
-from segmentation_models.losses import dice_loss
 from tensorflow.python.keras.callbacks import ReduceLROnPlateau, ModelCheckpoint
-from tensorflow.python.keras.losses import BinaryCrossentropy
-from tensorflow.python.keras.metrics import MeanIoU
 from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 
 from configurations.DataSet import cbis_seg_data_set as data_set
 from configurations.TrainingConfig import IMAGE_DIMS, hyperparameters, output_dir, MODEL_OUTPUT, \
     create_required_directories
-from metrics.LossFunctions import Semantic_loss_functions
+from metrics.LossFunctions import SegmentationLossFunctions
 from metrics.MetricsUtil import iou_coef, dice_coef
 from networks.NetworkHelper import compile_with_regularization, generate_heatmap
 from networks.UNet import build_pretrained_unet
@@ -40,7 +37,8 @@ gc.enable()
 print('[INFO] Loading images...')
 train_y, roi_train_labels = load_seg_images(data_set, path_suffix='roi',
                                             image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1), subset='Training')
-test_y, roi_test_labels = load_seg_images(data_set, path_suffix='roi', image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1),
+test_y, roi_test_labels = load_seg_images(data_set, path_suffix='roi',
+                                          image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1),
                                           subset='Test')
 
 train_x, train_labels = load_seg_images(data_set, image_dimensions=(IMAGE_DIMS[0], IMAGE_DIMS[1], 1), subset='Training')
@@ -73,7 +71,7 @@ if hyperparameters.weights_of_experiment_id is not None:
     model.load_weights(path_to_weights)
 
 # Compile model
-s = Semantic_loss_functions()
+s = SegmentationLossFunctions()
 compile_with_regularization(model=model,
                             loss=s.bce_dice_loss,
                             optimizer=opt,
