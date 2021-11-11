@@ -127,7 +127,6 @@ acc = model.evaluate(test_x, test_y)
 output = str(model.metrics_names) + '\n'
 output += str(acc) + '\n'
 output += 'IOU: {}\n'.format(iou_coef(test_y, predictions))
-output += 'Dice: {}\n'.format(s.dice_coef(test_y, predictions))
 output += 'Bad_Dice: {}\n'.format(dice_coef(test_y, predictions))
 output += 'Sensitivity: {}\n'.format(s.sensitivity(test_y, predictions))
 output += 'Specificity: {}\n'.format(s.specificity(test_y, predictions))

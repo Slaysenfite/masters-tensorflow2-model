@@ -7,12 +7,10 @@ import tensorflow as tf
 from tensorflow.python.keras.applications.xception import Xception
 
 from configurations.DataSet import cbis_ddsm_data_set as data_set
-from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, create_callbacks, \
-    MODEL_OUTPUT
-from networks.NetworkHelper import create_classification_layers, compile_with_regularization, generate_heatmap
-from training_loops.CustomCallbacks import RunMetaHeuristicOnPlateau
+from configurations.TrainingConfig import IMAGE_DIMS, create_required_directories, hyperparameters, MODEL_OUTPUT
+from networks.NetworkHelper import create_classification_layers, generate_heatmap
 from training_loops.CustomTrainingLoop import training_loop
-from utils.ScriptHelper import read_cmd_line_args, evaluate_classification_model, evaluate_meta_model
+from utils.ScriptHelper import read_cmd_line_args, evaluate_meta_model
 
 print('Python version: {}'.format(sys.version))
 print('Tensorflow version: {}\n'.format(tf.__version__))
@@ -72,7 +70,7 @@ generate_heatmap(model, test_x, 10, 0, hyperparameters, '_meta_pass')
 generate_heatmap(model, test_x, 10, 1, hyperparameters, '_meta_pass')
 
 # evaluate the network
-evaluate_meta_model(model, 'XceptionMeta', hyperparameters, data_set, H, time_taken,test_x, test_y)
+evaluate_meta_model(model, 'XceptionMeta', hyperparameters, data_set, test_x, test_y)
 
 print('[END] Finishing script...\n')
 
