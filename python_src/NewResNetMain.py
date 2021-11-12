@@ -53,7 +53,7 @@ if hyperparameters.weights_of_experiment_id is not None:
     model.load_weights(path_to_weights)
 
 # compile model
-    model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
+model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
 
 # Setup callbacks
 callbacks = create_callbacks(hyperparameters)
@@ -75,6 +75,6 @@ generate_heatmap(model, test_x, 10, 0, hyperparameters, '_meta_pass')
 generate_heatmap(model, test_x, 10, 1, hyperparameters, '_meta_pass')
 
 # evaluate the network
-evaluate_classification_model(model, 'ResNet50Meta', hyperparameters, data_set, H, time_taken,test_x, test_y)
+evaluate_meta_model(model, 'ResNet50Meta', hyperparameters, data_set, test_x, test_y)
 
 print('[END] Finishing script...\n')
