@@ -46,7 +46,7 @@ def calc_seg_fitness(weights, model, loss_metric, X, y, num_layers):
     predictions = model.predict(X)
     ŷ = convert_to_tensor(predictions)
     s = SegmentationLossFunctions()
-    return 1 - s.dice_coef(y, ŷ)
+    return 1 - s.sensitivity(y, ŷ)
 
 
 def calc_solution_fitness_only_loss(weights, model, loss_metric, X, y, num_layers):
