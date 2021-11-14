@@ -1,0 +1,65 @@
+*** Script Hyperparameters ***
+ Experiment Id: CRF-I
+ Epochs: 100
+ Initial learning rate: 0.001
+ Batch size: 32
+ Dropout: 0.25
+ Learning optimization: Adam
+ Meta-heuristic used: none
+ Meta-heuristic layer optimized: 10
+ Data augmentation: False
+ Preloaded weights: True
+ Kernel initializer: he_uniform
+ Existing Weights Exp Id: None
+ TF Fit Training: True
+ L2: 1e-05
+ Dataset subset: All Segments
+*** PERFORMANCE METRICS ***
+Time taken: 22:22:19.292562
+*** SCI-KIT METRICS ***
+
+*** Classification Report *** 
+               precision    recall  f1-score   support
+
+    Positive       0.00      0.00      0.00       996
+    Negative       0.62      1.00      0.76      1595
+
+    accuracy                           0.62      2591
+   macro avg       0.31      0.50      0.38      2591
+weighted avg       0.38      0.62      0.47      2591
+ 
+*** General Metrics *** 
+ Accuracy Score: 61.56% 
+ Precision Score: 30.78% 
+ Recall Score: 50.00% 
+
+*** Final Network Metrics *** 
+ Final Training Loss: 0.5914 
+ Final Validation Loss: 0.6324 
+ Final Training Accuracy: 0.64% 
+ Final Validation Accuracy: 0.61% 
+
+*** Best Network Metrics *** 
+ Best Epoch: 24 
+ Best Training Loss: 0.6208 
+ Best Validation Loss: 0.6203 
+ Best Training Accuracy: 0.61% 
+ Best Validation Accuracy: 0.62% 
+
+*** INTERNAL METRICS ***
+['loss', 'accuracy']
+[0.6202734708786011, 0.6155924201011658]*** Predictions *** 
+ Predictions: [[0.4579141  0.5420859 ]
+ [0.4579141  0.5420859 ]
+ [0.01212293 0.98787713]
+ ...
+ [0.39708272 0.6029172 ]
+ [0.30378962 0.6962104 ]
+ [0.44770458 0.5522954 ]] 
+ Ground Truth Labels: [[0. 1.]
+ [1. 0.]
+ [0. 1.]
+ ...
+ [0. 1.]
+ [1. 0.]
+ [1. 0.]] 
