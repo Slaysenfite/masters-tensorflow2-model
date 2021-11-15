@@ -15,6 +15,8 @@ workon wesselsenv
 #python python_src/DdsmMetadataGenerator.py
 
 # Run Scripts
+python python_src/NewUNetSegMain.py --id=SUD2-GA-2 --optimizer=sgd --dataset=cbis_seg --preloaded_experiment=SUD1 --epochs=100 --meta_heuristic=ga
+python python_src/NewUNetSegMain.py --id=SUD2-PSO-2 --optimizer=sgd --dataset=cbis_seg --preloaded_experiment=SUD1 --epochs=100 --meta_heuristic=pso
 
 python python_src/ResNetMain.py --optimizer=adam --id=CRF-I --dataset=ddsm --preloaded_weights=True --epochs=100
 python python_src/NewResNetMain.py --id=CRF-PSO --optimizer=adam --preloaded_experiment=CRF-I --epochs=100 --meta_heuristic=pso --dataset=ddsm
