@@ -16,41 +16,17 @@ workon wesselsenv
 
 # Run Scripts
 
-## CONTROLS ##
+python python_src/ResNetMain.py --optimizer=adam --id=CRF-I --dataset=ddsm --preloaded_weights=True --epochs=100
+python python_src/NewResNetMain.py --id=CRF-PSO --optimizer=adam --preloaded_experiment=CRF-I --epochs=100 --meta_heuristic=pso --dataset=ddsm
+python python_src/NewResNetMain.py --id=CRF-GA --optimizer=adam --preloaded_experiment=CRF-I --epochs=100 --meta_heuristic=ga --dataset=ddsm
 
-#python python_src/ResNetMain.py --optimizer=adam --id=CRD1 --dataset=cbis --preloaded_weights=False --epochs=100
-#python python_src/ResNetMain.py --optimizer=adam --id=CRD1-ImageNet --dataset=cbis --preloaded_weights=True --epochs=100
-#
-#python python_src/XceptionNetMain.py --optimizer=adam --id=CXD1 --dataset=cbis --preloaded_weights=False --epochs=100
-#python python_src/XceptionNetMain.py --optimizer=adam --id=CXD1-ImageNet --dataset=cbis --preloaded_weights=True --epochs=100
-#
-#python python_src/UNetSegMain.py --id=SUD1 --dataset=cbis_seg --optimizer=sgd --preloaded_weights=False --epochs=100
-#python python_src/UNetSegMain.py --id=SUD1-ImageNet --dataset=cbis_seg --optimizer=sgd --preloaded_weights=True --epochs=100
+python python_src/ResNetMain.py --optimizer=adam --id=CRD-I --dataset=cbis --preloaded_weights=True --epochs=100
+python python_src/NewResNetMain.py --id=CRD-GA --optimizer=adam --preloaded_weights=True --meta_heuristic=ga --preloaded_experiment=CRD-I
+python python_src/NewResNetMain.py --id=CRD-PSO --optimizer=adam --preloaded_weights=True --meta_heuristic=pso --preloaded_experiment=CRD-I
 
-#python python_src/ResNetMain.py --optimizer=adam --id=CRF1-ImageNet --dataset=ddsm --preloaded_weights=True --epochs=100
-#python python_src/XceptionNetMain.py --optimizer=adam --id=CXF1-ImageNet --dataset=ddsm --preloaded_weights=True --epochs=100
+python python_src/XceptionNetMain.py --optimizer=adam --id=CXD1-I --dataset=cbis --preloaded_weights=True --epochs=100
+python python_src/NewXceptionNetMain.py --id=CXD-GA --optimizer=adam --preloaded_weights=True --meta_heuristic=ga--preloaded_experiment=CXD1-I
+python python_src/NewXceptionNetMain.py --id=CXD-PSO --optimizer=adam --preloaded_weights=True --meta_heuristic=pso --preloaded_experiment=CXD1-I
 
-## Metaheuristics ##
 
-#python python_src/NewResNetMain.py --id=CRD2-GA --optimizer=adam --preloaded_weights=True --epochs=100 --meta_heuristic=ga
-#python python_src/NewXceptionNetMain.py --id=CXD2-GA --optimizer=adam --preloaded_weights=True --epochs=100 --meta_heuristic=ga
-
-#python python_src/NewResNetMain.py --id=CRD2-PSO --optimizer=adam --preloaded_weights=True --epochs=100 --meta_heuristic=pso
-#python python_src/NewXceptionNetMain.py --id=CXD2-PSO --optimizer=adam --preloaded_weights=True --epochs=100 --meta_heuristic=pso
-
-#python python_src/NewResNetMain.py --id=CRF2-GA-2 --optimizer=adam --preloaded_experiment=CRF2-GA --epochs=100 --meta_heuristic=ga --dataset=ddsm
-#python python_src/NewResNetMain.py --id=CRF2-PSO-2 --optimizer=adam --preloaded_experiment=CRF2-PSO --epochs=100 --meta_heuristic=pso --dataset=ddsm
-
-#
-#python python_src/NewUNetSegMain.py --id=SUD2-I-GA-2 --optimizer=sgd --dataset=cbis_seg --preloaded_weights=True --preloaded_experiment=MSUD001-ImageNet --epochs=100 --meta_heuristic=ga
-#python python_src/NewUNetSegMain.py --id=SUD2-I-PSO-2 --optimizer=sgd --dataset=cbis_seg --preloaded_weights=True --preloaded_experiment=MSUD001-ImageNet --epochs=100 --meta_heuristic=pso
-pip install segmentation_models
-
-#python python_src/UNetSegMain.py --id=SUD1 --dataset=cbis_seg --optimizer=sgd --preloaded_weights=False --epochs=100
-
-python python_src/NewUNetSegMain.py --id=SUD2-GA-2 --optimizer=sgd --dataset=cbis_seg --preloaded_experiment=SUD1 --epochs=100 --meta_heuristic=ga
-python python_src/NewUNetSegMain.py --id=SUD2-PSO-2 --optimizer=sgd --dataset=cbis_seg --preloaded_experiment=SUD1 --epochs=100 --meta_heuristic=pso
-
-#python python_src/NewXceptionNetMain.py --id=CXF2-PSO-2 --optimizer=adam --preloaded_experiment=CXF2-PSO --epochs=100 --meta_heuristic=pso --dataset=ddsm
-#python python_src/NewXceptionNetMain.py --id=CXF2-GA-2 --optimizer=adam --preloaded_experiment=CXF2-PSO --epochs=100 --meta_heuristic=ga --dataset=ddsm
 

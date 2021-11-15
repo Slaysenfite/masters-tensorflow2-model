@@ -52,7 +52,7 @@ if hyperparameters.weights_of_experiment_id is not None:
     model.load_weights(path_to_weights)
 
 # compile model
-    model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
+model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
 
 # train the network
 start_time = time.time()
@@ -62,6 +62,7 @@ print('META-HEURISTIC')
 H = training_loop(model, hyperparameters, train_x, train_y, test_x, test_y,
                   meta_heuristic=hyperparameters.meta_heuristic, num_solutions=20, iterations=5)
 time_taken = timedelta(seconds=(time.time() - start_time))
+
 print(time_taken)
 
 print('EVALUATION')
