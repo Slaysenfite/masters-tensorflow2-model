@@ -86,7 +86,8 @@ output += 'IOU: {}\n'.format(iou_coef(test_y, predictions))
 output += 'Bad_Dice: {}\n'.format(dice_coef(test_y, predictions))
 output += 'Sensitivity: {}\n'.format(s.sensitivity(test_y, predictions))
 output += 'Specificity: {}\n'.format(s.specificity(test_y, predictions))
-
+for i in range(10):
+    show_predictions(model, test_x, test_y, i, output_dir + 'segmentation/' + file_title + '_pred_{}.png'.format(i))
 with open(output_dir + file_title + '_metrics.txt', 'w+') as text_file:
     text_file.write(output)
 
