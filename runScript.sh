@@ -20,8 +20,8 @@ workon wesselsenv
 #python python_src/NewUNetSegMain.py --id=SUD-PSO --optimizer=sgd --dataset=cbis_seg --preloaded_experiment=SUD --meta_heuristic=pso
 #
 #python python_src/ResNetMain.py --optimizer=adam --id=CRD-I --dataset=cbis --preloaded_weights=True --epochs=100
-#python python_src/NewResNetMain.py --id=CRD-GA --optimizer=adam --meta_heuristic=ga --preloaded_experiment=CRD-I
-#python python_src/NewResNetMain.py --id=CRD-PSO --optimizer=adam --meta_heuristic=pso --preloaded_experiment=CRD-I
+python python_src/NewResNetMain.py --id=CRD-GA --optimizer=adam --meta_heuristic=ga --preloaded_experiment=MCRD001-ImageNet
+python python_src/NewResNetMain.py --id=CRD-PSO --optimizer=adam --meta_heuristic=pso --preloaded_experiment=MCRD001-ImageNet
 
 #python python_src/XceptionNetMain.py --optimizer=adam --id=CXD1-I --dataset=cbis --preloaded_weights=True --epochs=100
 python python_src/NewXceptionNetMain.py --id=CXD-GA --optimizer=adam --meta_heuristic=ga--preloaded_experiment=MCXD001-ImageNet
