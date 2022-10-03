@@ -71,9 +71,6 @@ print(time_taken)
 
 print('EVALUATION')
 
-generate_heatmap(model, test_x, 10, 0, hyperparameters, '_meta_pass')
-generate_heatmap(model, test_x, 10, 1, hyperparameters, '_meta_pass')
-
 # evaluate the network
 evaluate_meta_model(model, 'ResNet50Meta', hyperparameters, data_set, test_x, test_y)
 

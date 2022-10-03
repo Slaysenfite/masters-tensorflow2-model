@@ -9,7 +9,6 @@ from configurations.TrainingConfig import output_dir
 from metrics.MetricResults import MetricResult
 from metrics.MetricsReporter import MetricReporter
 from metrics.PerformanceMetrics import PerformanceMetrics
-from networks.NetworkHelper import generate_heatmap
 
 
 def generate_script_report(H, model, test_x, test_y, predictions, time_taken, data_set, hyperparameters, model_name,
@@ -111,7 +110,8 @@ def create_file_title(model_name, hyperparameters):
     meta_heuristic = hyperparameters.meta_heuristic if hyperparameters.meta_heuristic != None else 'none'
     return hyperparameters.experiment_id + '_' + model_name + '_' + meta_heuristic
 
-def evaluate_classification_model(model, model_name, hyperparameters, data_set, H, time_taken,test_x, test_y):
+
+def evaluate_classification_model(model, model_name, hyperparameters, data_set, H, time_taken, test_x, test_y):
     print('[INFO] evaluating network...')
     acc = model.evaluate(test_x, test_y)
     print(str(model.metrics_names))
@@ -126,6 +126,7 @@ def evaluate_classification_model(model, model_name, hyperparameters, data_set, 
                                    title='Confusion matrix, without normalization')
     reporter.plot_roc(data_set.class_names, test_y, predictions)
     reporter.plot_network_metrics(H, file_title)
+
 
 def evaluate_meta_model(model, model_name, hyperparameters, data_set, test_x, test_y):
     print('[INFO] evaluating network...')
